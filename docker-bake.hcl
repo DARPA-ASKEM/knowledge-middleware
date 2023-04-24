@@ -28,11 +28,11 @@ function "check_suffix" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 group "prod" {
-  targets = ["NAME-service"]
+  targets = ["extraction-service"]
 }
 
 group "default" {
-  targets = ["NAME-service-base"]
+  targets = ["extraction-service-base"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -41,12 +41,12 @@ target "_platforms" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "NAME-service-base" {
+target "extraction-service-base" {
   context = "."
-  tags = tag("NAME-service", "", "")
+  tags = tag("extraction-service", "", "")
   dockerfile = "Dockerfile"
 }
 
-target "NAME-service" {
-  inherits = ["_platforms", "NAME-service-base"]
+target "extraction-service" {
+  inherits = ["_platforms", "extraction-service-base"]
 }
