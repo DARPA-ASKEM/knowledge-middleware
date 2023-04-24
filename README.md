@@ -1,8 +1,8 @@
-[![Build and Publish](https://github.com/DARPA-ASKEM/service-template/actions/workflows/publish.yaml/badge.svg?event=push)](https://github.com/DARPA-ASKEM/service-template/actions/workflows/publish.yaml)
+[![Build and Publish](https://github.com/DARPA-ASKEM/extraction-service/actions/workflows/publish.yaml/badge.svg?event=push)](https://github.com/DARPA-ASKEM/extraction-service/actions/workflows/publish.yaml)
 
-# service-template
+# Exctraction service
 
-This is a template repository to create services for Terarium.
+TA1 repository to interface with Terarium tools to interface with TA1 services.
 
 
 ## License
