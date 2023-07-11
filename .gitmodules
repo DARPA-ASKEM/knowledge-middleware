@@ -1,0 +1,3 @@
+[submodule "askem-ta1-dockervm"]
+	path = askem-ta1-dockervm
+	url = https://github.com/ml4ai/ASKEM-TA1-DockerVM.git

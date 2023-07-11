@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "extraction-service"
+version = "0.1.0"
+description = ""
+authors = ["Powell Fendley"]
+readme = "README.md"
+packages = [{include = "extraction_service"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.100.0"
+redis = "^4.6.0"
+rq = "^1.15.1"
+pydantic = "^2.0.2"
+uvicorn = "^0.22.0"
+
+# TODO Split uvicorn, fastapi out into api only
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

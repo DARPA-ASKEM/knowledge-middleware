@@ -1,0 +1,97 @@
+version: "3.9"
+networks:
+  ta1-extraction-service:
+    driver: bridge
+    name: ta1-extraction-service
+services:
+  api:
+    container_name: api-ta1-extraction-service
+    build:
+      context: ./
+      dockerfile: api/Dockerfile
+    ports:
+      - "8010:8000"
+    env_file:
+      - api.env
+    networks:
+      - ta1-extraction-service
+    depends_on:
+      - redis
+    volumes:
+      - $PWD/api:/api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  redis:
+    container_name: redis-ta1-extraction-service
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ta1-extraction-service
+  rqworker:
+    container_name: worker-ta1-extraction-service
+    build:
+      context: ./
+      dockerfile: workers/Dockerfile
+    env_file:
+      - api.env
+    depends_on:
+      - redis
+    networks:
+      - ta1-extraction-service
+  mit-tr:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: mit-tr
+    networks:
+      - ta1-extraction-service
+  skema-tr:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-tr
+    networks:
+      - ta1-extraction-service
+  integrated-tr:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: integrated-tr
+    networks:
+      - ta1-extraction-service
+  skema-py:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-py
+    networks:
+      - ta1-extraction-service
+  skema-rs:
+    extends:
+      # Changed to port 8085
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-rs
+    networks:
+      - ta1-extraction-service
+  graphdb:
+    extends:
+      # Changed to port 7688
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: graphdb
+    networks:
+      - ta1-extraction-service
+  eq2mml:
+    extends:
+      # Changed to port 8011
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: eq2mml
+    networks:
+      - ta1-extraction-service
+  mathjax:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: mathjax
+    networks:
+      - ta1-extraction-service
+
+volumes:
+  mg_lib:
+  mg_log:
+  mg_etc:
