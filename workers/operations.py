@@ -3,8 +3,9 @@ import json
 import os
 import urllib
 import sys
-
 import requests
+
+from utils import put_amr_to_tds
 
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_URL")
@@ -29,10 +30,15 @@ def put_mathml_to_skema(*args, **kwargs):
     }
 
     amr_response = requests.put(skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers)
+    amr_json = amr_response.json()
+
+    tds_responses = put_amr_to_tds(amr_json)
 
     response = {
         "status_code": amr_response.status_code,
-        "amr": amr_response.json()
+        "amr": amr_json,
+        "tds_model_id": tds_responses.get("model_id"),
+        "tds_configuration_id": tds_responses.get("configuration_id")
     }
 
     return response
