@@ -41,12 +41,22 @@ target "_platforms" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "extraction-service-base" {
+target "extraction-service-api-base" {
   context = "."
-  tags = tag("extraction-service", "", "")
-  dockerfile = "Dockerfile"
+  tags = tag("extraction-service-api", "", "")
+  dockerfile = "api/Dockerfile"
 }
 
-target "extraction-service" {
-  inherits = ["_platforms", "extraction-service-base"]
+target "extraction-service-worker-base" {
+  context = "."
+  tags = tag("extraction-service-worker", "", "")
+  dockerfile = "workers/Dockerfile"
+}
+
+target "extraction-service-api" {
+  inherits = ["_platforms", "extraction-service-api-base"]
+}
+
+target "extraction-service-worker" {
+  inherits = ["_platforms", "extraction-service-worker-base"]
 }
