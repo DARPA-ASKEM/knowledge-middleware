@@ -28,11 +28,11 @@ function "check_suffix" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 group "prod" {
-  targets = ["extraction-service"]
+  targets = ["extraction-service-api", "extraction-service-worker"]
 }
 
 group "default" {
-  targets = ["extraction-service-base"]
+  targets = ["extraction-service-api-base", "extraction-service-worker-base"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
