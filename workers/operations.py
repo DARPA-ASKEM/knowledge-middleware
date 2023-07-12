@@ -8,7 +8,8 @@ import requests
 from utils import put_amr_to_tds
 
 TDS_API = os.getenv("TDS_URL")
-SKEMA_API = os.getenv("SKEMA_URL")
+SKEMA_API = os.getenv("SKEMA_RS_URL")
+UNIFIED_API = os.getenv("TA1_UNIFIED_URL")
 
 # Worker jobs for TA1 services
 def put_mathml_to_skema(*args, **kwargs):
@@ -42,3 +43,47 @@ def put_mathml_to_skema(*args, **kwargs):
     }
 
     return response
+
+def pdf_extractions(*args, **kwargs):
+    # Get options
+    text_content = kwargs.get("text_content")
+    annotate_skema = kwargs.get("annotate_skema")
+    annotate_mit = kwargs.get("annotate_mit")
+
+    # Try to feed text to the unified service
+    unified_text_reading_url = UNIFIED_API = f"/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    put_payload = {
+        "texts": [text_content]
+    }
+
+    try:
+        response = requests.post(unified_text_reading_url, data=json.dumps(put_payload, default=str), headers=headers)
+        extraction_json = response.json()
+
+        if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
+            raise ValueError
+
+        response = response = {
+            "status_code": response.status_code,
+            "extraction": extraction_json,
+        }
+
+        return response
+    
+    except ValueError:
+        # Extractions were null from unified service, try integrated service directly.
+        text_reading_url = os.getenv("INTEGRATED_TR_URL") + f"/integrated_text_extractions/?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
+
+        response = requests.post(text_reading_url, data=json.dumps(put_payload, default=str), headers=headers)
+        extraction_json = response.json()
+
+        response = response = {
+            "status_code": response.status_code,
+            "extraction": extraction_json,
+        }
+
+        return response
+

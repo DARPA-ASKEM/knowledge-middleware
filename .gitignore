@@ -3,3 +3,5 @@
 
 # Local environment
 .env
+api.env
+*.env

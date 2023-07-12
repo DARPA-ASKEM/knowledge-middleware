@@ -67,6 +67,10 @@ services:
       service: skema-py
     networks:
       - ta1-extraction-service
+  skema-unified:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-unified
   skema-rs:
     extends:
       file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml

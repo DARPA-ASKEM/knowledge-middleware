@@ -38,3 +38,22 @@ def put_amr_to_tds(amr_payload):
         "model_id": model_id,
         "configuration_id": config_id
     }
+
+def put_artifact_to_tds(bytes, name, description, filename, extractions):
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    artifact_payload = {
+        "username": "extraction_service",
+        "name": name,
+        "description": description,
+        "file_names": [filename],
+        "metadata": extractions
+    }
+
+    # Create TDS artifact
+    tds_artifact = TDS_API + "/models"
+    model_response = requests.post(tds_artifact, json=json.dumps(artifact_payload, default=str), headers=headers)
+
+    model_id = model_response.json().get("id")

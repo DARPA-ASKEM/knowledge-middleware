@@ -14,7 +14,7 @@ COPY --from=tmp / /
 WORKDIR /
 RUN pip install --no-cache-dir poetry==1.5.1
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-root --no-cache
+    poetry install --no-root --no-cache --extras api
 
 WORKDIR /api
 
