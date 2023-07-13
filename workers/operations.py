@@ -165,16 +165,7 @@ def data_profiling(dataset_id, document_text):
         }
         columns.append(col)
 
-    dataset["columns"] = columns
-
-    dataset["metadata"] = {
-        "document_textuments": [
-            {
-                "url": "https://github.com/reichlab/covid19-forecast-hub/blob/master/data-truth/README.md",
-                "title": "README: Ground truth data for the COVID-19 Forecast Hub",
-            }
-        ]
-    }
+    dataset_json["columns"] = columns
 
     resp = requests.post(f"{TDS_API}/datasets", json=dataset)
     dataset_id = resp.json()["id"]
