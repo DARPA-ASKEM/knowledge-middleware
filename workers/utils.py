@@ -50,7 +50,7 @@ def put_artifact_to_tds(
         "name": name,
         "description": description,
         "file_names": [filename],
-        "metadata": extractions,
+        "metadata": extractions[0],
     }
 
     # Create TDS artifact

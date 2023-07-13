@@ -55,12 +55,6 @@ services:
       service: skema-tr
     networks:
       - ta1-extraction-service
-  integrated-tr:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: integrated-tr
-    networks:
-      - ta1-extraction-service
   skema-py:
     extends:
       file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml

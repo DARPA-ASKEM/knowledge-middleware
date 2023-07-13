@@ -105,6 +105,8 @@ async def pdf_extractions(
                 text_content += page.decode("utf-8")
 
     operation_name = "operations.pdf_extractions"
+
+    # text_content = text_content[: len(text_content) // 2]
     options = {
         "text_content": text_content,
         "annotate_skema": annotate_skema,
@@ -113,6 +115,22 @@ async def pdf_extractions(
         "filename": filename,
         "name": filename.split(".")[0] if name is None else name,
         "description": description,
+    }
+
+    resp = create_job(operation_name=operation_name, options=options)
+
+    return resp
+
+
+@app.post("/profile_dataset")
+def profile_dataset(dataset_id, document_text):
+    from utils import create_job
+
+    operation_name = "operations.data_profiling"
+
+    options = {
+        "dataset_id": dataset_id,
+        "document_text": document_text,
     }
 
     resp = create_job(operation_name=operation_name, options=options)
