@@ -50,7 +50,9 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
 
     if not job or force_restart:
         flattened_options = deepcopy(options)
-        job = q.enqueue_call(func=operation_name, args=[], kwargs=flattened_options, job_id=job_id)
+        job = q.enqueue_call(
+            func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
+        )
         if synchronous:
             timer = 0.0
             while (
@@ -75,7 +77,7 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
         "enqueued_at": job.enqueued_at,
         "started_at": job.started_at,
         "status": status,
-        "simulation_error": job_error,
+        "extraction_error": job_error,
         "result": job_result,
     }
     return response

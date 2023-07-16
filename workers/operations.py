@@ -6,12 +6,26 @@ import sys
 import requests
 import pandas
 
-from utils import put_amr_to_tds, put_artifact_extraction_to_tds, get_artifact_from_tds
+from utils import (
+    put_amr_to_tds,
+    put_artifact_extraction_to_tds,
+    get_artifact_from_tds,
+    get_dataset_from_tds,
+)
 
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_RS_URL")
 UNIFIED_API = os.getenv("TA1_UNIFIED_URL")
 MIT_API = os.getenv("MIT_TR_URL")
+
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 # Worker jobs for TA1 services
@@ -30,18 +44,31 @@ def put_mathml_to_skema(*args, **kwargs):
     amr_response = requests.put(
         skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
     )
-    amr_json = amr_response.json()
 
-    tds_responses = put_amr_to_tds(amr_json)
+    if amr_response.status_code == 200:
+        amr_json = amr_response.json()
 
-    response = {
-        "status_code": amr_response.status_code,
-        "amr": amr_json,
-        "tds_model_id": tds_responses.get("model_id"),
-        "tds_configuration_id": tds_responses.get("configuration_id"),
-    }
+        tds_responses = put_amr_to_tds(amr_json)
 
-    return response
+        response = {
+            "status_code": amr_response.status_code,
+            "amr": amr_json,
+            "tds_model_id": tds_responses.get("model_id"),
+            "tds_configuration_id": tds_responses.get("configuration_id"),
+            "error": None,
+        }
+
+        return response
+    else:
+        response = {
+            "status_code": amr_response.status_code,
+            "amr": None,
+            "tds_model_id": None,
+            "tds_configuration_id": None,
+            "error": amr_response.text,
+        }
+
+        return response
 
 
 def pdf_extractions(*args, **kwargs):
@@ -118,51 +145,69 @@ def pdf_extractions(*args, **kwargs):
     return response
 
 
-def data_profiling(*args, **kwargs):
+def dataset_profiling(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
-
     dataset_id = kwargs.get("dataset_id")
-    document_text = kwargs.get("document_text")
 
-    tds_datasets_url = f"{TDS_API}/datasets"
-
-    dataset = requests.get(tds_datasets_url, data={"id": dataset_id})
-    dataset_json = dataset.json()
-
-    dataframes = []
-    for filename in dataset_json.get("filenames", []):
-        gen_download_url = f"{TDS_API}/datasets/{dataset_id}/download-url?dataset_id={dataset_id}&filename={filename}"
-        dataset_download_url = requests.get(gen_download_url)
-
-        downloaded_dataset = requests.get(dataset_download_url)
-
-        dataframe = pandas.read_csv(downloaded_dataset.content)
-        dataframes.append(dataframe)
-
-    final_df = pandas.merge(dataframes)
-
-    ######################################################
-    # Now we do the actual profiling!
-    ######################################################
-
-    # Here we perform our first call to the MIT service
-    mit_url = MIT_API
-
-    csv_string = final_df.to_csv()
-
-    resp = requests.post(
-        url=f"{mit_url}/annotation/link_dataset_col_to_dkg",
-        params={"csv_str": csv_string, "doc": document_text, "gpt_key": openai_key},
+    dataset_response, dataset_dataframe, dataset_csv_string = get_dataset_from_tds(
+        dataset_id
     )
-    mit_groundings = resp.json()
+
+    dataset_json = dataset_response.json()
 
     # here we perform our 2nd call to the MIT service
     resp = requests.post(
-        url=f"{mit_url}/annotation/upload_file_extract/?gpt_key={openai_key}",
-        files={"file": csv_string},
+        url=f"{MIT_API}/annotation/upload_file_extract/?gpt_key={openai_key}",
+        files={"file": dataset_csv_string},
     )
     resp.json()
     mit_annotations = {a["name"]: a for a in resp.json()}
+
+    print(f"MIT ANNOTATIONS: {mit_annotations}")
+    sys.stdout.flush()
+
+    columns = []
+    for c in dataset_dataframe.columns:
+        annotations = mit_annotations.get(c, {}).get("text_annotations", [])
+        col = {
+            "name": c,
+            "data_type": "float",
+            "description": annotations[0].strip(),
+            "annotations": [],
+            "metadata": {},
+        }
+        columns.append(col)
+
+    dataset_json["columns"] = columns
+
+    resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    dataset_id = resp.json()["id"]
+
+    return resp.json()
+
+
+def dataset_profiling_with_document(*args, **kwargs):
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+    dataset_id = kwargs.get("dataset_id")
+    artifact_id = kwargs.get("artifact_id")
+
+    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+
+    dataset_response, dataset_dataframe, dataset_csv_string = get_dataset_from_tds(
+        dataset_id
+    )
+    dataset_json = dataset_response.json()
+
+    resp = requests.post(
+        url=f"{MIT_API}/annotation/link_dataset_col_to_dkg",
+        params={
+            "csv_str": dataset_csv_string,
+            "doc": downloaded_artifact,
+            "gpt_key": openai_key,
+        },
+    )
+    mit_groundings = resp.json()
 
     #######################################
     # processing the results from MIT into the format
@@ -170,8 +215,7 @@ def data_profiling(*args, **kwargs):
     #######################################
 
     columns = []
-    for c in final_df.columns:
-        annotations = mit_annotations.get(c, {}).get("text_annotations", [])
+    for c in dataset_dataframe.columns:
         # Skip any single empty strings that are sometimes returned and drop extra items that are sometimes included (usually the string 'class')
         groundings = {
             g[0]: g[1]
@@ -181,7 +225,7 @@ def data_profiling(*args, **kwargs):
         col = {
             "name": c,
             "data_type": "float",
-            "description": annotations[0].strip(),
+            "description": "",
             "annotations": [],
             "metadata": {},
             "grounding": {
@@ -192,9 +236,10 @@ def data_profiling(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
-    resp = requests.post(f"{TDS_API}/datasets", json=dataset)
+    resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     dataset_id = resp.json()["id"]
-    resp.json()
+
+    return resp.json()
 
 
 def link_amr(*args, **kwargs):

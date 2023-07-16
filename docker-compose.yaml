@@ -43,55 +43,54 @@ services:
     networks:
       - ta1-extraction-service
       - data-api
+  mit-tr:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: mit-tr
+    networks:
+      - ta1-extraction-service
+  skema-tr:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-tr
+    networks:
+      - ta1-extraction-service
+  skema-py:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-py
+    networks:
+      - ta1-extraction-service
+  skema-unified:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-unified
+  skema-rs:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: skema-rs
+    networks:
+      - ta1-extraction-service
+  graphdb:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: graphdb
+    networks:
+      - ta1-extraction-service
+  eq2mml:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: eq2mml
+    networks:
+      - ta1-extraction-service
+  mathjax:
+    extends:
+      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
+      service: mathjax
+    networks:
+      - ta1-extraction-service
 
 volumes:
   mg_lib:
   mg_log:
   mg_etc:
-
-    # mit-tr:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: mit-tr
-    #   networks:
-    #     - ta1-extraction-service
-    # skema-tr:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: skema-tr
-    #   networks:
-    #     - ta1-extraction-service
-    # skema-py:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: skema-py
-    #   networks:
-    #     - ta1-extraction-service
-    # skema-unified:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: skema-unified
-    # skema-rs:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: skema-rs
-    #   networks:
-    #     - ta1-extraction-service
-    # graphdb:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: graphdb
-    #   networks:
-    #     - ta1-extraction-service
-    # eq2mml:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: eq2mml
-    #   networks:
-    #     - ta1-extraction-service
-    # mathjax:
-    #   extends:
-    #     file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-    #     service: mathjax
-    #   networks:
-    #     - ta1-extraction-service

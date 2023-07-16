@@ -37,7 +37,7 @@ app = build_api()
 @app.get("/status/{extraction_job_id}")
 def get_status(extraction_job_id: str):
     """
-    Retrieve the status of a simulation
+    Retrieve the status of a extraction
     """
     from utils import fetch_job_status
 
@@ -62,8 +62,6 @@ def mathml_to_amr(payload: List[str], model: str = "petrinet"):
     options = {"mathml": payload, "model": model}
 
     resp = create_job(operation_name=operation_name, options=options)
-
-    # response = {"simulation_id": resp["id"]}
 
     return resp
 
@@ -100,15 +98,30 @@ async def pdf_extractions(
     return resp
 
 
-@app.post("/profile_dataset")
-def profile_dataset(dataset_id, document_text):
+@app.post("/profile_dataset/{dataset_id}")
+def profile_dataset_document(dataset_id: str):
     from utils import create_job
 
-    operation_name = "operations.data_profiling"
+    operation_name = "operations.dataset_profiling"
 
     options = {
         "dataset_id": dataset_id,
-        "document_text": document_text,
+    }
+
+    resp = create_job(operation_name=operation_name, options=options)
+
+    return resp
+
+
+@app.post("/profile_dataset/{dataset_id}/{artifact_id}")
+def profile_dataset_document(dataset_id: str, artifact_id: str = None):
+    from utils import create_job
+
+    operation_name = "operations.dataset_profiling_with_document"
+
+    options = {
+        "dataset_id": dataset_id,
+        "artifact_id": artifact_id,
     }
 
     resp = create_job(operation_name=operation_name, options=options)
@@ -117,7 +130,7 @@ def profile_dataset(dataset_id, document_text):
 
 
 @app.post("/link_amr")
-def link_amr(artifact_id, model_id):
+def link_amr(artifact_id: str, model_id: str):
     from utils import create_job
 
     operation_name = "operations.link_amr"
