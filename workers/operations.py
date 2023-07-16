@@ -44,12 +44,6 @@ def put_mathml_to_skema(*args, **kwargs):
     amr_response = requests.put(
         skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
     )
-    
-    try:
-        amr_json = amr_response.json()
-    except:
-        logger.error(f"Equation to AMR failed: {amr_response.text}")
-        return
 
     if amr_response.status_code == 200:
         amr_json = amr_response.json()
