@@ -45,8 +45,12 @@ def put_mathml_to_skema(*args, **kwargs):
         skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
     )
 
-    if amr_response.status_code == 200:
+    try:
         amr_json = amr_response.json()
+    except:
+        logger.error("Failed to parse response from TA1 Service")
+
+    if amr_response.status_code == 200 and amr_json:
 
         tds_responses = put_amr_to_tds(amr_json)
 
