@@ -34,14 +34,14 @@ def build_api(*args) -> FastAPI:
 app = build_api()
 
 
-@app.get("/status/{simulation_id}")
-def get_status(simulation_id: str):
+@app.get("/status/{extraction_job_id}")
+def get_status(extraction_job_id: str):
     """
     Retrieve the status of a simulation
     """
     from utils import fetch_job_status
 
-    status, result = fetch_job_status(simulation_id)
+    status, result = fetch_job_status(extraction_job_id)
     if not isinstance(status, str):
         return status
 
@@ -70,7 +70,7 @@ def mathml_to_amr(payload: List[str], model: str = "petrinet"):
 
 @app.post("/pdf_extractions")
 async def pdf_extractions(
-    pdf: UploadFile = File(...),
+    artifact_id: str,
     annotate_skema: bool = True,
     annotate_mit: bool = True,
     name: str = None,
@@ -84,36 +84,14 @@ async def pdf_extractions(
 
     from utils import create_job
 
-    # Create a file-like object from the file content
-    filename = pdf.filename
-    pdf_file = io.BytesIO(await pdf.read())
-
-    if filename.split(".")[-1] == "pdf":
-        # Open the PDF file and extract text content
-        pdf_reader = pypdf.PdfReader(pdf_file)
-        num_pages = len(pdf_reader.pages)
-
-        text_content = ""
-        for page_number in range(num_pages):
-            page = pdf_reader.pages[page_number]
-            text_content += page.extract_text()
-    else:
-        # Open the TXT file and extract text content
-        with pdf_file as pdf:
-            text_content = ""
-            for page in pdf:
-                text_content += page.decode("utf-8")
-
     operation_name = "operations.pdf_extractions"
 
     # text_content = text_content[: len(text_content) // 2]
     options = {
-        "text_content": text_content,
+        "artifact_id": artifact_id,
         "annotate_skema": annotate_skema,
         "annotate_mit": annotate_mit,
-        "bytes_obj": pdf_file.seek(0),
-        "filename": filename,
-        "name": filename.split(".")[0] if name is None else name,
+        "name": name,
         "description": description,
     }
 
@@ -131,6 +109,22 @@ def profile_dataset(dataset_id, document_text):
     options = {
         "dataset_id": dataset_id,
         "document_text": document_text,
+    }
+
+    resp = create_job(operation_name=operation_name, options=options)
+
+    return resp
+
+
+@app.post("/link_amr")
+def link_amr(artifact_id, model_id):
+    from utils import create_job
+
+    operation_name = "operations.link_amr"
+
+    options = {
+        "artifact_id": artifact_id,
+        "model_id": model_id,
     }
 
     resp = create_job(operation_name=operation_name, options=options)

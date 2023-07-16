@@ -6,7 +6,7 @@ import sys
 import requests
 import pandas
 
-from utils import put_amr_to_tds, put_artifact_to_tds
+from utils import put_amr_to_tds, put_artifact_extraction_to_tds, get_artifact_from_tds
 
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_RS_URL")
@@ -46,23 +46,34 @@ def put_mathml_to_skema(*args, **kwargs):
 
 def pdf_extractions(*args, **kwargs):
     # Get options
-    text_content = kwargs.get("text_content")
+    artifact_id = kwargs.get("artifact_id")
     annotate_skema = kwargs.get("annotate_skema")
     annotate_mit = kwargs.get("annotate_mit")
-    bytes_obj = kwargs.get("bytes_obj")
-    filename = kwargs.get("filename")
     name = kwargs.get("name")
     description = kwargs.get("description")
 
+    artifact_json, downloaded_artifact = get_artifact_from_tds(
+        artifact_id=artifact_id
+    )  # Assumes  downloaded artifact is PDF, doesn't type check
+    filename = artifact_json.get("file_names")[0]
+
     # Try to feed text to the unified service
-    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
+    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-pdf-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
     headers = {"Content-Type": "application/json"}
-    put_payload = {"texts": [text_content]}
+    put_payload = {
+        "pdfs": [
+            (
+                "extractions.json",
+                downloaded_artifact,
+                "application/json",
+            )
+        ]
+    }
 
     try:
         response = requests.post(
             unified_text_reading_url,
-            data=json.dumps(put_payload, default=str),
+            files=put_payload,
             headers=headers,
         )
         extraction_json = response.json()
@@ -77,27 +88,41 @@ def pdf_extractions(*args, **kwargs):
             "status_code": 500,
             "extraction": None,
             "artifact_id": None,
+            "error": "Extractions did not complete, extractions values were null.",
         }
 
-    artifact_response = put_artifact_to_tds(
-        bytes_obj=bytes_obj,
-        name=name,
-        description=description,
+    artifact_response = put_artifact_extraction_to_tds(
+        name=name if name is not None else artifact_json.get("name"),
+        description=description
+        if description is not None
+        else artifact_json.get("description"),
         filename=filename,
         extractions=extraction_json,
     )
 
-    response = {
-        "status_code": response.status_code,
-        "extraction": extraction_json,
-        "artifact_id": artifact_response.get("artifact_id"),
-    }
+    if artifact_response.get("status") == 200:
+        response = {
+            "extraction_status_code": response.status_code,
+            "extraction": extraction_json,
+            "tds_status_code": artifact_response.get("status"),
+            "error": None,
+        }
+    else:
+        response = {
+            "extraction_status_code": response.status_code,
+            "extraction": extraction_json,
+            "tds_status_code": artifact_response.get("status"),
+            "error": "PUT extraction metadata to TDS failed, please check TDS api logs.",
+        }
 
     return response
 
 
-def data_profiling(dataset_id, document_text):
+def data_profiling(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
+
+    dataset_id = kwargs.get("dataset_id")
+    document_text = kwargs.get("document_text")
 
     tds_datasets_url = f"{TDS_API}/datasets"
 
@@ -170,3 +195,53 @@ def data_profiling(dataset_id, document_text):
     resp = requests.post(f"{TDS_API}/datasets", json=dataset)
     dataset_id = resp.json()["id"]
     resp.json()
+
+
+def link_amr(*args, **kwargs):
+    artifact_id = kwargs.get("artifact_id")
+    model_id = kwargs.get("model_id")
+
+    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+
+    tds_models_url = f"{TDS_API}/models"
+
+    model = requests.get(tds_models_url, data={"model_id": model_id})
+    model_json = model.json()
+
+    model_amr = model_json.get("model")
+
+    files = {
+        "amr_file": (
+            "amr.json",
+            io.BytesIO(json.dumps(model_amr, ensure_ascii=False).encode("utf-8")),
+            "application/json",
+        ),
+        "text_extractions_file": (
+            "extractions.json",
+            downloaded_artifact,
+            "application/json",
+        ),
+    }
+
+    params = {"amr_type": "petrinet"}
+
+    skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
+
+    response = requests.post(skema_amr_linking_url, files=files, params=params)
+
+    if response.status_code == 200:
+        enriched_amr = response.json()
+
+        model_json["model"] = enriched_amr
+        model_id = model_json.get("id")
+
+        new_model_payload = model_json
+
+        update_response = requests.put(
+            f"{tds_models_url}/{model_id}", data=new_model_payload
+        )
+
+        return {
+            "status": update_response.status_code,
+            "message": "Model enriched and updated in TDS",
+        }

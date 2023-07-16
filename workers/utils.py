@@ -40,8 +40,8 @@ def put_amr_to_tds(amr_payload):
     return {"model_id": model_id, "configuration_id": config_id}
 
 
-def put_artifact_to_tds(
-    bytes_obj, name, description, filename, extractions
+def put_artifact_extraction_to_tds(
+    name, description, filename, extractions
 ):  # TODO change to get artifact from TDS via filename and artifact id maybe
     headers = {"Content-Type": "application/json"}
 
@@ -55,22 +55,36 @@ def put_artifact_to_tds(
 
     # Create TDS artifact
     tds_artifact = TDS_API + "/artifacts"
-    artifact_response = requests.post(
+    artifact_response = requests.put(
         tds_artifact, data=json.dumps(artifact_payload, default=str), headers=headers
     )
 
-    artifact_id = artifact_response.json().get("id")
+    artifact_put_status = artifact_response.status_code
 
-    # Get presigned URL
-    tds_presign_url = (
-        TDS_API + f"/artifacts/{artifact_id}/upload-url?filename={filename}"
-    )
-    tds_presign_response = requests.get(tds_presign_url)
-    presigned_url = tds_presign_response.json().get("url")
+    return {"status": artifact_put_status}
 
-    upload_resp = requests.put(presigned_url, data=bytes_obj)
 
-    if upload_resp.status_code == 200:
-        print("File upload completed")
+def get_artifact_from_tds(artifact_id):
+    tds_artifacts_url = f"{TDS_API}/artifacts/{artifact_id}"
 
-    return {"artifact_id": artifact_id}
+    artifact = requests.get(tds_artifacts_url)
+    artifact_json = artifact.json()
+
+    filename = artifact_json.get("file_names")[
+        0
+    ]  # Assumes only one file will be present for now.
+
+    download_url = f"{TDS_API}/artifacts/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
+    artifact_download_url = requests.get(download_url)
+
+    presigned_download = artifact_download_url.json().get("url")
+
+    print(presigned_download)
+    sys.stdout.flush()
+
+    downloaded_artifact = requests.get(artifact_download_url.json().get("url"))
+
+    print(f"ARTIFACT RETRIEVAL STATUS:{downloaded_artifact.status_code}")
+    sys.stdout.flush()
+
+    return artifact_json, downloaded_artifact.content

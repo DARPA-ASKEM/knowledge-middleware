@@ -43,5 +43,5 @@ restart:docker-compose.yaml
 # No internal docker connection to TDS
 .PHONY:up-prod
 up-prod:docker-compose.yaml
-	$(DOCKER_COMPOSE) compose up -f docker-compose.prod.yaml -d
+	$(DOCKER_COMPOSE) compose -f docker-compose.prod.yaml up -d
 
