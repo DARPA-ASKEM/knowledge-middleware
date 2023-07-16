@@ -13,6 +13,15 @@ from utils import (
     get_dataset_from_tds,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_RS_URL")
 UNIFIED_API = os.getenv("TA1_UNIFIED_URL")
@@ -44,6 +53,12 @@ def put_mathml_to_skema(*args, **kwargs):
     amr_response = requests.put(
         skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
     )
+    
+    try:
+        amr_json = amr_response.json()
+    except:
+        logger.error(f"Equation to AMR failed: {amr_response.text}")
+        return
 
     if amr_response.status_code == 200:
         amr_json = amr_response.json()
@@ -103,6 +118,7 @@ def pdf_extractions(*args, **kwargs):
             files=put_payload,
             headers=headers,
         )
+        
         extraction_json = response.json()
 
         if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
@@ -115,7 +131,7 @@ def pdf_extractions(*args, **kwargs):
             "status_code": 500,
             "extraction": None,
             "artifact_id": None,
-            "error": "Extractions did not complete, extractions values were null.",
+            "error": f"Extractions did not complete, extractions values were null: {response.text}",
         }
 
     artifact_response = put_artifact_extraction_to_tds(
