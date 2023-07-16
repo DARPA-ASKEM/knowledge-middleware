@@ -103,7 +103,6 @@ def pdf_extractions(*args, **kwargs):
             files=put_payload,
             headers=headers,
         )
-        
         extraction_json = response.json()
 
         if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
