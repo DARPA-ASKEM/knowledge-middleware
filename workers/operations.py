@@ -90,39 +90,43 @@ def pdf_extractions(*args, **kwargs):
 
     # Try to feed text to the unified service
     unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-pdf-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
-    headers = {"Content-Type": "application/json"}
-    put_payload = {
-        "pdfs": [
-            (
-                "extractions.json",
-                downloaded_artifact,
-                "application/json",
-            )
-        ]
-    }
+    # headers = {"Content-Type": "application/json"}
+
+    put_payload = [("pdfs", (
+                    filename,
+                    io.BytesIO(downloaded_artifact),
+                    "application/pdf"
+                    ))]
 
     try:
+        logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
         response = requests.post(
             unified_text_reading_url,
             files=put_payload,
-            headers=headers,
+            #headers=headers,
         )
+        logger.info(f"Response received from TA1 with status code: {response.status_code}")
         extraction_json = response.json()
+        outputs = extraction_json['outputs']
 
-        if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
-            raise ValueError
-
-        extraction_json = extraction_json.get("outputs").get("data")
+        if isinstance(outputs, dict):
+            if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
+                raise ValueError
+            else:
+                extraction_json = extraction_json.get("outputs").get("data")
+        elif isinstance(outputs, list):
+            extraction_json = [extraction_json.get("outputs")[0].get("data")]
 
     except ValueError:
         return {
             "status_code": 500,
             "extraction": None,
             "artifact_id": None,
-            "error": f"Extractions did not complete, extractions values were null: {response.text}",
+            "error": f"Extraction failure: {response.text}",
         }
 
     artifact_response = put_artifact_extraction_to_tds(
+        artifact_id = artifact_id,
         name=name if name is not None else artifact_json.get("name"),
         description=description
         if description is not None
@@ -164,10 +168,9 @@ def dataset_profiling(*args, **kwargs):
         url=f"{MIT_API}/annotation/upload_file_extract/?gpt_key={openai_key}",
         files={"file": dataset_csv_string},
     )
-    resp.json()
+    logger.info(f"MIT ANNOTATIONS: {resp.json()}")
     mit_annotations = {a["name"]: a for a in resp.json()}
 
-    print(f"MIT ANNOTATIONS: {mit_annotations}")
     sys.stdout.flush()
 
     columns = []

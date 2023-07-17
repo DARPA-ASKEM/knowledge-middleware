@@ -6,6 +6,15 @@ import sys
 
 import pandas
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 TDS_API = os.getenv("TDS_URL")
 
 
@@ -44,9 +53,8 @@ def put_amr_to_tds(amr_payload):
 
 
 def put_artifact_extraction_to_tds(
-    name, description, filename, extractions
+    artifact_id, name, description, filename, extractions
 ):  # TODO change to get artifact from TDS via filename and artifact id maybe
-    headers = {"Content-Type": "application/json"}
 
     artifact_payload = {
         "username": "extraction_service",
@@ -55,13 +63,13 @@ def put_artifact_extraction_to_tds(
         "file_names": [filename],
         "metadata": extractions[0],
     }
-
+    logger.info(f"Storing extraction to TDS for artifact: {artifact_id}")
     # Create TDS artifact
-    tds_artifact = TDS_API + "/artifacts"
+    tds_artifact = f"{TDS_API}/artifacts/{artifact_id}"
     artifact_response = requests.put(
-        tds_artifact, data=json.dumps(artifact_payload, default=str), headers=headers
+        tds_artifact, json=artifact_payload
     )
-
+    logger.info(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
 
     return {"status": artifact_put_status}
