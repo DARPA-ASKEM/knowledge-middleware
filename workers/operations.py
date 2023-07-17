@@ -74,7 +74,69 @@ def put_mathml_to_skema(*args, **kwargs):
         return response
 
 
-# dccde3a0-0132-430c-afd8-c67953298f48
+def pdf_to_text(*args, **kwargs):
+    # Get options
+    artifact_id = kwargs.get("artifact_id")
+
+    artifact_json, downloaded_artifact = get_artifact_from_tds(
+        artifact_id=artifact_id
+    )  # Assumes  downloaded artifact is PDF, doesn't type check
+    filename = artifact_json.get("file_names")[0]
+
+    # Try to feed text to the unified service
+    unified_text_reading_url = f"{UNIFIED_API}/text-reading/cosmos_to_json"
+
+    put_payload = [
+        ("pdf", (filename, io.BytesIO(downloaded_artifact), "application/pdf"))
+    ]
+
+    try:
+        logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
+        response = requests.post(
+            unified_text_reading_url,
+            files=put_payload
+        )
+        logger.info(
+            f"Response received from TA1 with status code: {response.status_code}"
+        )
+        extraction_json = response.json()
+        text = ''
+        for d in extraction_json:
+            text += f"{d['content']}\n"
+            
+    except ValueError:
+        return {
+            "status_code": 500,
+            "extraction": None,
+            "artifact_id": None,
+            "error": f"Extraction failure: {response.text}",
+        }
+
+    artifact_response = put_artifact_extraction_to_tds(
+        artifact_id=artifact_id,
+        name=artifact_json.get("name", None),
+        description=artifact_json.get("description", None),
+        filename=filename,
+        text=text
+    )
+
+    if artifact_response.get("status") == 200:
+        response = {
+            "extraction_status_code": response.status_code,
+            "extraction": extraction_json,
+            "tds_status_code": artifact_response.get("status"),
+            "error": None,
+        }
+    else:
+        response = {
+            "extraction_status_code": response.status_code,
+            "extraction": extraction_json,
+            "tds_status_code": artifact_response.get("status"),
+            "error": "PUT extraction metadata to TDS failed, please check TDS api logs.",
+        }
+
+    return response
+
 def pdf_extractions(*args, **kwargs):
     # Get options
     artifact_id = kwargs.get("artifact_id")
@@ -100,8 +162,7 @@ def pdf_extractions(*args, **kwargs):
         logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
         response = requests.post(
             unified_text_reading_url,
-            files=put_payload,
-            # headers=headers,
+            files=put_payload
         )
         logger.info(
             f"Response received from TA1 with status code: {response.status_code}"
@@ -111,20 +172,26 @@ def pdf_extractions(*args, **kwargs):
 
         if isinstance(outputs, dict):
             if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
+                logger.error(f"Malformed or empty response from TA1: {extraction_json}")
                 raise ValueError
             else:
                 extraction_json = extraction_json.get("outputs").get("data")
         elif isinstance(outputs, list):
-            extraction_json = [extraction_json.get("outputs")[0].get("data")]
+            if extraction_json.get("outputs")[0].get("data") is None:
+                logger.error(f"Malformed or empty response from TA1: {extraction_json}")
+                raise ValueError
+            else:            
+                extraction_json = [extraction_json.get("outputs")[0].get("data")]
 
     except ValueError:
+        logger.error(f"Extraction for artifact {artifact_id} failed.")
         return {
             "status_code": 500,
             "extraction": None,
             "artifact_id": None,
             "error": f"Extraction failure: {response.text}",
         }
-
+    
     artifact_response = put_artifact_extraction_to_tds(
         artifact_id=artifact_id,
         name=name if name is not None else artifact_json.get("name"),
@@ -133,6 +200,7 @@ def pdf_extractions(*args, **kwargs):
         else artifact_json.get("description"),
         filename=filename,
         extractions=extraction_json,
+        text=artifact_json['metadata'].get("text",None)
     )
 
     if artifact_response.get("status") == 200:

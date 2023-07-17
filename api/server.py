@@ -77,6 +77,27 @@ def code_to_amr(artifact_id: str):
 
     return resp
 
+@app.post("/pdf_to_text")
+async def pdf_to_text(
+    artifact_id: str
+):
+    """Run text extractions over pdfs and stores the text as metadata on the artifact
+
+    Args:
+        `artifact_id`: the id of the artifact to process
+    """
+
+    from utils import create_job
+
+    operation_name = "operations.pdf_to_text"
+
+    options = {
+        "artifact_id": artifact_id
+    }
+
+    resp = create_job(operation_name=operation_name, options=options)
+
+    return resp
 
 @app.post("/pdf_extractions")
 async def pdf_extractions(
