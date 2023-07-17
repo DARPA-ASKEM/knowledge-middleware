@@ -66,6 +66,18 @@ def mathml_to_amr(payload: List[str], model: str = "petrinet"):
     return resp
 
 
+@app.post("/code_to_amr")
+def code_to_amr(artifact_id: str):
+    from utils import create_job
+
+    operation_name = "operations.code_to_amr"
+    options = {"artifact_id": artifact_id}
+
+    resp = create_job(operation_name=operation_name, options=options)
+
+    return resp
+
+
 @app.post("/pdf_extractions")
 async def pdf_extractions(
     artifact_id: str,

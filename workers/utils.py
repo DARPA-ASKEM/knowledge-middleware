@@ -23,10 +23,10 @@ def put_amr_to_tds(amr_payload):
 
     headers = {"Content-Type": "application/json"}
 
-    print(amr_payload)
+    logger.info(amr_payload)
 
     # Create TDS model
-    tds_models = TDS_API + "/models"
+    tds_models = f"{TDS_API}/models"
     model_response = requests.post(tds_models, json=amr_payload, headers=headers)
 
     model_id = model_response.json().get("id")
@@ -54,8 +54,7 @@ def put_amr_to_tds(amr_payload):
 
 def put_artifact_extraction_to_tds(
     artifact_id, name, description, filename, extractions
-):  # TODO change to get artifact from TDS via filename and artifact id maybe
-
+):
     artifact_payload = {
         "username": "extraction_service",
         "name": name,
@@ -66,9 +65,7 @@ def put_artifact_extraction_to_tds(
     logger.info(f"Storing extraction to TDS for artifact: {artifact_id}")
     # Create TDS artifact
     tds_artifact = f"{TDS_API}/artifacts/{artifact_id}"
-    artifact_response = requests.put(
-        tds_artifact, json=artifact_payload
-    )
+    artifact_response = requests.put(tds_artifact, json=artifact_payload)
     logger.info(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
 
@@ -90,13 +87,11 @@ def get_artifact_from_tds(artifact_id):
 
     presigned_download = artifact_download_url.json().get("url")
 
-    print(presigned_download)
-    sys.stdout.flush()
+    logger.info(presigned_download)
 
     downloaded_artifact = requests.get(artifact_download_url.json().get("url"))
 
-    print(f"ARTIFACT RETRIEVAL STATUS:{downloaded_artifact.status_code}")
-    sys.stdout.flush()
+    logger.info(f"ARTIFACT RETRIEVAL STATUS:{downloaded_artifact.status_code}")
 
     return artifact_json, downloaded_artifact.content
 
@@ -107,20 +102,18 @@ def get_dataset_from_tds(dataset_id):
     dataset = requests.get(tds_datasets_url)
     dataset_json = dataset.json()
 
-    print(f"DATASET RESPONSE JSON: {dataset_json}")
-    sys.stdout.flush()
+    logger.info(f"DATASET RESPONSE JSON: {dataset_json}")
 
     dataframes = []
     for filename in dataset_json.get("file_names", []):
         gen_download_url = f"{TDS_API}/datasets/{dataset_id}/download-url?dataset_id={dataset_id}&filename={filename}"
         dataset_download_url = requests.get(gen_download_url)
 
-        print(dataset_download_url)
+        logger.info(f"{dataset_download_url} {dataset_download_url.json().get('url')}")
 
         downloaded_dataset = requests.get(dataset_download_url.json().get("url"))
 
-        print(downloaded_dataset)
-        sys.stdout.flush()
+        logger.info(downloaded_dataset)
 
         dataset_file = io.BytesIO(downloaded_dataset.content)
         dataset_file.seek(0)
