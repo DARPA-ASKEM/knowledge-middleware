@@ -53,14 +53,24 @@ def put_amr_to_tds(amr_payload):
 
 
 def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions
+    artifact_id, name, description, filename, extractions=None, text=None
 ):
+    if extractions and text:
+        metadata = extractions[0]
+        metadata['text'] = text
+    elif extractions:
+        metadata = extractions[0]
+    elif text:
+        metadata = {'text': text}
+    else:
+        metadata = {}
+
     artifact_payload = {
         "username": "extraction_service",
         "name": name,
         "description": description,
         "file_names": [filename],
-        "metadata": extractions[0],
+        "metadata": metadata,
     }
     logger.info(f"Storing extraction to TDS for artifact: {artifact_id}")
     # Create TDS artifact
