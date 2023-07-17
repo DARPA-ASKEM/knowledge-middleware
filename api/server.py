@@ -4,7 +4,7 @@ import io
 
 import pypdf
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, Response, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -111,22 +111,17 @@ async def pdf_extractions(
 
 
 @app.post("/profile_dataset/{dataset_id}")
-def profile_dataset_document(dataset_id: str):
-    from utils import create_job
+def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None):
+    """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which 
+    is expected to be some user uploaded document which has had its text extracted and stored to 
+    `metadata.text`.
 
-    operation_name = "operations.dataset_profiling"
+    > NOTE: if nothing is found within `metadata.text` of the artifact then it is ignored.
 
-    options = {
-        "dataset_id": dataset_id,
-    }
-
-    resp = create_job(operation_name=operation_name, options=options)
-
-    return resp
-
-
-@app.post("/profile_dataset/{dataset_id}/{artifact_id}")
-def profile_dataset_document(dataset_id: str, artifact_id: str = None):
+    Args:
+        dataset_id: the id of the dataset to profile
+        artifact_id [optional]: the id of the artifact (paper/document) associated with the dataset.
+    """    
     from utils import create_job
 
     operation_name = "operations.dataset_profiling_with_document"

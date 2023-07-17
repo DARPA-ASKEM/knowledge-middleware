@@ -153,92 +153,64 @@ def pdf_extractions(*args, **kwargs):
     return response
 
 
-# 2931748e-3932-4cef-b5d7-d0d7e9e7740b
-def dataset_profiling(*args, **kwargs):
-    openai_key = os.getenv("OPENAI_API_KEY")
-    dataset_id = kwargs.get("dataset_id")
-
-    dataset_response, dataset_dataframe, dataset_csv_string = get_dataset_from_tds(
-        dataset_id
-    )
-
-    dataset_json = dataset_response.json()
-
-    # here we perform our 2nd call to the MIT service
-    resp = requests.post(
-        url=f"{MIT_API}/annotation/upload_file_extract/?gpt_key={openai_key}",
-        files={"file": dataset_csv_string},
-    )
-    logger.info(f"MIT ANNOTATIONS: {resp.json()}")
-    mit_annotations = {a["name"]: a for a in resp.json()}
-
-    sys.stdout.flush()
-
-    columns = []
-    for c in dataset_dataframe.columns:
-        annotations = mit_annotations.get(c, {}).get("text_annotations", [])
-        col = {
-            "name": c,
-            "data_type": "float",
-            "description": annotations[0].strip(),
-            "annotations": [],
-            "metadata": {},
-        }
-        columns.append(col)
-
-    dataset_json["columns"] = columns
-
-    resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
-    dataset_id = resp.json()["id"]
-
-    return resp.json()
-
-
 def dataset_profiling_with_document(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
 
     dataset_id = kwargs.get("dataset_id")
     artifact_id = kwargs.get("artifact_id")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+    if artifact_id:
+        artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+        doc_file = artifact_json['metadata'].get('text', 'There is no documentation for this dataset').encode()
+    else:
+        doc_file = b'There is no documentation for this dataset'
+    
+    logger.info(f"document file: {doc_file}")
 
     dataset_response, dataset_dataframe, dataset_csv_string = get_dataset_from_tds(
         dataset_id
     )
     dataset_json = dataset_response.json()
 
-    resp = requests.post(
-        url=f"{MIT_API}/annotation/link_dataset_col_to_dkg",
-        params={
-            "csv_str": dataset_csv_string,
-            "doc": downloaded_artifact,
-            "gpt_key": openai_key,
-        },
-    )
-    mit_groundings = resp.json()
+    params = {
+        'gpt_key': openai_key
+    }
 
-    #######################################
-    # processing the results from MIT into the format
-    # expected by TDS
-    #######################################
+    files = {
+        'csv_file': ('csv_file', dataset_csv_string.encode()),
+        'doc_file': ('doc_file', doc_file)
+    }
+
+    logger.info(f"Sending dataset {dataset_id} to MIT service")
+    
+    resp = requests.post(f"{MIT_API}/cards/get_data_card", params=params, files=files)
+    
+    logger.info(f"Response received from MIT with status: {resp.status_code}")
+    logger.debug(f"MIT ANNOTATIONS: {resp.json()}")
+
+    mit_annotations = resp.json()['DATA_PROFILING_RESULT']
+
+    sys.stdout.flush()
 
     columns = []
     for c in dataset_dataframe.columns:
-        # Skip any single empty strings that are sometimes returned and drop extra items that are sometimes included (usually the string 'class')
-        groundings = {
-            g[0]: g[1]
-            for g in mit_groundings.get(c, None).get("dkg_groundings", None)
-            if g and isinstance(g, list)
-        }
+        annotation = mit_annotations.get(c, {})
+
+        # parse groundings
+        groundings = {'identifiers': {}}
+        for g in annotation.get('dkg_groundings',[]):   
+            groundings['identifiers'][g[0]] = g[1]
+                
+        # remove groundings from annotation object
+        annotation.pop('dkg_groundings')
+        annotation['groundings'] = groundings
+
         col = {
             "name": c,
             "data_type": "float",
-            "description": "",
+            "description": annotation.get('description','').strip() ,
             "annotations": [],
-            "metadata": {},
-            "grounding": {
-                "identifiers": groundings,
-            },
+            "metadata": annotation
         }
         columns.append(col)
 

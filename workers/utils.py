@@ -126,6 +126,6 @@ def get_dataset_from_tds(dataset_id):
     else:
         final_df = dataframes[0]
 
-    csv_string = final_df.to_csv()
+    csv_string = final_df.to_csv(index=False)
 
     return dataset, final_df, csv_string
