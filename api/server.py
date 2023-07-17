@@ -4,7 +4,7 @@ import io
 
 import pypdf
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, Response, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -111,22 +111,7 @@ async def pdf_extractions(
 
 
 @app.post("/profile_dataset/{dataset_id}")
-def profile_dataset_document(dataset_id: str):
-    from utils import create_job
-
-    operation_name = "operations.dataset_profiling"
-
-    options = {
-        "dataset_id": dataset_id,
-    }
-
-    resp = create_job(operation_name=operation_name, options=options)
-
-    return resp
-
-
-@app.post("/profile_dataset/{dataset_id}/{artifact_id}")
-def profile_dataset_document(dataset_id: str, artifact_id: str = None):
+def profile_dataset_document(dataset_id: str, artifact_id: Optional[str] = None):
     from utils import create_job
 
     operation_name = "operations.dataset_profiling_with_document"
