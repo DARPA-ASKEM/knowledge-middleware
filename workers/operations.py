@@ -29,22 +29,32 @@ logger.addHandler(handler)
 
 
 # Worker jobs for TA1 services
-def put_mathml_to_skema(*args, **kwargs):
-    # Get vars
-    mathml = kwargs.get("mathml")
+def equations_to_amr(*args, **kwargs):
+    equation_type = kwargs.get("equation_type")
+    equations = kwargs.get("equations")
     model = kwargs.get("model")
 
-    # PUT the mathml to the skema endpoint.
-    skema_mathml_url = SKEMA_API + "/mathml/amr"
+    if equation_type == "mathml":
+        # PUT the mathml to the skema endpoint.
+        logger.info("Processing mathml")
+        url = f"{SKEMA_API}/mathml/amr"
+        put_payload = {"mathml": equations, "model": model}
+    elif equation_type == "latex":
+        logger.info("Processing latex")
+        url = f"{UNIFIED_API}/workflows/latex/equations-to-amr"
+        put_payload = {"equations": equations, "model": model}
 
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json"}    
 
-    put_payload = {"mathml": mathml, "model": model}
-
-    amr_response = requests.put(
-        skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
-    )
-
+    logger.info(f"Sending equations of type {equation_type} to TA1")
+    if equation_type == "mathml":
+        amr_response = requests.put(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
+    elif equation_type == "latex": 
+        amr_response = requests.post(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
     try:
         amr_json = amr_response.json()
     except:

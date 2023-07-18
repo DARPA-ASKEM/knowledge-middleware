@@ -5,10 +5,14 @@ import io
 import pypdf
 
 from typing import List, Optional
+from enum import Enum
 
 from fastapi import FastAPI, Response, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
+class EquationType(Enum):
+    LATEX = "latex"
+    MATHML = "mathml"
 
 def build_api(*args) -> FastAPI:
     api = FastAPI(
@@ -48,18 +52,21 @@ def get_status(extraction_job_id: str):
     return {"status": status, "result": result}
 
 
-@app.post("/mathml_to_amr")
-def mathml_to_amr(payload: List[str], model: str = "petrinet"):
-    """Post MathML to skema service to get AMR return
+@app.post("/equations_to_amr")
+def equations_to_amr(payload: List[str], equation_type: EquationType, model: str = "petrinet"):
+    """Post equations and store an AMR to TDS
 
     Args:
-        payload (List[str]): A list of MathML strings representing the functions that are used to convert to AMR
+        payload (List[str]): A list of Latex or MathML strings representing the functions that are used to convert to AMR
+        equation_type (str): [latex, mathml]
         model (str, optional): AMR model return type. Defaults to "petrinet". Options: "regnet", "petrinet".
     """
     from utils import create_job
-
-    operation_name = "operations.put_mathml_to_skema"
-    options = {"mathml": payload, "model": model}
+    
+    operation_name = "operations.equations_to_amr"
+    options = {"equations": payload, 
+               "equation_type": equation_type.value, 
+               "model": model}
 
     resp = create_job(operation_name=operation_name, options=options)
 
