@@ -363,8 +363,7 @@ def code_to_amr(*args, **kwargs):
 
     request_payload = {
         "files": [artifact_json.get("file_names")[0]],
-        # "blobs": [code_blob],
-        "blobs": ["x=2"],
+        "blobs": [code_blob]
     }
 
     logger.info(f"Sending code to TA1 service with artifact id: {artifact_id}")
