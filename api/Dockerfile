@@ -4,7 +4,6 @@ WORKDIR /
 
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
-COPY api api
 COPY README.md README.md
 
 FROM python:3.10
@@ -16,6 +15,7 @@ RUN pip install --no-cache-dir poetry==1.5.1
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-cache --extras api
 
+COPY api api
 WORKDIR /api
 
 EXPOSE 8000

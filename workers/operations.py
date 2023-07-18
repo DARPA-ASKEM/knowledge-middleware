@@ -29,29 +29,41 @@ logger.addHandler(handler)
 
 
 # Worker jobs for TA1 services
-def put_mathml_to_skema(*args, **kwargs):
-    # Get vars
-    mathml = kwargs.get("mathml")
+def equations_to_amr(*args, **kwargs):
+    equation_type = kwargs.get("equation_type")
+    equations = kwargs.get("equations")
     model = kwargs.get("model")
+    name = kwargs.get("name")
+    description = kwargs.get("description")
 
-    # PUT the mathml to the skema endpoint.
-    skema_mathml_url = SKEMA_API + "/mathml/amr"
+    if equation_type == "mathml":
+        # PUT the mathml to the skema endpoint.
+        logger.info("Processing mathml")
+        url = f"{SKEMA_API}/mathml/amr"
+        put_payload = {"mathml": equations, "model": model}
+    elif equation_type == "latex":
+        logger.info("Processing latex")
+        url = f"{UNIFIED_API}/workflows/latex/equations-to-amr"
+        put_payload = {"equations": equations, "model": model}
 
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json"}    
 
-    put_payload = {"mathml": mathml, "model": model}
-
-    amr_response = requests.put(
-        skema_mathml_url, data=json.dumps(put_payload, default=str), headers=headers
-    )
-
+    logger.info(f"Sending equations of type {equation_type} to TA1")
+    if equation_type == "mathml":
+        amr_response = requests.put(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
+    elif equation_type == "latex": 
+        amr_response = requests.post(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
     try:
         amr_json = amr_response.json()
     except:
-        logger.error("Failed to parse response from TA1 Service")
+        logger.error(f"Failed to parse response from TA1 Service: {amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
-        tds_responses = put_amr_to_tds(amr_json)
+        tds_responses = put_amr_to_tds(amr_json, name, description)
 
         response = {
             "status_code": amr_response.status_code,
@@ -355,31 +367,34 @@ def link_amr(*args, **kwargs):
 # 60e539e4-6969-4369-a358-c601a3a583da
 def code_to_amr(*args, **kwargs):
     artifact_id = kwargs.get("artifact_id")
+    name = kwargs.get("name")
+    description = kwargs.get("description")
 
     artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
 
     code_blob = downloaded_artifact.decode("utf-8")
-
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
     request_payload = {
         "files": [artifact_json.get("file_names")[0]],
-        "blobs": [code_blob],
+        "blobs": [code_blob]
     }
 
+    logger.info(f"Sending code to TA1 service with artifact id: {artifact_id}")
     amr_response = requests.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
     )
+    logger.info(f"Response received from TA1 with status code: {amr_response.status_code}")
 
     amr_json = amr_response
 
     try:
         amr_json = amr_response.json()
     except:
-        logger.error("Failed to parse response from TA1 Service")
+        logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
-        tds_responses = put_amr_to_tds(amr_json)
+        tds_responses = put_amr_to_tds(amr_json, name, description)
 
         response = {
             "status_code": amr_response.status_code,
@@ -391,6 +406,7 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
+        logger.error(f"Code extraction failure: {amr_response.text}")
         response = {
             "status_code": amr_response.status_code,
             "amr": None,
