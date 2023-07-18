@@ -18,12 +18,17 @@ logger.addHandler(handler)
 TDS_API = os.getenv("TDS_URL")
 
 
-def put_amr_to_tds(amr_payload):
+def put_amr_to_tds(amr_payload, name=None, description=None):
     # Expects json amr payload and puts it to TDS models and model-configurations, returning an ID.
 
     headers = {"Content-Type": "application/json"}
 
-    logger.info(amr_payload)
+    if name:
+        amr_payload['name'] = name
+    if description:
+        amr_payload['description'] = description
+
+    logger.debug(amr_payload)
 
     # Create TDS model
     tds_models = f"{TDS_API}/models"
@@ -49,6 +54,8 @@ def put_amr_to_tds(amr_payload):
 
     config_id = config_response.json().get("id")
 
+    logger.info(f"Created model in TDS with id {model_id}")
+    logger.info(f"Created model config in TDS with id {config_id}")
     return {"model_id": model_id, "configuration_id": config_id}
 
 

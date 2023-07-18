@@ -33,6 +33,8 @@ def equations_to_amr(*args, **kwargs):
     equation_type = kwargs.get("equation_type")
     equations = kwargs.get("equations")
     model = kwargs.get("model")
+    name = kwargs.get("name")
+    description = kwargs.get("description")
 
     if equation_type == "mathml":
         # PUT the mathml to the skema endpoint.
@@ -61,7 +63,7 @@ def equations_to_amr(*args, **kwargs):
         logger.error(f"Failed to parse response from TA1 Service: {amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
-        tds_responses = put_amr_to_tds(amr_json)
+        tds_responses = put_amr_to_tds(amr_json, name, description)
 
         response = {
             "status_code": amr_response.status_code,
@@ -365,6 +367,8 @@ def link_amr(*args, **kwargs):
 # 60e539e4-6969-4369-a358-c601a3a583da
 def code_to_amr(*args, **kwargs):
     artifact_id = kwargs.get("artifact_id")
+    name = kwargs.get("name")
+    description = kwargs.get("description")
 
     artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
 
@@ -390,7 +394,7 @@ def code_to_amr(*args, **kwargs):
         logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
-        tds_responses = put_amr_to_tds(amr_json)
+        tds_responses = put_amr_to_tds(amr_json, name, description)
 
         response = {
             "status_code": amr_response.status_code,
