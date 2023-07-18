@@ -48,7 +48,7 @@ def put_mathml_to_skema(*args, **kwargs):
     try:
         amr_json = amr_response.json()
     except:
-        logger.error("Failed to parse response from TA1 Service")
+        logger.error(f"Failed to parse response from TA1 Service: {amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json)
@@ -359,24 +359,26 @@ def code_to_amr(*args, **kwargs):
     artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
 
     code_blob = downloaded_artifact.decode("utf-8")
-
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
     request_payload = {
         "files": [artifact_json.get("file_names")[0]],
-        "blobs": [code_blob],
+        # "blobs": [code_blob],
+        "blobs": ["x=2"],
     }
 
+    logger.info(f"Sending code to TA1 service with artifact id: {artifact_id}")
     amr_response = requests.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
     )
+    logger.info(f"Response received from TA1 with status code: {amr_response.status_code}")
 
     amr_json = amr_response
 
     try:
         amr_json = amr_response.json()
     except:
-        logger.error("Failed to parse response from TA1 Service")
+        logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json)
@@ -391,6 +393,7 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
+        logger.error(f"Code extraction failure: {amr_response.text}")
         response = {
             "status_code": amr_response.status_code,
             "amr": None,
