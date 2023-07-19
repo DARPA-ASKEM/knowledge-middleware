@@ -6,7 +6,13 @@ import sys
 
 import pandas
 
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+
 import logging
+
+numeric_level = getattr(logging, LOG_LEVEL, None)
+if not isinstance(numeric_level, int):
+    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -60,7 +66,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
 
 
 def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions=None, text=None
+    artifact_id, name, description, filename, extractions=None, text=None, model_id=None
 ):
     if extractions and text:
         metadata = extractions[0]
@@ -69,6 +75,8 @@ def put_artifact_extraction_to_tds(
         metadata = extractions[0]
     elif text:
         metadata = {'text': text}
+    elif model_id:
+        metadata = {'model_id': model_id}
     else:
         metadata = {}
 
@@ -146,3 +154,8 @@ def get_dataset_from_tds(dataset_id):
     csv_string = final_df.to_csv(index=False)
 
     return dataset, final_df, csv_string
+
+def get_model_from_tds(model_id):
+    tds_model_url = f"{TDS_API}/models/{model_id}"
+    model = requests.get(tds_model_url)
+    return model

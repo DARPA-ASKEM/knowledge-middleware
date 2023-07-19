@@ -11,17 +11,23 @@ from utils import (
     put_artifact_extraction_to_tds,
     get_artifact_from_tds,
     get_dataset_from_tds,
+    get_model_from_tds
 )
 
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_RS_URL")
 UNIFIED_API = os.getenv("TA1_UNIFIED_URL")
 MIT_API = os.getenv("MIT_TR_URL")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 
 import logging
 
+numeric_level = getattr(logging, LOG_LEVEL, None)
+if not isinstance(numeric_level, int):
+    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(numeric_level)
 handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
@@ -59,6 +65,7 @@ def equations_to_amr(*args, **kwargs):
         )
     try:
         amr_json = amr_response.json()
+        logger.debug(f"TA 1 response object: {amr_response}")
     except:
         logger.error(f"Failed to parse response from TA1 Service: {amr_response.text}")
 
@@ -112,6 +119,7 @@ def pdf_to_text(*args, **kwargs):
             f"Response received from TA1 with status code: {response.status_code}"
         )
         extraction_json = response.json()
+        logger.debug(f"TA 1 response object: {extraction_json}")
         text = ''
         for d in extraction_json:
             text += f"{d['content']}\n"
@@ -180,6 +188,7 @@ def pdf_extractions(*args, **kwargs):
             f"Response received from TA1 with status code: {response.status_code}"
         )
         extraction_json = response.json()
+        logger.debug(f"TA 1 response object: {extraction_json}")
         outputs = extraction_json["outputs"]
 
         if isinstance(outputs, dict):
@@ -233,7 +242,7 @@ def pdf_extractions(*args, **kwargs):
     return response
 
 
-def dataset_profiling_with_document(*args, **kwargs):
+def data_card(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
 
     dataset_id = kwargs.get("dataset_id")
@@ -266,7 +275,7 @@ def dataset_profiling_with_document(*args, **kwargs):
     resp = requests.post(f"{MIT_API}/cards/get_data_card", params=params, files=files)
     
     logger.info(f"Response received from MIT with status: {resp.status_code}")
-    logger.debug(f"MIT ANNOTATIONS: {resp.json()}")
+    logger.debug(f"TA 1 response object: {resp.json()}")
 
     mit_annotations = resp.json()['DATA_PROFILING_RESULT']
 
@@ -300,6 +309,48 @@ def dataset_profiling_with_document(*args, **kwargs):
     dataset_id = resp.json()["id"]
 
     return resp.json()
+
+def model_card(*args, **kwargs):
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+    model_id = kwargs.get("model_id")
+    paper_artifact_id = kwargs.get("paper_artifact_id")
+    code_artifact_id = kwargs.get("code_artifact_id")
+
+    
+    paper_artifact_json, paper_downloaded_artifact = get_artifact_from_tds(artifact_id=paper_artifact_id)
+    code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(artifact_id=code_artifact_id)
+
+    text_file = paper_artifact_json['metadata'].get('text', 'There is no documentation for this model').encode()
+    code_file = code_downloaded_artifact.decode('utf-8')
+    logger.debug(f"Code file: {code_file}")
+    
+    amr = get_model_from_tds(model_id).json()
+
+    params = {
+        'gpt_key': openai_key
+    }
+
+    files = {
+        'text_file': ('text_file', text_file),
+        'code_file': ('doc_file', code_file)
+    }
+
+    logger.info(f"Sending model {model_id} to MIT service")
+    
+    resp = requests.post(f"{MIT_API}/cards/get_model_card", params=params, files=files)
+    
+    logger.info(f"Response received from MIT with status: {resp.status_code}")
+    logger.debug(f"TA 1 response object: {resp.json()}")
+
+    # mit_annotations = resp.json()['DATA_PROFILING_RESULT']
+
+    # sys.stdout.flush()
+
+    # resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    # dataset_id = resp.json()["id"]
+
+    # return resp.json()
 
 
 # dccde3a0-0132-430c-afd8-c67953298f48
@@ -338,6 +389,7 @@ def link_amr(*args, **kwargs):
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
 
     response = requests.post(skema_amr_linking_url, files=files, params=params)
+    logger.debug(f"TA 1 response object: {response.json()}")
 
     if response.status_code == 200:
         enriched_amr = response.json()
@@ -390,11 +442,20 @@ def code_to_amr(*args, **kwargs):
 
     try:
         amr_json = amr_response.json()
+        logger.debug(f"TA 1 response object: {amr_json}")
     except:
         logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
+
+        put_artifact_extraction_to_tds(
+            artifact_id=artifact_id,
+            name=artifact_json.get("name", None),
+            filename=artifact_json.get("file_names")[0],
+            description=artifact_json.get("description", None),
+            model_id=tds_responses.get("model_id")
+        )
 
         response = {
             "status_code": amr_response.status_code,
