@@ -323,7 +323,7 @@ def model_card(*args, **kwargs):
 
     text_file = paper_artifact_json['metadata'].get('text', 'There is no documentation for this model').encode()
     code_file = code_downloaded_artifact.decode('utf-8')
-    logger.debug(f"Code file: {code_file}")
+    logger.debug(f"Code file head (250 chars): {code_file[:250]}")
     
     amr = get_model_from_tds(model_id).json()
 
@@ -339,19 +339,41 @@ def model_card(*args, **kwargs):
     logger.info(f"Sending model {model_id} to MIT service")
     
     resp = requests.post(f"{MIT_API}/cards/get_model_card", params=params, files=files)
-    
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
+    
+    if resp.status_code == 200:    
+        try:
+            card = resp.json()
+            sys.stdout.flush()
 
-    # mit_annotations = resp.json()['DATA_PROFILING_RESULT']
-
-    # sys.stdout.flush()
-
-    # resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
-    # dataset_id = resp.json()["id"]
-
-    # return resp.json()
-
+            amr['description'] = card.get('DESCRIPTION')
+            if not amr.get('metadata',None):
+                amr['metadata'] = {'card': card}
+            else:
+                amr['metadata']['card'] = card
+        
+            tds_resp = requests.put(f"{TDS_API}/models/{model_id}", json=amr)
+            if tds_resp.status_code == 200:
+                logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")        
+                return  {
+                    "status": tds_resp.status_code,
+                    "message": "Model card generated and updated in TDS",
+                }
+            else:
+                raise Exception(f"Error when updating model {model_id} in TDS: {tds_resp.status_code}")
+        except Exception as e:
+            logger.error(f"Failed to generate model card for {model_id}: {e}")
+            return {
+                "status": 500,
+                "message": f"Error: {e}",
+            }
+    else:
+        logger.error(f"Bad response from TA1 for {model_id}: {resp.status_code}")
+        return {
+            "status": {resp.status_code},
+            "message": f"Error: {resp.text}",
+        }        
 
 # dccde3a0-0132-430c-afd8-c67953298f48
 # 77a2dffb-08b3-4f6e-bfe5-83d27ed259c4
@@ -425,6 +447,7 @@ def code_to_amr(*args, **kwargs):
     artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
 
     code_blob = downloaded_artifact.decode("utf-8")
+    logger.info(code_blob[:250])
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
     request_payload = {
@@ -445,6 +468,7 @@ def code_to_amr(*args, **kwargs):
         logger.debug(f"TA 1 response object: {amr_json}")
     except:
         logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
+        pass
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
