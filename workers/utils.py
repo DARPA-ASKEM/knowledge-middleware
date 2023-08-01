@@ -159,3 +159,50 @@ def get_model_from_tds(model_id):
     tds_model_url = f"{TDS_API}/models/{model_id}"
     model = requests.get(tds_model_url)
     return model
+
+
+def set_provenance(
+    left_id, left_type, right_id, right_type, relation_type
+):
+    """
+    Creates a provenance record in TDS. Used during code to model to associate the 
+    code artifact with the model AMR
+    """
+
+    provenance_payload = {
+        "relation_type": relation_type,
+        "left": left_id,
+        "left_type": left_type,
+        "right": right_id,
+        "right_type": right_type
+        }
+
+    # Create TDS provenance
+    tds_provenance = f"{TDS_API}/provenance"
+    provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+    if provenance_resp.status_code == 200:        
+        logger.info(f"Stored provenance to TDS for left {left_id} and right {right_id}")
+    else:
+        logger.error(f"Storing provenance failed: {provenance_resp.text}")
+
+    return {"status": provenance_resp.status_code}
+
+def find_source_code(
+        model_id
+):
+    """
+    For a given model id, finds the associated source code artifact from which it was extracted
+    """
+
+    payload = {
+            "root_id": model_id,
+            "root_type": "Model"
+            }
+    
+    tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
+    resp = requests.post(tds_provenance, json=payload)
+    results = resp.json().get('result',[])
+    if len(results) > 0:
+        return results[0]
+    else:
+        return None

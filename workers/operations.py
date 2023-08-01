@@ -11,7 +11,8 @@ from utils import (
     put_artifact_extraction_to_tds,
     get_artifact_from_tds,
     get_dataset_from_tds,
-    get_model_from_tds
+    get_model_from_tds,
+    set_provenance
 )
 
 TDS_API = os.getenv("TDS_URL")
@@ -480,6 +481,11 @@ def code_to_amr(*args, **kwargs):
             description=artifact_json.get("description", None),
             model_id=tds_responses.get("model_id")
         )
+
+        try:
+            set_provenance(tds_responses.get("model_id"), 'Model', artifact_id, 'Artifact', 'EXTRACTED_FROM')
+        except Exception as e:
+            logger.error(f"Failed to store provenance tying model to code artifact: {e}")
 
         response = {
             "status_code": amr_response.status_code,
