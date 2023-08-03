@@ -1,14 +1,14 @@
 # WIP
 from __future__ import annotations
+
+import logging
 import os
+import sys
 import time
 import uuid
-import json
-import sys
-import requests
 from ast import Dict
-from typing import Any, Optional
 from copy import deepcopy
+from typing import Any, Optional
 
 from fastapi import Response, status
 from redis import Redis
@@ -16,10 +16,7 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-from models import ExtractionJob
-
-# LOGGING
-import logging
+from api.models import ExtractionJob
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)

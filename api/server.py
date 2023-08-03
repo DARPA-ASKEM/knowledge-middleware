@@ -6,7 +6,9 @@ from typing import Annotated, List, Optional
 
 from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
-from models import EquationType, ExtractionJob
+
+from api.models import EquationType, ExtractionJob
+from api.utils import create_job, fetch_job_status
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
@@ -45,7 +47,6 @@ def get_status(extraction_job_id: str) -> ExtractionJob:
     """
     Retrieve the status of a extraction
     """
-    from utils import fetch_job_status
 
     extraction_job_status = fetch_job_status(extraction_job_id)
     if (
@@ -78,7 +79,6 @@ def equations_to_amr(
         description (str, optional): the description to set on the newly created model
     ```
     """
-    from utils import create_job
 
     operation_name = "operations.equations_to_amr"
     options = {
@@ -109,8 +109,6 @@ def code_to_amr(
         description (str, optional): the description to set on the newly created model
     ```
     """
-    from utils import create_job
-
     operation_name = "operations.code_to_amr"
     options = {"artifact_id": artifact_id, "name": name, "description": description}
 
@@ -126,9 +124,6 @@ def pdf_to_text(artifact_id: str) -> ExtractionJob:
     Args:
         `artifact_id`: the id of the artifact to process
     """
-
-    from utils import create_job
-
     operation_name = "operations.pdf_to_text"
 
     options = {"artifact_id": artifact_id}
@@ -151,9 +146,6 @@ async def pdf_extractions(
     Args:
         pdf (UploadFile, optional): The pdf to run extractions over. Defaults to File(...).
     """
-
-    from utils import create_job
-
     operation_name = "operations.pdf_extractions"
 
     # text_content = text_content[: len(text_content) // 2]
@@ -184,8 +176,6 @@ def profile_dataset(
         dataset_id: the id of the dataset to profile
         artifact_id [optional]: the id of the artifact (paper/document) associated with the dataset.
     """
-    from utils import create_job
-
     operation_name = "operations.dataset_card"
 
     options = {
@@ -211,8 +201,6 @@ def profile_model(model_id: str, paper_artifact_id: str) -> ExtractionJob:
         model_id: the id of the model to profile
         paper_artifact_id: the id of the paper artifact
     """
-    from utils import create_job
-
     operation_name = "operations.model_card"
 
     options = {"model_id": model_id, "paper_artifact_id": paper_artifact_id}
@@ -225,7 +213,6 @@ def profile_model(model_id: str, paper_artifact_id: str) -> ExtractionJob:
 @app.post("/link_amr")
 def link_amr(artifact_id: str, model_id: str) -> ExtractionJob:
     raise HTTPException(status_code=501, detail="Endpoint is under development")
-    from utils import create_job
 
     operation_name = "operations.link_amr"
 

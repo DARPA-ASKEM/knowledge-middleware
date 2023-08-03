@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -20,7 +21,7 @@ class Status(Enum):
 class Result(BaseModel):
     created_at: datetime
     enqueued_at: datetime
-    started_at: datetime
+    started_at: datetime | None
     job_result: dict | None
     job_error: str | None
 
