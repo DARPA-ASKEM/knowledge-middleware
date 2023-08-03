@@ -18,8 +18,14 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+
+numeric_level = getattr(logging, LOG_LEVEL, None)
+if not isinstance(numeric_level, int):
+    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+
 logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(numeric_level)
 
 
 # REDIS CONNECTION AND QUEUE OBJECTS

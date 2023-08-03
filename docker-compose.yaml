@@ -6,7 +6,7 @@ networks:
   data-api:
     external: true
 services:
-  api:
+  extraction-api:
     container_name: api-ta1-extraction-service
     build:
       context: ./

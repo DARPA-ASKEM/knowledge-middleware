@@ -6,7 +6,13 @@ import sys
 
 import pandas
 
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+
 import logging
+
+numeric_level = getattr(logging, LOG_LEVEL, None)
+if not isinstance(numeric_level, int):
+    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -60,7 +66,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
 
 
 def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions=None, text=None
+    artifact_id, name, description, filename, extractions=None, text=None, model_id=None
 ):
     if extractions and text:
         metadata = extractions[0]
@@ -69,6 +75,8 @@ def put_artifact_extraction_to_tds(
         metadata = extractions[0]
     elif text:
         metadata = {'text': text}
+    elif model_id:
+        metadata = {'model_id': model_id}
     else:
         metadata = {}
 
@@ -146,3 +154,56 @@ def get_dataset_from_tds(dataset_id):
     csv_string = final_df.to_csv(index=False)
 
     return dataset, final_df, csv_string
+
+def get_model_from_tds(model_id):
+    tds_model_url = f"{TDS_API}/models/{model_id}"
+    model = requests.get(tds_model_url)
+    return model
+
+
+def set_provenance(
+    left_id, left_type, right_id, right_type, relation_type
+):
+    """
+    Creates a provenance record in TDS. Used during code to model to associate the 
+    code artifact with the model AMR
+    """
+
+    provenance_payload = {
+        "relation_type": relation_type,
+        "left": left_id,
+        "left_type": left_type,
+        "right": right_id,
+        "right_type": right_type
+        }
+
+    # Create TDS provenance
+    tds_provenance = f"{TDS_API}/provenance"
+    provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+    if provenance_resp.status_code == 200:        
+        logger.info(f"Stored provenance to TDS for left {left_id} and right {right_id}")
+    else:
+        logger.error(f"Storing provenance failed: {provenance_resp.text}")
+
+    return {"status": provenance_resp.status_code}
+
+def find_source_code(
+        model_id
+):
+    """
+    For a given model id, finds the associated source code artifact from which it was extracted
+    """
+
+    payload = {
+            "root_id": model_id,
+            "root_type": "Model"
+            }
+
+    tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
+    resp = requests.post(tds_provenance, json=payload)
+    logger.info(f"Provenance code lookup for model ID {model_id}: {resp.json()}")
+    results = resp.json().get('result',[])
+    if len(results) > 0:
+        return results[0]
+    else:
+        return None
