@@ -198,9 +198,10 @@ def find_source_code(
             "root_id": model_id,
             "root_type": "Model"
             }
-    
+
     tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
     resp = requests.post(tds_provenance, json=payload)
+    logger.info(f"Provenance code lookup for model ID {model_id}: {resp.json()}")
     results = resp.json().get('result',[])
     if len(results) > 0:
         return results[0]

@@ -12,7 +12,8 @@ from utils import (
     get_artifact_from_tds,
     get_dataset_from_tds,
     get_model_from_tds,
-    set_provenance
+    set_provenance,
+    find_source_code
 )
 
 TDS_API = os.getenv("TDS_URL")
@@ -313,18 +314,25 @@ def data_card(*args, **kwargs):
 
 def model_card(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
-
     model_id = kwargs.get("model_id")
     paper_artifact_id = kwargs.get("paper_artifact_id")
-    code_artifact_id = kwargs.get("code_artifact_id")
 
-    
-    paper_artifact_json, paper_downloaded_artifact = get_artifact_from_tds(artifact_id=paper_artifact_id)
-    code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(artifact_id=code_artifact_id)
-
-    text_file = paper_artifact_json['metadata'].get('text', 'There is no documentation for this model').encode()
-    code_file = code_downloaded_artifact.decode('utf-8')
+    try:
+        code_artifact_id = find_source_code(model_id)
+        if code_artifact_id:
+            code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(artifact_id=code_artifact_id)
+            code_file = code_downloaded_artifact.decode('utf-8')
+        else:
+            logger.info(f"No associated code artifact found for model {model_id}")
+            code_file = "No available code associated with model."
+    except Exception as e:
+        logger.error(f"Issue finding associated source code: {e}")
+        code_file = "No available code associated with model."
+        
     logger.debug(f"Code file head (250 chars): {code_file[:250]}")
+
+    paper_artifact_json, paper_downloaded_artifact = get_artifact_from_tds(artifact_id=paper_artifact_id)
+    text_file = paper_artifact_json['metadata'].get('text', 'There is no documentation for this model').encode()
     
     amr = get_model_from_tds(model_id).json()
 

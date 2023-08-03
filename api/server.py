@@ -188,7 +188,7 @@ def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None):
     return resp
 
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, paper_artifact_id: str, code_artifact_id: str):
+def profile_model(model_id: str, paper_artifact_id: str):
     """Profile model with MIT's profiling service. This takes in a paper and code artifact 
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
     has been extracted with `/pdf_to_text` and the code has been converted to an AMR
@@ -199,7 +199,6 @@ def profile_model(model_id: str, paper_artifact_id: str, code_artifact_id: str):
     Args:
         model_id: the id of the model to profile
         paper_artifact_id: the id of the paper artifact
-        code_artifact_id: the id of the code artifact
     """    
     from utils import create_job
 
@@ -207,8 +206,7 @@ def profile_model(model_id: str, paper_artifact_id: str, code_artifact_id: str):
 
     options = {
         "model_id": model_id,
-        "paper_artifact_id": paper_artifact_id,
-        "code_artifact_id": code_artifact_id,
+        "paper_artifact_id": paper_artifact_id
     }
 
     resp = create_job(operation_name=operation_name, options=options)
