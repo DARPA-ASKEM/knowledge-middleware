@@ -1,13 +1,12 @@
-from typing import List, Optional, Annotated
-from enum import Enum
-
-from fastapi import FastAPI, Path, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-
-from models import ExtractionJob, EquationType
-
 # LOGGING
-import logging, os
+import logging
+import os
+from enum import Enum
+from typing import Annotated, List, Optional
+
+from fastapi import FastAPI, HTTPException, Path, status
+from fastapi.middleware.cors import CORSMiddleware
+from models import EquationType, ExtractionJob
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
@@ -72,7 +71,7 @@ def equations_to_amr(
 
     Args:
     ```
-        payload (List[str]): A list of Latex or MathML strings representing the functions that are used to convert to AMR
+        payload (List[str]): A list of LaTeX or MathML strings representing the functions that are used to convert to AMR
         equation_type (str): [latex, mathml]
         model (str, optional): AMR model return type. Defaults to "petrinet". Options: "regnet", "petrinet".
         name (str, optional): the name to set on the newly created model
