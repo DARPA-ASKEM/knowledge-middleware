@@ -5,15 +5,17 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
+
 class Status(Enum):
     started = "started"
-    finished = "finished"    
+    finished = "finished"
     cancelled = "cancelled"
     complete = "complete"
     error = "error"
     queued = "queued"
     running = "running"
     failed = "failed"
+
 
 class Result(BaseModel):
     created_at: datetime
@@ -22,10 +24,12 @@ class Result(BaseModel):
     job_result: dict | None
     job_error: str | None
 
+
 class ExtractionJob(BaseModel):
     id: str
     status: Status
     result: Result | None
+
 
 class EquationType(Enum):
     LATEX = "latex"

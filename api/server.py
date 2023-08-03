@@ -8,12 +8,14 @@ from models import ExtractionJob, EquationType
 
 # LOGGING
 import logging, os
+
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
-    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+    raise ValueError(f"Invalid log level: {LOG_LEVEL}")
 logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
+
 
 def build_api(*args) -> FastAPI:
     api = FastAPI(
@@ -47,9 +49,14 @@ def get_status(extraction_job_id: str) -> ExtractionJob:
     from utils import fetch_job_status
 
     extraction_job_status = fetch_job_status(extraction_job_id)
-    if isinstance(extraction_job_status, int) and extraction_job_status == status.HTTP_404_NOT_FOUND:
-        raise HTTPException(status_code=404, 
-                            detail=f"Extraction Job with ID {extraction_job_id} not found")
+    if (
+        isinstance(extraction_job_status, int)
+        and extraction_job_status == status.HTTP_404_NOT_FOUND
+    ):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Extraction Job with ID {extraction_job_id} not found",
+        )
     return extraction_job_status
 
 
@@ -165,7 +172,9 @@ async def pdf_extractions(
 
 
 @app.post("/profile_dataset/{dataset_id}")
-def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None) -> ExtractionJob:
+def profile_dataset(
+    dataset_id: str, artifact_id: Optional[str] = None
+) -> ExtractionJob:
     """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which
     is expected to be some user uploaded document which has had its text extracted and stored to
     `metadata.text`.

@@ -20,10 +20,11 @@ from models import ExtractionJob
 
 # LOGGING
 import logging
+
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
-    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+    raise ValueError(f"Invalid log level: {LOG_LEVEL}")
 logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
 
@@ -104,7 +105,7 @@ def fetch_job_status(job_id):
             "enqueued_at": job.enqueued_at,
             "started_at": job.started_at,
             "job_error": job.exc_info,
-            "job_result": job.result            
+            "job_result": job.result,
         }
         return ExtractionJob(id=job_id, status=job.get_status(), result=result)
     except NoSuchJobError:
