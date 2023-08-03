@@ -1,23 +1,24 @@
-from __future__ import annotations
-
-import io
-
-import pypdf
-
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from enum import Enum
 
-from fastapi import FastAPI, Response, status, UploadFile, File
+from fastapi import FastAPI, Path, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-class EquationType(Enum):
-    LATEX = "latex"
-    MATHML = "mathml"
+from models import ExtractionJob, EquationType
+
+# LOGGING
+import logging, os
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+numeric_level = getattr(logging, LOG_LEVEL, None)
+if not isinstance(numeric_level, int):
+    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+logging.basicConfig()
+logging.getLogger().setLevel(numeric_level)
 
 def build_api(*args) -> FastAPI:
     api = FastAPI(
-        title="TA 1 Extraction Service",
-        description="Service for running the extraction pipelines from artifact to AMR.",
+        title="Extraction Service",
+        description="Middleware for managing interactions with various TA1 services.",
         docs_url="/",
     )
     origins = [
@@ -39,25 +40,27 @@ app = build_api()
 
 
 @app.get("/status/{extraction_job_id}")
-def get_status(extraction_job_id: str):
+def get_status(extraction_job_id: str) -> ExtractionJob:
     """
     Retrieve the status of a extraction
     """
     from utils import fetch_job_status
 
-    status, result = fetch_job_status(extraction_job_id)
-    if not isinstance(status, str):
-        return status
-
-    return {"status": status, "result": result}
+    extraction_job_status = fetch_job_status(extraction_job_id)
+    if isinstance(extraction_job_status, int) and extraction_job_status == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=404, 
+                            detail=f"Extraction Job with ID {extraction_job_id} not found")
+    return extraction_job_status
 
 
 @app.post("/equations_to_amr")
-def equations_to_amr(payload: List[str], 
-                     equation_type: EquationType, 
-                     model: str = "petrinet", 
-                     name: Optional[str] = None, 
-                     description: Optional[str] = None):
+def equations_to_amr(
+    payload: List[str],
+    equation_type: EquationType,
+    model: str = "petrinet",
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> ExtractionJob:
     """Post equations and store an AMR to TDS
 
     Args:
@@ -66,26 +69,29 @@ def equations_to_amr(payload: List[str],
         equation_type (str): [latex, mathml]
         model (str, optional): AMR model return type. Defaults to "petrinet". Options: "regnet", "petrinet".
         name (str, optional): the name to set on the newly created model
-        description (str, optional): the description to set on the newly created model        
+        description (str, optional): the description to set on the newly created model
     ```
     """
     from utils import create_job
-    
+
     operation_name = "operations.equations_to_amr"
-    options = {"equations": payload, 
-               "equation_type": equation_type.value, 
-               "model": model,
-               "name": name,
-               "description": description}
+    options = {
+        "equations": payload,
+        "equation_type": equation_type.value,
+        "model": model,
+        "name": name,
+        "description": description,
+    }
 
     resp = create_job(operation_name=operation_name, options=options)
 
     return resp
 
+
 @app.post("/code_to_amr")
-def code_to_amr(artifact_id: str, 
-                name: Optional[str] = None, 
-                description: Optional[str] = None):
+def code_to_amr(
+    artifact_id: str, name: Optional[str] = None, description: Optional[str] = None
+) -> ExtractionJob:
     """
     Converts a code artifact to an AMR. Assumes that the code file is the first
     file (and only) attached to the artifact.
@@ -100,18 +106,15 @@ def code_to_amr(artifact_id: str,
     from utils import create_job
 
     operation_name = "operations.code_to_amr"
-    options = {"artifact_id": artifact_id,
-               "name": name,
-               "description": description}
+    options = {"artifact_id": artifact_id, "name": name, "description": description}
 
     resp = create_job(operation_name=operation_name, options=options)
 
     return resp
 
+
 @app.post("/pdf_to_text")
-async def pdf_to_text(
-    artifact_id: str
-):
+def pdf_to_text(artifact_id: str) -> ExtractionJob:
     """Run text extractions over pdfs and stores the text as metadata on the artifact
 
     Args:
@@ -122,13 +125,12 @@ async def pdf_to_text(
 
     operation_name = "operations.pdf_to_text"
 
-    options = {
-        "artifact_id": artifact_id
-    }
+    options = {"artifact_id": artifact_id}
 
     resp = create_job(operation_name=operation_name, options=options)
 
     return resp
+
 
 @app.post("/pdf_extractions")
 async def pdf_extractions(
@@ -137,7 +139,7 @@ async def pdf_extractions(
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
-):
+) -> ExtractionJob:
     """Run text extractions over pdfs
 
     Args:
@@ -163,9 +165,9 @@ async def pdf_extractions(
 
 
 @app.post("/profile_dataset/{dataset_id}")
-def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None):
-    """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which 
-    is expected to be some user uploaded document which has had its text extracted and stored to 
+def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None) -> ExtractionJob:
+    """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which
+    is expected to be some user uploaded document which has had its text extracted and stored to
     `metadata.text`.
 
     > NOTE: if nothing is found within `metadata.text` of the artifact then it is ignored.
@@ -173,7 +175,7 @@ def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None):
     Args:
         dataset_id: the id of the dataset to profile
         artifact_id [optional]: the id of the artifact (paper/document) associated with the dataset.
-    """    
+    """
     from utils import create_job
 
     operation_name = "operations.dataset_card"
@@ -187,9 +189,10 @@ def profile_dataset(dataset_id: str, artifact_id: Optional[str] = None):
 
     return resp
 
+
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, paper_artifact_id: str):
-    """Profile model with MIT's profiling service. This takes in a paper and code artifact 
+def profile_model(model_id: str, paper_artifact_id: str) -> ExtractionJob:
+    """Profile model with MIT's profiling service. This takes in a paper and code artifact
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
     has been extracted with `/pdf_to_text` and the code has been converted to an AMR
     with `/code_to_amr`
@@ -199,15 +202,12 @@ def profile_model(model_id: str, paper_artifact_id: str):
     Args:
         model_id: the id of the model to profile
         paper_artifact_id: the id of the paper artifact
-    """    
+    """
     from utils import create_job
 
     operation_name = "operations.model_card"
 
-    options = {
-        "model_id": model_id,
-        "paper_artifact_id": paper_artifact_id
-    }
+    options = {"model_id": model_id, "paper_artifact_id": paper_artifact_id}
 
     resp = create_job(operation_name=operation_name, options=options)
 
@@ -215,7 +215,8 @@ def profile_model(model_id: str, paper_artifact_id: str):
 
 
 @app.post("/link_amr")
-def link_amr(artifact_id: str, model_id: str):
+def link_amr(artifact_id: str, model_id: str) -> ExtractionJob:
+    raise HTTPException(status_code=501, detail="Endpoint is under development")
     from utils import create_job
 
     operation_name = "operations.link_amr"

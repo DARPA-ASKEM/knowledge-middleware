@@ -84,15 +84,7 @@ def equations_to_amr(*args, **kwargs):
 
         return response
     else:
-        response = {
-            "status_code": amr_response.status_code,
-            "amr": None,
-            "tds_model_id": None,
-            "tds_configuration_id": None,
-            "error": amr_response.text,
-        }
-
-        return response
+        raise Exception(f"Error encountered converting equations to text: {amr_response.text}") from None
 
 
 def pdf_to_text(*args, **kwargs):
@@ -127,13 +119,10 @@ def pdf_to_text(*args, **kwargs):
             text += f"{d['content']}\n"
             
     except ValueError:
-        return {
-            "status_code": 500,
-            "extraction": None,
-            "artifact_id": None,
-            "error": f"Extraction failure: {response.text}",
-        }
-
+        raise Exception(f"Extraction failure: {response.text}" \
+                        f"with status code {response.status_code}") \
+                        from None
+    
     artifact_response = put_artifact_extraction_to_tds(
         artifact_id=artifact_id,
         name=artifact_json.get("name", None),
@@ -147,16 +136,12 @@ def pdf_to_text(*args, **kwargs):
             "extraction_status_code": response.status_code,
             "extraction": extraction_json,
             "tds_status_code": artifact_response.get("status"),
-            "error": None,
         }
     else:
-        response = {
-            "extraction_status_code": response.status_code,
-            "extraction": extraction_json,
-            "tds_status_code": artifact_response.get("status"),
-            "error": "PUT extraction metadata to TDS failed, please check TDS api logs.",
-        }
-
+        raise Exception(f"PUT extraction metadata to TDS failed with status" \
+                        f"{artifact_response.get('status')} please check TDS api logs.") \
+                        from None
+    
     return response
 
 def pdf_extractions(*args, **kwargs):
@@ -195,25 +180,17 @@ def pdf_extractions(*args, **kwargs):
 
         if isinstance(outputs, dict):
             if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
-                logger.error(f"Malformed or empty response from TA1: {extraction_json}")
-                raise ValueError
+                raise ValueError(f"Malformed or empty response from TA1: {extraction_json}")
             else:
                 extraction_json = extraction_json.get("outputs").get("data")
         elif isinstance(outputs, list):
             if extraction_json.get("outputs")[0].get("data") is None:
-                logger.error(f"Malformed or empty response from TA1: {extraction_json}")
-                raise ValueError
+                raise ValueError(f"Malformed or empty response from TA1: {extraction_json}")
             else:            
                 extraction_json = [extraction_json.get("outputs")[0].get("data")]
 
     except ValueError:
-        logger.error(f"Extraction for artifact {artifact_id} failed.")
-        return {
-            "status_code": 500,
-            "extraction": None,
-            "artifact_id": None,
-            "error": f"Extraction failure: {response.text}",
-        }
+        raise ValueError(f"Extraction for artifact {artifact_id} failed.")
     
     artifact_response = put_artifact_extraction_to_tds(
         artifact_id=artifact_id,
@@ -234,12 +211,9 @@ def pdf_extractions(*args, **kwargs):
             "error": None,
         }
     else:
-        response = {
-            "extraction_status_code": response.status_code,
-            "extraction": extraction_json,
-            "tds_status_code": artifact_response.get("status"),
-            "error": "PUT extraction metadata to TDS failed, please check TDS api logs.",
-        }
+        raise Exception(f"PUT extraction metadata to TDS failed with status" \
+                        f"{artifact_response.get('status')} please check TDS api logs.") \
+                        from None
 
     return response
 
@@ -275,6 +249,8 @@ def data_card(*args, **kwargs):
     logger.info(f"Sending dataset {dataset_id} to MIT service")
     
     resp = requests.post(f"{MIT_API}/cards/get_data_card", params=params, files=files)
+    if resp.status_code != 200:
+        raise Exception(f"Failed response from MIT: {resp.status_code}")
     
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
@@ -307,10 +283,14 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
-    resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
-    dataset_id = resp.json()["id"]
-
-    return resp.json()
+    tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    if tds_resp.status_code != 200:
+        raise Exception(f"PUT extraction metadata to TDS failed with status please check TDS api logs: {tds_resp.status_code}") from None
+    
+    return  {
+        "status": tds_resp.status_code,
+        "message": "Data card generated and updated in TDS",
+    }
 
 def model_card(*args, **kwargs):
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -372,17 +352,10 @@ def model_card(*args, **kwargs):
             else:
                 raise Exception(f"Error when updating model {model_id} in TDS: {tds_resp.status_code}")
         except Exception as e:
-            logger.error(f"Failed to generate model card for {model_id}: {e}")
-            return {
-                "status": 500,
-                "message": f"Error: {e}",
-            }
+            raise Exception(f"Failed to generate model card for {model_id}: {e}")
+
     else:
-        logger.error(f"Bad response from TA1 for {model_id}: {resp.status_code}")
-        return {
-            "status": {resp.status_code},
-            "message": f"Error: {resp.text}",
-        }        
+        raise Exception(f"Bad response from TA1 for {model_id}: {resp.status_code}")
 
 # dccde3a0-0132-430c-afd8-c67953298f48
 # 77a2dffb-08b3-4f6e-bfe5-83d27ed259c4
@@ -439,13 +412,7 @@ def link_amr(*args, **kwargs):
             "message": "Model enriched and updated in TDS",
         }
     else:
-        logging.error("Response from TA1 service was not 200")
-
-        return {
-            "status": response.status_code,
-            "message": f"Response from TA1 service was not 200: {response.text}",
-        }
-
+        raise Exception("Response from TA1 service was not 200: {response.text}")
 
 # 60e539e4-6969-4369-a358-c601a3a583da
 def code_to_amr(*args, **kwargs):
@@ -477,7 +444,6 @@ def code_to_amr(*args, **kwargs):
         logger.debug(f"TA 1 response object: {amr_json}")
     except:
         logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
-        pass
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
@@ -505,13 +471,4 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
-        logger.error(f"Code extraction failure: {amr_response.text}")
-        response = {
-            "status_code": amr_response.status_code,
-            "amr": None,
-            "tds_model_id": None,
-            "tds_configuration_id": None,
-            "error": amr_response.text,
-        }
-
-        return response
+        raise Exception(f"Code extraction failure: {amr_response.text}")

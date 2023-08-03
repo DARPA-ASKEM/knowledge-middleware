@@ -1,7 +1,5 @@
 # WIP
 from __future__ import annotations
-
-import logging
 import os
 import time
 import uuid
@@ -18,15 +16,16 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+from models import ExtractionJob
 
+# LOGGING
+import logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
     raise ValueError(f'Invalid log level: {LOG_LEVEL}')
-
 logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
-
 
 # REDIS CONNECTION AND QUEUE OBJECTS
 redis = Redis(
@@ -77,16 +76,14 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
         job_result = None
         job_error = None
 
-    response = {
-        "id": job_id,
+    result = {
         "created_at": job.created_at,
         "enqueued_at": job.enqueued_at,
         "started_at": job.started_at,
-        "status": status,
-        "extraction_error": job_error,
-        "result": job_result,
+        "job_error": job_error,
+        "job_result": job_result,
     }
-    return response
+    return ExtractionJob(id=job_id, status=status, result=result)
 
 
 def fetch_job_status(job_id):
@@ -102,13 +99,13 @@ def fetch_job_status(job_id):
     """
     try:
         job = Job.fetch(job_id, connection=redis)
-        # r = job.latest_result()
-        # string_res = r.return_value
-        job_status = job.get_status()
-        if job_status in ("finished", "failed"):
-            result = job.result
-        else:
-            result = None
-        return job_status, result
+        result = {
+            "created_at": job.created_at,
+            "enqueued_at": job.enqueued_at,
+            "started_at": job.started_at,
+            "job_error": job.exc_info,
+            "job_result": job.result            
+        }
+        return ExtractionJob(id=job_id, status=job.get_status(), result=result)
     except NoSuchJobError:
-        return status.HTTP_404_NOT_FOUND, "Simulation job with id = {job_id} not found"
+        return status.HTTP_404_NOT_FOUND
