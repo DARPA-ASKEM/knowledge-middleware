@@ -1,8 +1,0 @@
-[
-    "\\frac{dS}{dt} = - \\beta I \\frac{S}{N}",
-    "\\frac{dE}{dt} = \\beta I \\frac{S}{N} - r_{EI}E",
-    "\\frac{dI}{dt} = r_{EI}E - r_{IR}p_{IR}I - r_{IH}p_{IH}I",
-    "\\frac{dH}{dt} = r_{IH}p_{IH}I - r_{HR}p_{HR}H - r_{HD}p_{HD}H",
-    "\\frac{dR}{dt} = r_{IR}p_{IR}I + r_{HR}p_{HR}H",
-    "\\frac{dD}{dt} = r_{HD}p_{HD}H"
-]
