@@ -1,8 +1,8 @@
 import json
 import os
 import sys
-from datetime import datetime
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+
+from unittest.mock import Mock, patch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "workers"))
 
