@@ -74,7 +74,7 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
 
     status = job.get_status()
     if status in ("finished", "failed"):
-        job_result = job.result
+        job_result = job.return_value()
         job_error = job.exc_info
         job.cleanup(ttl=0)  # Cleanup/remove data immediately
     else:
@@ -109,7 +109,7 @@ def fetch_job_status(job_id):
             "enqueued_at": job.enqueued_at,
             "started_at": job.started_at,
             "job_error": job.exc_info,
-            "job_result": job.result,
+            "job_result": job.return_value(),
         }
         return ExtractionJob(id=job_id, status=job.get_status(), result=result)
     except NoSuchJobError:
