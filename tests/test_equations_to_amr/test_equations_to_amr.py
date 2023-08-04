@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "workers"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../..", "workers"))
 
 # Create a test application
 from fastapi.testclient import TestClient
@@ -25,7 +25,7 @@ queue = Queue(is_async=False, connection=FakeStrictRedis())
 def test_equations_to_amr(mock_queue, mock_post):
     # The mock responses
     mock_ta1_response = Mock()
-    amr = json.loads(open("tests/data/test_equations_to_amr/amr.json").read())
+    amr = json.loads(open("tests/test_equations_to_amr/amr.json").read())
     mock_ta1_response.json.return_value = amr
     mock_ta1_response.text = json.dumps(amr)
     mock_ta1_response.status_code = 200
@@ -40,7 +40,7 @@ def test_equations_to_amr(mock_queue, mock_post):
     mock_post.side_effect = [mock_ta1_response, mock_tds_response, mock_tds_response]
 
     # The endpoint parameters
-    payload = open("tests/data/test_equations_to_amr/equations.txt").read()
+    payload = open("tests/test_equations_to_amr/equations.txt").read()
 
     # Define the query parameters
     query_params = {

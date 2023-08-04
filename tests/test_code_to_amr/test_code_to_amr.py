@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "workers"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../..", "workers"))
 
 # Create a test application
 from fastapi.testclient import TestClient
@@ -51,14 +51,14 @@ def test_code_to_amr(mock_queue, mock_post, mock_get, mock_put):
 
     # Mock the downloaded code
     mock_code = Mock()
-    mock_code.content = open("tests/data/test_code_to_amr/code.py").read().encode()
+    mock_code.content = open("tests/test_code_to_amr/code.py").read().encode()
     mock_code.status_code = 200
 
     # Mock all gets with side effects
     mock_get.side_effect = [mock_tds_artifact, mock_presigned_download_url, mock_code]
 
     mock_ta1_response = Mock()
-    amr = json.loads(open("tests/data/test_code_to_amr/amr.json").read())
+    amr = json.loads(open("tests/test_code_to_amr/amr.json").read())
     mock_ta1_response.json.return_value = amr
     mock_ta1_response.text = json.dumps(amr)
     mock_ta1_response.status_code = 200

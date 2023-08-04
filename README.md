@@ -12,6 +12,29 @@ The extraction service will have several key endpoints:
 - profiling of a dataset
 - model to dataset alignment suggestion
 
+## Testing
+You can run the tests by initializing the environment:
+
+```
+poetry install
+poetry shell
+```
+
+Then from the top of the repo run:
+
+```
+pytest tests
+```
+
+You can generate a coverage report with:
+
+```
+pytest --cov . tests
+```
+
+> You can add the flag ` --cov-report html` to generate an HTML report
+
+
 ## License
 
 [Apache License 2.0](LICENSE)
