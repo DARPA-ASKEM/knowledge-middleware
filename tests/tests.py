@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "workers"))
 
@@ -21,20 +21,26 @@ from rq import Queue
 queue = Queue(is_async=False, connection=FakeStrictRedis())
 
 
-@patch("workers.utils.equation_to_amr_call")  # mock actual call to TA1
-@patch("workers.utils.put_amr_to_tds")  # mock put to TDS after retrieval of AMR
+# Note that the patches have to be in reverse order of the
+# test function arguments
+@patch("requests.post")  # patch anytime a POST is made
 @patch("api.utils.get_queue", return_value=queue)  # mock the redis queue
-def test_equations_to_amr(mock_ta1_response, mock_tds_response, mock_queue):
+def test_equations_to_amr_endpoint(mock_queue, mock_post):
     # The mock responses
+    mock_ta1_response = Mock()
     amr = json.loads(open("tests/data/test_1_equations_to_amr/amr.json").read())
     mock_ta1_response.json.return_value = amr
     mock_ta1_response.text = json.dumps(amr)
     mock_ta1_response.status_code = 200
 
-    tds_response = {"model_id": "123", "configuration_id": "456"}
+    # Note: this mock response is used for both POSTs
+    # made by TDS including a POST to /models and to /model_configurations
     mock_tds_response = Mock()
-    mock_tds_response.return_value = tds_response
+    tds_response = {"id": "123"}
+    mock_tds_response.json.return_value = tds_response
     mock_tds_response.status_code = 200
+
+    mock_post.side_effect = [mock_ta1_response, mock_tds_response, mock_tds_response]
 
     # The endpoint parameters
     payload = open("tests/data/test_1_equations_to_amr/equations.txt").read()
@@ -54,15 +60,16 @@ def test_equations_to_amr(mock_ta1_response, mock_tds_response, mock_queue):
         data=payload,
         headers={"Content-Type": "application/json"},
     )
-
-    print(response.json())
+    results = response.json()
 
     # Assert the status code and response
     assert response.status_code == 200
-    assert response.json() == {
+    assert results.get("status") == "finished"
+    assert results.get("job_error") == None
+    assert results.get("result", {}).get("job_result") == {
         "status_code": 200,
         "amr": amr,
-        "tds_model_id": tds_response.get("model_id"),
-        "tds_configuration_id": tds_response.get("configuration_id"),
+        "tds_model_id": tds_response.get("id"),
+        "tds_configuration_id": tds_response.get("id"),
         "error": None,
     }
