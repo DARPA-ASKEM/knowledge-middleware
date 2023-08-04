@@ -58,7 +58,7 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
     mock_get.side_effect = [mock_tds_artifact, mock_presigned_download_url, mock_paper]
 
     mock_ta1_response = Mock()
-    text = [{"content": "extracted pdf text content here"}]
+    text = json.loads(open("tests/test_pdf_to_text/text.json").read())
     mock_ta1_response.json.return_value = text
     mock_ta1_response.text = json.dumps(text)
     mock_ta1_response.status_code = 200
