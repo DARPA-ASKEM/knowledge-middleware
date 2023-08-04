@@ -153,22 +153,21 @@ def pdf_extractions(*args, **kwargs):
     name = kwargs.get("name")
     description = kwargs.get("description")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(
-        artifact_id=artifact_id
-    )  # Assumes  downloaded artifact is PDF, doesn't type check
-    filename = artifact_json.get("file_names")[0]
+    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+
+    text = artifact_json.get("metadata", {}).get("text", None)
+    if not text:
+        raise Exception(
+            "No text found in paper artifact, please ensure to submit to /pdf_to_text endpoint."
+        )
 
     # Try to feed text to the unified service
-    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-pdf-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
-    # headers = {"Content-Type": "application/json"}
-
-    put_payload = [
-        ("pdfs", (filename, io.BytesIO(downloaded_artifact), "application/pdf"))
-    ]
+    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
+    payload = {"texts": text}
 
     try:
         logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
-        response = requests.post(unified_text_reading_url, files=put_payload)
+        response = requests.post(unified_text_reading_url, json=payload)
         logger.info(
             f"Response received from TA1 with status code: {response.status_code}"
         )
@@ -190,6 +189,7 @@ def pdf_extractions(*args, **kwargs):
                 )
             else:
                 extraction_json = [extraction_json.get("outputs")[0].get("data")]
+                logging.info("HERE!")
 
     except ValueError:
         raise ValueError(f"Extraction for artifact {artifact_id} failed.")
@@ -200,7 +200,7 @@ def pdf_extractions(*args, **kwargs):
         description=description
         if description is not None
         else artifact_json.get("description"),
-        filename=filename,
+        filename=artifact_json.get("file_names")[0],
         extractions=extraction_json,
         text=artifact_json["metadata"].get("text", None),
     )

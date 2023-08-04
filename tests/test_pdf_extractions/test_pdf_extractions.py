@@ -24,8 +24,12 @@ queue = Queue(is_async=False, connection=FakeStrictRedis())
 @patch("requests.get")  # patch anytime a GET is made
 @patch("requests.post")  # patch anytime a POST is made
 @patch("api.utils.get_queue", return_value=queue)  # mock the redis queue
-def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
+def test_pdf_extractions(mock_queue, mock_post, mock_get, mock_put):
     # The mock responses
+    text_json = json.loads(open("tests/test_pdf_extractions/text.json").read())
+    text = ""
+    for d in text_json:
+        text += f"{d['content']}\n"
 
     # Mock the TDS artifact
     mock_tds_artifact = Mock()
@@ -36,7 +40,7 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
         "description": "test paper",
         "timestamp": "2023-07-17T19:11:43",
         "file_names": ["paper.pdf"],
-        "metadata": {},
+        "metadata": {"text": text},
     }
     mock_tds_artifact.json.return_value = artifact
     mock_tds_artifact.text = json.dumps(artifact)
@@ -49,7 +53,7 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
         "method": "GET",
     }
 
-    # Mock the downloaded code
+    # Mock the downloaded paper
     mock_paper = Mock()
     mock_paper.content = "some encoded PDF content goes here".encode()
     mock_paper.status_code = 200
@@ -58,9 +62,9 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
     mock_get.side_effect = [mock_tds_artifact, mock_presigned_download_url, mock_paper]
 
     mock_ta1_response = Mock()
-    text = json.loads(open("tests/test_pdf_to_text/text.json").read())
-    mock_ta1_response.json.return_value = text
-    mock_ta1_response.text = json.dumps(text)
+    extractions = json.loads(open("tests/test_pdf_extractions/extractions.json").read())
+    mock_ta1_response.json.return_value = extractions
+    mock_ta1_response.text = json.dumps(extractions)
     mock_ta1_response.status_code = 200
 
     # Mock all posts with side effects
@@ -68,7 +72,9 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
 
     # Mock the TDS artifact
     mock_updated_tds_artifact = Mock()
-    artifact["metadata"] = {"text": "extracted pdf text content here"}
+    ex = extractions["outputs"][0]["data"]
+    ex["text"] = text
+    artifact["metadata"] = ex
     mock_updated_tds_artifact.json.return_value = artifact
     mock_updated_tds_artifact.text = json.dumps(artifact)
     mock_updated_tds_artifact.status_code = 200
@@ -77,16 +83,23 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
     mock_put.side_effect = [mock_updated_tds_artifact]
 
     # Define the query parameters
-    query_params = {"artifact_id": artifact_id}
+    query_params = {
+        "artifact_id": artifact_id,
+        "annotate_skema": True,
+        "annotate_mit": True,
+        "name": None,
+        "description": None,
+    }
 
     # Call the endpoint
     response = client.post(
-        "/pdf_to_text",
+        "/pdf_extractions",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
-    print(results)
+    print("printing results keys")
+    print(results.keys())
 
     # Assert the status code and response
     assert response.status_code == 200
@@ -94,6 +107,7 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
     assert results.get("job_error") == None
     assert results.get("result", {}).get("job_result") == {
         "extraction_status_code": mock_ta1_response.status_code,
-        "extraction": mock_ta1_response.json(),
+        "extraction": [extractions["outputs"][0]["data"]],
         "tds_status_code": mock_updated_tds_artifact.status_code,
+        "error": None,
     }

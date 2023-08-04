@@ -91,7 +91,7 @@ def put_artifact_extraction_to_tds(
     # Create TDS artifact
     tds_artifact = f"{TDS_API}/artifacts/{artifact_id}"
     artifact_response = requests.put(tds_artifact, json=artifact_payload)
-    logger.info(f"TDS response: {artifact_response.text}")
+    logger.debug(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
 
     return {"status": artifact_put_status}
