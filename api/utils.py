@@ -30,10 +30,17 @@ redis = Redis(
     os.environ.get("REDIS_HOST", "redis.ta1-extraction-service"),
     os.environ.get("REDIS_PORT", "6379"),
 )
+
 q = Queue(connection=redis, default_timeout=-1)
 
 
+def get_queue():
+    return q
+
+
 def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
+    q = get_queue()
+
     if options is None:
         options = {}
 
@@ -53,17 +60,17 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
 
     if not job or force_restart:
         flattened_options = deepcopy(options)
-        job = q.enqueue_call(
-            func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
-        )
-        if synchronous:
-            timer = 0.0
-            while (
-                job.get_status(refresh=True) not in ("finished", "failed")
-                and timer < timeout
-            ):
-                time.sleep(recheck_delay)
-                timer += recheck_delay
+    job = q.enqueue_call(
+        func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
+    )
+    if synchronous:
+        timer = 0.0
+        while (
+            job.get_status(refresh=True) not in ("finished", "failed")
+            and timer < timeout
+        ):
+            time.sleep(recheck_delay)
+            timer += recheck_delay
 
     status = job.get_status()
     if status in ("finished", "failed"):

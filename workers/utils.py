@@ -1,10 +1,10 @@
-import json
 import io
+import json
 import os
-import requests
 import sys
 
 import pandas
+import requests
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 
@@ -22,6 +22,18 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 TDS_API = os.getenv("TDS_URL")
+
+
+def equation_to_amr_call(equation_type, url, put_payload, headers):
+    if equation_type == "mathml":
+        amr_response = requests.put(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
+    elif equation_type == "latex":
+        amr_response = requests.post(
+            url, data=json.dumps(put_payload, default=str), headers=headers
+        )
+    return amr_response
 
 
 def put_amr_to_tds(amr_payload, name=None, description=None):

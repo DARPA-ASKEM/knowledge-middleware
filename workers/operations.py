@@ -1,20 +1,15 @@
 import io
 import json
 import os
-import urllib
 import sys
-import requests
-import pandas
+import urllib
 
-from utils import (
-    put_amr_to_tds,
-    put_artifact_extraction_to_tds,
-    get_artifact_from_tds,
-    get_dataset_from_tds,
-    get_model_from_tds,
-    set_provenance,
-    find_source_code,
-)
+import pandas
+import requests
+from utils import (equation_to_amr_call, find_source_code,
+                   get_artifact_from_tds, get_dataset_from_tds,
+                   get_model_from_tds, put_amr_to_tds,
+                   put_artifact_extraction_to_tds, set_provenance)
 
 TDS_API = os.getenv("TDS_URL")
 SKEMA_API = os.getenv("SKEMA_RS_URL")
@@ -57,14 +52,7 @@ def equations_to_amr(*args, **kwargs):
     headers = {"Content-Type": "application/json"}
 
     logger.info(f"Sending equations of type {equation_type} to TA1")
-    if equation_type == "mathml":
-        amr_response = requests.put(
-            url, data=json.dumps(put_payload, default=str), headers=headers
-        )
-    elif equation_type == "latex":
-        amr_response = requests.post(
-            url, data=json.dumps(put_payload, default=str), headers=headers
-        )
+    amr_response = equation_to_amr_call(equation_type, url, put_payload, headers)
     try:
         amr_json = amr_response.json()
         logger.debug(f"TA 1 response object: {amr_response}")
