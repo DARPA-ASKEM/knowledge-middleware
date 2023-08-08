@@ -1,8 +1,14 @@
 import json
-from unittest.mock import Mock, patch, DEFAULT
+from unittest.mock import Mock, patch
 import os
 import requests
 import sys
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+from tests.test_utils import AMR
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../..", "workers"))
 
@@ -18,6 +24,7 @@ from rq import Queue
 
 queue = Queue(is_async=False, connection=FakeStrictRedis())
 
+live = os.environ.get("LIVE", "FALSE")
 
 ##############################
 ##### The mock responses #####
@@ -92,15 +99,14 @@ def decide_post_response(*args, **kwargs):
     to be sent out (e.g. to TA1 live service) for true integration testing.
     """
     url = args[0]  # Assuming the first argument to requests.post is the URL
-    live = os.environ.get("LIVE", "FALSE")
     if "tds" in url:
-        print("Mocking response from TDS")
+        logger.info("Mocking response from TDS")
         return mock_tds_response
-    if "ta1" in url:
-        print("Mocking response from TA1")
+    if "ta1" in url and live == "FALSE":
+        logger.info("Mocking response from TA1")
         return mock_ta1_response
     elif live == "TRUE":
-        print("Sending request to LIVE TA1 Service")
+        logger.info("Sending request to LIVE TA1 Service")
         return original_post(*args, **kwargs)  # Call the original
 
 
@@ -112,47 +118,62 @@ def decide_post_response(*args, **kwargs):
 # Note that the patches have to be in reverse order of the
 # test function arguments
 @patch("requests.put")  # patch anytime a PUT is made
-@patch("requests.get")  # patch anytime a GET is made
 @patch(
     "requests.post", side_effect=decide_post_response
 )  # patch anytime a POST is made
 @patch("api.utils.get_queue", return_value=queue)  # mock the redis queue
-def test_code_to_amr(mock_queue, mock_post, mock_get, mock_put):
-    # response from TDS for artifact
-    # response from TDS for presigned URL
-    # response from S3 to pull down the code file
-    mock_get.side_effect = [mock_tds_artifact, mock_presigned_download_url, mock_code]
+def test_code_to_amr(mock_queue, mock_post, mock_put):
+    # Added patch on requests.get internal to the function via a `with`
+    # so we can end the patch prior to validating the AMR response
+    # in the event we are running LIVE
+    with patch("requests.get") as mock_get:  # patch anytime a GET is made
+        # response from TDS for artifact
+        # response from TDS for presigned URL
+        # response from S3 to pull down the code file
+        mock_get.side_effect = [
+            mock_tds_artifact,
+            mock_presigned_download_url,
+            mock_code,
+        ]
 
-    # response from TDS after updateing artifact
-    mock_put.side_effect = [mock_updated_tds_artifact]
+        # response from TDS after updating artifact
+        mock_put.side_effect = [mock_updated_tds_artifact]
 
-    # Define the query parameters
-    query_params = {
-        "artifact_id": artifact_id,
-        "name": "test model",
-        "description": "test description",
-    }
+        # Define the query parameters
+        query_params = {
+            "artifact_id": artifact_id,
+            "name": "test model",
+            "description": "test description",
+        }
 
-    # Call the endpoint
-    response = client.post(
-        "/code_to_amr",
-        params=query_params,
-        headers={"Content-Type": "application/json"},
-    )
-    results = response.json()
-    print(results)
+        # Call the endpoint
+        response = client.post(
+            "/code_to_amr",
+            params=query_params,
+            headers={"Content-Type": "application/json"},
+        )
+        results = response.json()
 
-    # Assert the status code and response
-    assert response.status_code == 200
-    assert results.get("status") == "finished"
-    assert results.get("job_error") == None
+        # Assert the status code and response
+        assert response.status_code == 200
+        assert results.get("status") == "finished", results.get("result", {}).get(
+            "job_error"
+        )
+        assert results.get("result", {}).get("job_error") == None
 
-    # TODO: in case of LIVE situation, don't test the exact response `amr`
-    # TODO: instead test that the result amr is schema compliant
-    assert results.get("result", {}).get("job_result") == {
-        "status_code": 200,
-        "amr": amr,
-        "tds_model_id": tds_response.get("id"),
-        "tds_configuration_id": tds_response.get("id"),
-        "error": None,
-    }
+    if live == "FALSE":
+        assert results.get("result", {}).get("job_result") == {
+            "status_code": 200,
+            "amr": amr,
+            "tds_model_id": tds_response.get("id"),
+            "tds_configuration_id": tds_response.get("id"),
+            "error": None,
+        }
+
+    # If testing live, we focus on validating the AMR against its provided JSON Schema
+    elif live == "TRUE":
+        result_amr = results.get("result", {}).get("job_result", {}).get("amr", None)
+        amr_instance = AMR(result_amr)
+        assert (
+            amr_instance.is_valid()
+        ), f"AMR failed to validate to its provided schema: {amr_instance.get_validation_error()}"

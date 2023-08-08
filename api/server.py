@@ -176,7 +176,7 @@ def profile_dataset(
         dataset_id: the id of the dataset to profile
         artifact_id [optional]: the id of the artifact (paper/document) associated with the dataset.
     """
-    operation_name = "operations.dataset_card"
+    operation_name = "operations.data_card"
 
     options = {
         "dataset_id": dataset_id,

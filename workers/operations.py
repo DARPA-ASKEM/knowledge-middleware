@@ -29,7 +29,9 @@ if not isinstance(numeric_level, int):
 logger = logging.getLogger(__name__)
 logger.setLevel(numeric_level)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - [%(lineno)d] - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -164,7 +166,7 @@ def pdf_extractions(*args, **kwargs):
 
     # Try to feed text to the unified service
     unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
-    payload = {"texts": text}
+    payload = {"texts": [text]}
 
     try:
         logger.info(
@@ -175,7 +177,7 @@ def pdf_extractions(*args, **kwargs):
             f"Response received from TA1 with status code: {response.status_code}"
         )
         extraction_json = response.json()
-        logger.debug(f"TA 1 response object: {extraction_json}")
+        logger.debug(f"TA 1 response object: {response.text}")
         outputs = extraction_json["outputs"]
 
         if isinstance(outputs, dict):
@@ -242,7 +244,7 @@ def data_card(*args, **kwargs):
     else:
         doc_file = b"There is no documentation for this dataset"
 
-    logger.info(f"document file: {doc_file}")
+    logger.debug(f"document file: {doc_file}")
 
     dataset_response, dataset_dataframe, dataset_csv_string = get_dataset_from_tds(
         dataset_id
