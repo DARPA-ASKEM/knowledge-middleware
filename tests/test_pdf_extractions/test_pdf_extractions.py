@@ -98,8 +98,6 @@ def test_pdf_extractions(mock_queue, mock_post, mock_get, mock_put):
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
-    print("printing results keys")
-    print(results.keys())
 
     # Assert the status code and response
     assert response.status_code == 200

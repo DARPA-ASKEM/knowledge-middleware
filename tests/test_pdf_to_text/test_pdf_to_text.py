@@ -86,7 +86,6 @@ def test_pdf_to_text(mock_queue, mock_post, mock_get, mock_put):
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
-    print(results)
 
     # Assert the status code and response
     assert response.status_code == 200

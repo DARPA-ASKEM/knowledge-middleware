@@ -178,11 +178,19 @@ def set_provenance(left_id, left_type, right_id, right_type, relation_type):
 
     # Create TDS provenance
     tds_provenance = f"{TDS_API}/provenance"
-    provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+    logger.info(f"Storing provenance to {tds_provenance}")
+    try:
+        provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+    except Exception as e:
+        logger.error(e)
+        logger.info(provenance_resp.text)
+        logger.info(provenance_resp.status_code)
     if provenance_resp.status_code == 200:
         logger.info(f"Stored provenance to TDS for left {left_id} and right {right_id}")
     else:
-        logger.error(f"Storing provenance failed: {provenance_resp.text}")
+        logger.error(
+            f"Storing provenance failed at {tds_provenance}: {provenance_resp.text}"
+        )
 
     return {"status": provenance_resp.status_code}
 

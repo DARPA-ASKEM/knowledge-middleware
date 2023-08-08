@@ -54,8 +54,7 @@ def equations_to_amr(*args, **kwargs):
 
     headers = {"Content-Type": "application/json"}
 
-    logger.info(f"Sending equations of type {equation_type} to TA1")
-    # amr_response = equation_to_amr_call(equation_type, url, put_payload, headers)
+    logger.info(f"Sending equations of type {equation_type} to TA1 at {url}")
     if equation_type == "mathml":
         amr_response = requests.put(
             url, data=json.dumps(put_payload, default=str), headers=headers
@@ -105,7 +104,9 @@ def pdf_to_text(*args, **kwargs):
     ]
 
     try:
-        logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
+        logger.info(
+            f"Sending PDF to TA1 service with artifact id {artifact_id} at {unified_text_reading_url}"
+        )
         response = requests.post(unified_text_reading_url, files=put_payload)
         logger.info(
             f"Response received from TA1 with status code: {response.status_code}"
@@ -166,7 +167,9 @@ def pdf_extractions(*args, **kwargs):
     payload = {"texts": text}
 
     try:
-        logger.info(f"Sending PDF to TA1 service with artifact id: {artifact_id}")
+        logger.info(
+            f"Sending PDF to TA1 service with artifact id {artifact_id} at {unified_text_reading_url}"
+        )
         response = requests.post(unified_text_reading_url, json=payload)
         logger.info(
             f"Response received from TA1 with status code: {response.status_code}"
@@ -253,9 +256,9 @@ def data_card(*args, **kwargs):
         "doc_file": ("doc_file", doc_file),
     }
 
-    logger.info(f"Sending dataset {dataset_id} to MIT service")
-
-    resp = requests.post(f"{MIT_API}/cards/get_data_card", params=params, files=files)
+    url = f"{MIT_API}/cards/get_data_card"
+    logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
+    resp = requests.post(url, params=params, files=files)
     if resp.status_code != 200:
         raise Exception(f"Failed response from MIT: {resp.status_code}")
 
@@ -341,9 +344,10 @@ def model_card(*args, **kwargs):
         "code_file": ("doc_file", code_file),
     }
 
-    logger.info(f"Sending model {model_id} to MIT service")
+    url = f"{MIT_API}/cards/get_model_card"
+    logger.info(f"Sending model {model_id} to MIT service at {url}")
 
-    resp = requests.post(f"{MIT_API}/cards/get_model_card", params=params, files=files)
+    resp = requests.post(url, params=params, files=files)
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
@@ -451,7 +455,9 @@ def code_to_amr(*args, **kwargs):
         "blobs": [code_blob],
     }
 
-    logger.info(f"Sending code to TA1 service with artifact id: {artifact_id}")
+    logger.info(
+        f"Sending code to TA1 service with artifact id: {artifact_id} at {code_amr_workflow_url}"
+    )
     amr_response = requests.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
     )
