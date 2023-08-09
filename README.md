@@ -1,5 +1,7 @@
 # Terarium TA1 Middleware Service
 
+[![codecov](https://codecov.io/github/DARPA-ASKEM/TA1-Service/branch/main/graph/badge.svg?token=XEARJHESHY)](https://codecov.io/github/DARPA-ASKEM/TA1-Service)
+
 The TA1 Middleware Service is designed to provide an intermediate job queue for management of long running TA1 extraction and profiling tasks. It enables the Terarium HMI to request TA1 tasks to be performed asynchronously, with robust error handling, and with customized ETL of TA1 responses into Terarium specific schemas and specifications. It currently supports the following functions:
 
 1. Equation to AMR: both LaTeX and MathML
