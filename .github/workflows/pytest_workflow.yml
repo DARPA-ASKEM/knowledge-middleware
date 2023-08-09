@@ -1,0 +1,43 @@
+name: PyTest and Coverage
+
+on:
+  pull_request:
+    branches:
+      - main  # Or whichever is your default branch
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.10  # Change this to your project's Python version
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+
+    - name: Install dependencies with Poetry
+      run: |
+        poetry install
+
+    - name: Run tests with coverage using Poetry
+      run: |
+        poetry run pytest tests --cov=./
+
+    - name: Upload coverage to codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true  # Set to true if CI should fail when codecov fails
