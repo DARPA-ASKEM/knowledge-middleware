@@ -1,9 +1,9 @@
-name: PyTest and Coverage
+name: Tests
 
 on:
   pull_request:
     branches:
-      - main  # Or whichever is your default branch
+      - main 
   push:
     branches:
       - codecov
@@ -37,15 +37,9 @@ jobs:
       run: |
         poetry run pytest tests --cov=./ --cov-report=term --cov-report=xml:coverage.xml
 
-    - name: List directory for debugging
-      run: ls -la      
-
-    - name: what is current directory
-      run: pwd      
-
     - name: Upload coverage to codecov
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-        fail_ci_if_error: true  # Set to true if CI should fail when codecov fails
+        fail_ci_if_error: true
