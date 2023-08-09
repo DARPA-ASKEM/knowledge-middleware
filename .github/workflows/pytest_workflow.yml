@@ -35,7 +35,7 @@ jobs:
 
     - name: Run tests with coverage using Poetry
       run: |
-        poetry run pytest tests --cov=./
+        poetry run pytest tests --cov=./ --cov-report=term --cov-report=xml:coverage.xml
 
     - name: List directory for debugging
       run: ls -la      
@@ -47,5 +47,5 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: /home/runner/work/TA1-Service/TA1-Service/.coverage
+        file: ./coverage.xml
         fail_ci_if_error: true  # Set to true if CI should fail when codecov fails
