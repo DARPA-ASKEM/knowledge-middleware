@@ -37,6 +37,9 @@ jobs:
       run: |
         poetry run pytest tests --cov=./
 
+    - name: List directory for debugging
+      run: ls -la
+
     - name: Upload coverage to codecov
       uses: codecov/codecov-action@v3
       with:
