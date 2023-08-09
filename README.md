@@ -1,16 +1,22 @@
-# Exctraction service
+# Terarium TA1 Middleware Service
 
-TA1 repository to interface with Terarium tools to interface with TA1 services.
+The TA1 Middleware Service is designed to provide an intermediate job queue for management of long running TA1 extraction and profiling tasks. It enables the Terarium HMI to request TA1 tasks to be performed asynchronously, with robust error handling, and with customized ETL of TA1 responses into Terarium specific schemas and specifications. It currently supports the following functions:
 
-## Goals
+1. Equation to AMR: both LaTeX and MathML
+2. Code to AMR: code snippets only
+3. PDF to text: via Cosmos
+4. PDF Extraction: via SKEMA
+5. Data Card: via MIT
+6. Model Card: via MIT
+7. TODO: Model/Paper Linking
 
-The extraction service will be hosted inside xDD to support extractions over non-open access documents: in this way, Terarium users will be able to work with models from non-public papers.
 
-The extraction service will have several key endpoints:
-- summarization/literature review
-- extraction of a model
-- profiling of a dataset
-- model to dataset alignment suggestion
+## Quickstart
+
+1. Run `make init` which will create a stub `api.env` file. 
+2. Ensure that `api.env` contains the correct endpoint and other information 
+3. Run `make up`
+
 
 ## Testing
 You can run the tests by initializing the environment:
@@ -34,6 +40,9 @@ pytest --cov . tests
 
 > You can add the flag ` --cov-report html` to generate an HTML report
 
+### Testing Configuration
+
+To modify your test configuration, edit the `tests/conftest.py` file. In particular note that setting `LIVE` to `TRUE` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
 
 ## License
 
