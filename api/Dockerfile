@@ -15,8 +15,9 @@ RUN pip install --no-cache-dir poetry==1.5.1
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-cache --extras api
 
-COPY api api
-WORKDIR /api
+COPY api extraction-service/api
+WORKDIR /extraction-service
 
 EXPOSE 8000
+ENV PYTHONPATH=/extraction-service/api
 CMD [ "uvicorn", "server:app", "--reload", "--host", "0.0.0.0", "--port", "8000" ]

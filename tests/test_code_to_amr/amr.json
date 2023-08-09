@@ -1,0 +1,90 @@
+{
+  "name":"mathml model",
+  "schema":"https://github.com/DARPA-ASKEM/Model-Representations/blob/main/petrinet/petrinet_schema.json",
+  "schema_name":"PetriNet",
+  "description":"This is a model from mathml equations",
+  "model_version":"0.1",
+  "model":{
+     "states":[
+        {
+           "id":"i",
+           "name":"i"
+        },
+        {
+           "id":"r",
+           "name":"r"
+        },
+        {
+           "id":"s",
+           "name":"s"
+        }
+     ],
+     "transitions":[
+        {
+           "id":"t0",
+           "input":[
+              "i"
+           ],
+           "output":[
+              "r"
+           ],
+           "grounding":null
+        }
+     ]
+  },
+  "semantics":{
+     "ode":{
+        "rates":[
+           {
+              "target":"t0",
+              "expression":"gamma*i*",
+              "expression_mathml":"<apply><times/><ci>i</ci><ci>gamma</ci></apply>"
+           }
+        ],
+        "initials":[
+           {
+              "target":"s",
+              "expression":"s0",
+              "expression_mathml":""
+           },
+           {
+              "target":"i",
+              "expression":"i0",
+              "expression_mathml":""
+           },
+           {
+              "target":"r",
+              "expression":"r0",
+              "expression_mathml":""
+           }
+        ],
+        "parameters":[
+           {
+              "id":"beta",
+              "name":"beta",
+              "description":"beta rate"
+           },
+           {
+              "id":"gamma",
+              "name":"gamma",
+              "description":"gamma rate"
+           },
+           {
+              "id":"i0",
+              "name":"i0",
+              "description":"The total i population at timestep 0"
+           },
+           {
+              "id":"r0",
+              "name":"r0",
+              "description":"The total r population at timestep 0"
+           },
+           {
+              "id":"s0",
+              "name":"s0",
+              "description":"The total s population at timestep 0"
+           }
+        ]
+     }
+  }
+}

@@ -1,10 +1,10 @@
-import json
 import io
+import json
 import os
-import requests
 import sys
 
 import pandas
+import requests
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 
@@ -12,12 +12,14 @@ import logging
 
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
-    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
+    raise ValueError(f"Invalid log level: {LOG_LEVEL}")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - [%(lineno)d] - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -30,9 +32,9 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
     headers = {"Content-Type": "application/json"}
 
     if name:
-        amr_payload['name'] = name
+        amr_payload["name"] = name
     if description:
-        amr_payload['description'] = description
+        amr_payload["description"] = description
 
     logger.debug(amr_payload)
 
@@ -70,13 +72,13 @@ def put_artifact_extraction_to_tds(
 ):
     if extractions and text:
         metadata = extractions[0]
-        metadata['text'] = text
+        metadata["text"] = text
     elif extractions:
         metadata = extractions[0]
     elif text:
-        metadata = {'text': text}
+        metadata = {"text": text}
     elif model_id:
-        metadata = {'model_id': model_id}
+        metadata = {"model_id": model_id}
     else:
         metadata = {}
 
@@ -91,7 +93,7 @@ def put_artifact_extraction_to_tds(
     # Create TDS artifact
     tds_artifact = f"{TDS_API}/artifacts/{artifact_id}"
     artifact_response = requests.put(tds_artifact, json=artifact_payload)
-    logger.info(f"TDS response: {artifact_response.text}")
+    logger.debug(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
 
     return {"status": artifact_put_status}
@@ -155,17 +157,16 @@ def get_dataset_from_tds(dataset_id):
 
     return dataset, final_df, csv_string
 
+
 def get_model_from_tds(model_id):
     tds_model_url = f"{TDS_API}/models/{model_id}"
     model = requests.get(tds_model_url)
     return model
 
 
-def set_provenance(
-    left_id, left_type, right_id, right_type, relation_type
-):
+def set_provenance(left_id, left_type, right_id, right_type, relation_type):
     """
-    Creates a provenance record in TDS. Used during code to model to associate the 
+    Creates a provenance record in TDS. Used during code to model to associate the
     code artifact with the model AMR
     """
 
@@ -174,35 +175,39 @@ def set_provenance(
         "left": left_id,
         "left_type": left_type,
         "right": right_id,
-        "right_type": right_type
-        }
+        "right_type": right_type,
+    }
 
     # Create TDS provenance
     tds_provenance = f"{TDS_API}/provenance"
-    provenance_resp = requests.post(tds_provenance, json=provenance_payload)
-    if provenance_resp.status_code == 200:        
+    logger.info(f"Storing provenance to {tds_provenance}")
+    try:
+        provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+    except Exception as e:
+        logger.error(e)
+        logger.info(provenance_resp.text)
+        logger.info(provenance_resp.status_code)
+    if provenance_resp.status_code == 200:
         logger.info(f"Stored provenance to TDS for left {left_id} and right {right_id}")
     else:
-        logger.error(f"Storing provenance failed: {provenance_resp.text}")
+        logger.error(
+            f"Storing provenance failed at {tds_provenance}: {provenance_resp.text}"
+        )
 
     return {"status": provenance_resp.status_code}
 
-def find_source_code(
-        model_id
-):
+
+def find_source_code(model_id):
     """
     For a given model id, finds the associated source code artifact from which it was extracted
     """
 
-    payload = {
-            "root_id": model_id,
-            "root_type": "Model"
-            }
+    payload = {"root_id": model_id, "root_type": "Model"}
 
     tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
     resp = requests.post(tds_provenance, json=payload)
     logger.info(f"Provenance code lookup for model ID {model_id}: {resp.json()}")
-    results = resp.json().get('result',[])
+    results = resp.json().get("result", [])
     if len(results) > 0:
         return results[0]
     else:

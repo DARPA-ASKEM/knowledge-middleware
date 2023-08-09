@@ -21,7 +21,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD/api:/api
+      - $PWD/api:/extraction-service/api
     extra_hosts:
       - "host.docker.internal:host-gateway"
   redis:

@@ -3,14 +3,12 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import time
 import uuid
-import json
-import sys
-import requests
 from ast import Dict
-from typing import Any, Optional
 from copy import deepcopy
+from typing import Any, Optional
 
 from fastapi import Response, status
 from redis import Redis
@@ -18,25 +16,31 @@ from rq import Queue
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+from api.models import ExtractionJob
 
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
-    raise ValueError(f'Invalid log level: {LOG_LEVEL}')
-
+    raise ValueError(f"Invalid log level: {LOG_LEVEL}")
 logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
-
 
 # REDIS CONNECTION AND QUEUE OBJECTS
 redis = Redis(
     os.environ.get("REDIS_HOST", "redis.ta1-extraction-service"),
     os.environ.get("REDIS_PORT", "6379"),
 )
+
 q = Queue(connection=redis, default_timeout=-1)
 
 
+def get_queue():
+    return q
+
+
 def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
+    q = get_queue()
+
     if options is None:
         options = {}
 
@@ -56,37 +60,35 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
 
     if not job or force_restart:
         flattened_options = deepcopy(options)
-        job = q.enqueue_call(
-            func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
-        )
-        if synchronous:
-            timer = 0.0
-            while (
-                job.get_status(refresh=True) not in ("finished", "failed")
-                and timer < timeout
-            ):
-                time.sleep(recheck_delay)
-                timer += recheck_delay
+    job = q.enqueue_call(
+        func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
+    )
+    if synchronous:
+        timer = 0.0
+        while (
+            job.get_status(refresh=True) not in ("finished", "failed")
+            and timer < timeout
+        ):
+            time.sleep(recheck_delay)
+            timer += recheck_delay
 
     status = job.get_status()
     if status in ("finished", "failed"):
-        job_result = job.result
+        job_result = job.return_value()
         job_error = job.exc_info
         job.cleanup(ttl=0)  # Cleanup/remove data immediately
     else:
         job_result = None
         job_error = None
 
-    response = {
-        "id": job_id,
+    result = {
         "created_at": job.created_at,
         "enqueued_at": job.enqueued_at,
         "started_at": job.started_at,
-        "status": status,
-        "extraction_error": job_error,
-        "result": job_result,
+        "job_error": job_error,
+        "job_result": job_result,
     }
-    return response
+    return ExtractionJob(id=job_id, status=status, result=result)
 
 
 def fetch_job_status(job_id):
@@ -102,13 +104,13 @@ def fetch_job_status(job_id):
     """
     try:
         job = Job.fetch(job_id, connection=redis)
-        # r = job.latest_result()
-        # string_res = r.return_value
-        job_status = job.get_status()
-        if job_status in ("finished", "failed"):
-            result = job.result
-        else:
-            result = None
-        return job_status, result
+        result = {
+            "created_at": job.created_at,
+            "enqueued_at": job.enqueued_at,
+            "started_at": job.started_at,
+            "job_error": job.exc_info,
+            "job_result": job.return_value(),
+        }
+        return ExtractionJob(id=job_id, status=job.get_status(), result=result)
     except NoSuchJobError:
-        return status.HTTP_404_NOT_FOUND, "Simulation job with id = {job_id} not found"
+        return status.HTTP_404_NOT_FOUND
