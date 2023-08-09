@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main  # Or whichever is your default branch
+  push:
+    branches:
+      - codecov
 
 jobs:
   test:
