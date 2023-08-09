@@ -47,5 +47,5 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: /home/runner/work/TA1-Service/TA1-Service/coverage
+        file: /home/runner/work/TA1-Service/TA1-Service/.coverage
         fail_ci_if_error: true  # Set to true if CI should fail when codecov fails
