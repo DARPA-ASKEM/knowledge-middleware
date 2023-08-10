@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "extraction-service"
+name = "ta1-service"
 version = "0.1.0"
 description = ""
 authors = ["Powell Fendley"]
