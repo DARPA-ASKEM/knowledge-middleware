@@ -28,11 +28,11 @@ function "check_suffix" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 group "prod" {
-  targets = ["extraction-service-api", "extraction-service-worker"]
+  targets = ["ta1-service-api", "ta1-service-worker"]
 }
 
 group "default" {
-  targets = ["extraction-service-api-base", "extraction-service-worker-base"]
+  targets = ["ta1-service-api-base", "ta1-service-worker-base"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -41,22 +41,22 @@ target "_platforms" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "extraction-service-api-base" {
+target "ta1-service-api-base" {
   context = "."
-  tags = tag("extraction-service-api", "", "")
+  tags = tag("ta1-service-api", "", "")
   dockerfile = "api/Dockerfile"
 }
 
-target "extraction-service-worker-base" {
+target "ta1-service-worker-base" {
   context = "."
-  tags = tag("extraction-service-worker", "", "")
+  tags = tag("ta1-service-worker", "", "")
   dockerfile = "workers/Dockerfile"
 }
 
-target "extraction-service-api" {
-  inherits = ["_platforms", "extraction-service-api-base"]
+target "ta1-service-api" {
+  inherits = ["_platforms", "ta1-service-api-base"]
 }
 
-target "extraction-service-worker" {
-  inherits = ["_platforms", "extraction-service-worker-base"]
+target "ta1-service-worker" {
+  inherits = ["_platforms", "ta1-service-worker-base"]
 }

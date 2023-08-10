@@ -27,7 +27,7 @@ logging.getLogger().setLevel(numeric_level)
 
 # REDIS CONNECTION AND QUEUE OBJECTS
 redis = Redis(
-    os.environ.get("REDIS_HOST", "redis.ta1-extraction-service"),
+    os.environ.get("REDIS_HOST", "redis.ta1-service"),
     os.environ.get("REDIS_PORT", "6379"),
 )
 
