@@ -1,43 +1,36 @@
+---
 name: Tests
-
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   pull_request:
     branches:
       - main
-
 jobs:
   test:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-
-    - name: Configure Poetry
-      run: |
-        poetry config virtualenvs.create true
-        poetry config virtualenvs.in-project true
-
-    - name: Install dependencies with Poetry
-      run: |
-        poetry install
-
-    - name: Run tests with coverage using Poetry
-      run: |
-        poetry run pytest tests --cov=./ --cov-report=term --cov-report=xml:coverage.xml
-
-    - name: Upload coverage to codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
-        fail_ci_if_error: true
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+      - name: Install dependencies with Poetry
+        run: |
+          poetry install
+      - name: Run tests with coverage using Poetry
+        run: >
+          poetry run pytest tests --cov=./ --cov-report=term
+          --cov-report=xml:coverage.xml
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          fail_ci_if_error: true
