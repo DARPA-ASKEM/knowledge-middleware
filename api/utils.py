@@ -26,20 +26,15 @@ logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
 
 # REDIS CONNECTION AND QUEUE OBJECTS
-redis = Redis(
-    os.environ.get("REDIS_HOST", "redis.ta1-service"),
-    os.environ.get("REDIS_PORT", "6379"),
-)
-
-q = Queue(connection=redis, default_timeout=-1)
-
-
-def get_queue():
-    return q
+def get_redis():
+    redis = Redis(
+        os.environ.get("REDIS_HOST", "redis.ta1-service"),
+        os.environ.get("REDIS_PORT", "6379"),
+    )
 
 
-def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
-    q = get_queue()
+def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None, *, redis):
+    q = Queue(connection=redis, default_timeout=-1)
 
     if options is None:
         options = {}
@@ -91,7 +86,7 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
     return ExtractionJob(id=job_id, status=status, result=result)
 
 
-def fetch_job_status(job_id):
+def fetch_job_status(job_id, redis):
     """Fetch a job's results from RQ.
 
     Args:

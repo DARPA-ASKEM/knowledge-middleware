@@ -2,27 +2,10 @@ import json
 from unittest.mock import Mock, patch
 import os
 import requests
-import sys
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../..", "workers"))
-
-# Create a test application
-from fastapi.testclient import TestClient
-from api.server import app
-
-client = TestClient(app)
-
-# Create a fake redis server and a fake redis instance
-from fakeredis import FakeStrictRedis
-from rq import Queue
-
-queue = Queue(is_async=False, connection=FakeStrictRedis())
-
-live = os.environ.get("LIVE", "FALSE")
 
 ##############################
 ##### The mock responses #####
@@ -79,9 +62,6 @@ mock_updated_tds_artifact.status_code = 200
 ##### Setup for Integration Tests #####
 #######################################
 
-original_post = requests.post
-
-
 def decide_post_response(*args, **kwargs):
     """
     This function redefines `requests.post` and optionally allows for overrides
@@ -91,9 +71,6 @@ def decide_post_response(*args, **kwargs):
     if "ta1" in url:
         logger.info("Mocking response from TA1")
         return mock_ta1_response
-    elif live == "TRUE":
-        logger.info("Sending request to LIVE TA1 Service")
-        return original_post(*args, **kwargs)  # Call the original
 
 
 # Note that the patches have to be in reverse order of the
@@ -103,8 +80,7 @@ def decide_post_response(*args, **kwargs):
 @patch(
     "requests.post", side_effect=decide_post_response
 )  # patch anytime a POST is made
-@patch("api.utils.get_queue", return_value=queue)  # mock the redis queue
-def test_pdf_extractions(mock_queue, mock_post, mock_get, mock_put):
+def test_pdf_extractions(mock_post, mock_get, mock_put, client, worker):
     # Mock all gets with side effects
     mock_get.side_effect = [mock_tds_artifact, mock_presigned_download_url, mock_paper]
 
@@ -128,6 +104,8 @@ def test_pdf_extractions(mock_queue, mock_post, mock_get, mock_put):
     )
     results = response.json()
 
+    worker.work(burst=True)
+
     # Assert the status code and response
     assert response.status_code == 200
     assert results.get("status") == "finished", results.get("result", {}).get(
@@ -135,10 +113,9 @@ def test_pdf_extractions(mock_queue, mock_post, mock_get, mock_put):
     )
     assert results.get("result", {}).get("job_error") == None
 
-    if live == "FALSE":
-        assert results.get("result", {}).get("job_result") == {
-            "extraction_status_code": mock_ta1_response.status_code,
-            "extraction": [extractions["outputs"][0]["data"]],
-            "tds_status_code": mock_updated_tds_artifact.status_code,
-            "error": None,
-        }
+    assert results.get("result", {}).get("job_result") == {
+        "extraction_status_code": mock_ta1_response.status_code,
+        "extraction": [extractions["outputs"][0]["data"]],
+        "tds_status_code": mock_updated_tds_artifact.status_code,
+        "error": None,
+    }

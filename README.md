@@ -15,8 +15,8 @@ The TA1 Middleware Service is designed to provide an intermediate job queue for 
 
 ## Quickstart
 
-1. Run `make init` which will create a stub `api.env` file. 
-2. Ensure that `api.env` contains the correct endpoint and other information 
+1. Run `make init` which will create a stub `.env` file. 
+2. Ensure that `.env` contains the correct endpoint and other information 
 3. Run `make up`
 
 

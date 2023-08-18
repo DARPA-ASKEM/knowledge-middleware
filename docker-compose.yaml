@@ -15,7 +15,7 @@ services:
     ports:
       - "8010:8000"
     env_file:
-      - api.env
+      - .env
     networks:
       - ta1-service
       - data-api
@@ -38,7 +38,7 @@ services:
       context: ./
       dockerfile: workers/Dockerfile
     env_file:
-      - api.env
+      - .env
     depends_on:
       - redis
     networks:
