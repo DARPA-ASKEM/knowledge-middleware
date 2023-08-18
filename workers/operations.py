@@ -227,7 +227,6 @@ def pdf_extractions(*args, **kwargs):
 
 
 def data_card(*args, **kwargs):
-    openai_key = os.getenv("OPENAI_API_KEY")
 
     dataset_id = kwargs.get("dataset_id")
     artifact_id = kwargs.get("artifact_id")
@@ -251,8 +250,6 @@ def data_card(*args, **kwargs):
     )
     dataset_json = dataset_response.json()
 
-    params = {"gpt_key": openai_key}
-
     files = {
         "csv_file": ("csv_file", dataset_csv_string.encode()),
         "doc_file": ("doc_file", doc_file),
@@ -260,7 +257,7 @@ def data_card(*args, **kwargs):
 
     url = f"{MIT_API}/cards/get_data_card"
     logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
-    resp = requests.post(url, params=params, files=files)
+    resp = requests.post(url, files=files)
     if resp.status_code != 200:
         raise Exception(f"Failed response from MIT: {resp.status_code}")
 
@@ -308,7 +305,6 @@ def data_card(*args, **kwargs):
 
 
 def model_card(*args, **kwargs):
-    openai_key = os.getenv("OPENAI_API_KEY")
     model_id = kwargs.get("model_id")
     paper_artifact_id = kwargs.get("paper_artifact_id")
 
@@ -339,8 +335,6 @@ def model_card(*args, **kwargs):
 
     amr = get_model_from_tds(model_id).json()
 
-    params = {"gpt_key": openai_key}
-
     files = {
         "text_file": ("text_file", text_file),
         "code_file": ("doc_file", code_file),
@@ -349,7 +343,7 @@ def model_card(*args, **kwargs):
     url = f"{MIT_API}/cards/get_model_card"
     logger.info(f"Sending model {model_id} to MIT service at {url}")
 
-    resp = requests.post(url, params=params, files=files)
+    resp = requests.post(url, files=files)
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
