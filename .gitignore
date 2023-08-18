@@ -1,6 +1,9 @@
 # OSX
 .DS_Store
 
+# IDE
+.idea
+
 # Local environment
 .env
 api.env
