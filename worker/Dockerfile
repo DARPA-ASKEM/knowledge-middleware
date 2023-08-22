@@ -18,6 +18,6 @@ RUN poetry config virtualenvs.create false && \
 ENV REDIS_HOST redis
 ENV REDIS_PORT 6379
 
-COPY workers workers
-WORKDIR /workers
+COPY worker worker
+WORKDIR /worker
 CMD rq worker --url redis://$REDIS_HOST:$REDIS_PORT high default low

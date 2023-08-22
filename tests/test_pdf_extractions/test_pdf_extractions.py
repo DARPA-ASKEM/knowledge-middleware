@@ -103,6 +103,7 @@ def test_pdf_extractions(mock_post, mock_get, mock_put, client, worker):
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
+    assert results.get("status") == "queued"
 
     worker.work(burst=True)
 

@@ -4,7 +4,7 @@ import os
 import sys
 
 import requests
-from utils import (
+from worker.utils import (
     find_source_code,
     get_artifact_from_tds,
     get_dataset_from_tds,
