@@ -6,6 +6,7 @@ import sys
 import re
 from urllib.parse import urlparse, parse_qs, quote_plus 
 import json
+from collections import namedtuple
 from io import BytesIO
 
 import requests
@@ -17,20 +18,6 @@ from fastapi.testclient import TestClient
 from fakeredis import FakeStrictRedis
 from api.server import app, get_redis
 from lib.settings import settings
-
-
-# class TestEnvironment(BaseSettings):
-#     LIVE: bool = False
-#     TA1_UNIFIED_URL: str = "https://ta1:5"
-#     MIT_TR_URL: str = "https://mit:10"
-#     TDS_URL: str = "https://tds:15"
-#     OPENAI_API_KEY: str = "foo"
-#     LOG_LEVEL: str = "INFO"
-
-
-# @pytest.fixture
-# def environment():
-#     yield TestEnvironment()
 
 
 @pytest.fixture(autouse=True)
@@ -69,6 +56,12 @@ def client(redis):
 
 
 @pytest.fixture
+def context_dir(request):
+    chosen = request.node.get_closest_marker("resource").args[0]
+    yield f"./tests/resources/{chosen}" 
+
+
+@pytest.fixture
 def http_mock():
     # adapter = requests_mock.Adapter()
     # session = requests.Session()
@@ -99,45 +92,42 @@ def file_storage(http_mock):
     def retrieve_from_url(request, _):
         retrieve(get_filename(request.url)).encode()
 
+    def upload(filename, content):
+        if isinstance(content, str):
+            content = BytesIO(content.encode())
+        requests.put(f"mock://filesave?filename={quote_plus(filename)}", content)
+
     get_file_url = re.compile(f"(?:(?:upload)|(?:download))-url")
     http_mock.get(get_file_url, json=get_loc)
     file_url = re.compile("filesave")
     http_mock.put(file_url, json=save)
     http_mock.get(file_url, content=retrieve_from_url)
+    Storage = namedtuple("Storage", ["retrieve", "upload"])
 
-    yield retrieve
+    yield Storage(retrieve=retrieve, upload=upload)
+
 
 
 @pytest.fixture
-def context_dir(request):
-    chosen = request.node.get_closest_marker("resource").args[0]
-    yield f"./tests/resources/{chosen}" 
-
-
-@pytest.fixture(autouse=True)
-def tds(context_dir, http_mock, file_storage):
-    text_json = json.load(open(f"{context_dir}/text.json"))
-    text = ""
-    for d in text_json:
-        text += f"{d['content']}\n"
-
+def tds_artifact(context_dir, http_mock, file_storage):
     # Mock the TDS artifact
     artifact = {
         "id": "artifact-123",
         "name": "paper",
         "description": "test paper",
         "timestamp": "2023-07-17T19:11:43",
-        "file_names": ["paper.pdf"],
-        "metadata": {"text": text},
+        "file_names": [],
+        # "file_names": ["paper.pdf"],
+        # "metadata": {"text": text},
+        "metadata": {},
     }
     artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
     http_mock.get(artifact_url, json=artifact)
     http_mock.put(artifact_url)
-    content = BytesIO("some encoded PDF content goes here".encode())
-    requests.put(f"mock://filesave?filename={quote_plus('paper.pdf')}", content)
+    yield artifact
 
 
 @pytest.fixture(autouse=True)
-def ta1(context_dir, http_mock, tds):
+def ta1(context_dir, http_mock, tds_artifact):
     extractions = json.load(open(f"{context_dir}/extractions.json"))
     http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
