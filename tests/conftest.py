@@ -4,7 +4,11 @@ from pydantic_settings import BaseSettings
 import logging
 import sys
 import re
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote_plus 
+import json
+from io import BytesIO
+
+import requests
 
 import requests
 import requests_mock
@@ -102,3 +106,38 @@ def file_storage(http_mock):
     http_mock.get(file_url, content=retrieve_from_url)
 
     yield retrieve
+
+
+@pytest.fixture
+def context_dir(request):
+    chosen = request.node.get_closest_marker("resource").args[0]
+    yield f"./tests/resources/{chosen}" 
+
+
+@pytest.fixture(autouse=True)
+def tds(context_dir, http_mock, file_storage):
+    text_json = json.load(open(f"{context_dir}/text.json"))
+    text = ""
+    for d in text_json:
+        text += f"{d['content']}\n"
+
+    # Mock the TDS artifact
+    artifact = {
+        "id": "artifact-123",
+        "name": "paper",
+        "description": "test paper",
+        "timestamp": "2023-07-17T19:11:43",
+        "file_names": ["paper.pdf"],
+        "metadata": {"text": text},
+    }
+    artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
+    http_mock.get(artifact_url, json=artifact)
+    http_mock.put(artifact_url)
+    content = BytesIO("some encoded PDF content goes here".encode())
+    requests.put(f"mock://filesave?filename={quote_plus('paper.pdf')}", content)
+
+
+@pytest.fixture(autouse=True)
+def ta1(context_dir, http_mock, tds):
+    extractions = json.load(open(f"{context_dir}/extractions.json"))
+    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)

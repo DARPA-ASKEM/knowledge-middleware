@@ -2,10 +2,12 @@ import json
 import os
 import requests
 
+import pytest
 import logging
 
 logger = logging.getLogger(__name__)
 
+@pytest.mark.resource("basic_pdf_extraction")
 def test_pdf_extractions(client, worker, tds, file_storage):
 
     artifact_id = "artifact-123" #DELETE
@@ -40,15 +42,3 @@ def test_pdf_extractions(client, worker, tds, file_storage):
     status_response = client.get(f"/status/{job_id}")
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
-    
-    # results.get("result", {}).get(
-    #     "job_error"
-    # )
-    assert results.get("result", {}).get("job_error") == None
-
-    # assert results.get("result", {}).get("job_result") == {
-    #     "extraction_status_code": mock_ta1_response.status_code,
-    #     "extraction": [extractions["outputs"][0]["data"]],
-    #     "tds_status_code": mock_updated_tds_artifact.status_code,
-    #     "error": None,
-    # }

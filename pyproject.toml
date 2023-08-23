@@ -37,7 +37,7 @@ poethepoet = "^0.22.0"
 requests-mock = "^1.11.0"
 
 [tool.pytest.ini_options]
-markers = ["example_dir"]
+markers = ["resource"]
 
 [build-system]
 requires = ["poetry-core"]
