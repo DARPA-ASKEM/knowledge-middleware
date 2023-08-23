@@ -125,9 +125,3 @@ def tds_artifact(context_dir, http_mock, file_storage):
     http_mock.get(artifact_url, json=artifact)
     http_mock.put(artifact_url)
     yield artifact
-
-
-@pytest.fixture(autouse=True)
-def ta1(context_dir, http_mock, tds_artifact):
-    extractions = json.load(open(f"{context_dir}/extractions.json"))
-    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)

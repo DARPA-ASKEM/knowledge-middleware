@@ -5,10 +5,12 @@ import requests
 import pytest
 import logging
 
+from lib.settings import settings
+
 logger = logging.getLogger(__name__)
 
 @pytest.mark.resource("basic_pdf_extraction")
-def test_pdf_extractions(context_dir, client, worker, tds_artifact, file_storage):
+def test_pdf_extractions(context_dir, http_mock, client, worker, tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
@@ -17,6 +19,9 @@ def test_pdf_extractions(context_dir, client, worker, tds_artifact, file_storage
     tds_artifact["file_names"] = ["paper.pdf"]
     tds_artifact["metadata"] = {"text": text}
     file_storage.upload("paper.pdf", "TEST TEXT")
+
+    extractions = json.load(open(f"{context_dir}/extractions.json"))
+    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
 
     query_params = {
         "artifact_id": tds_artifact["id"],
@@ -35,11 +40,40 @@ def test_pdf_extractions(context_dir, client, worker, tds_artifact, file_storage
     results = response.json()
     job_id = results.get("id")
     worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
+
+    #### ASSERT ####
+    assert results.get("status") == "queued"
+    assert status_response.status_code == 200
+    assert status_response.json().get("status") == "finished"
+
+
+@pytest.mark.resource("basic_pdf_to_text")
+def test_pdf_to_text(context_dir, http_mock, client, worker, tds_artifact, file_storage):
+    #### ARRANGE ####
+    text_json = json.load(open(f"{context_dir}/text.json"))
+    text = ""
+    for d in text_json:
+        text += f"{d['content']}\n"
+    tds_artifact["file_names"] = ["paper.pdf"]
+    file_storage.upload("paper.pdf", "TEST TEXT")
+
+    query_params = {
+        "artifact_id": tds_artifact["id"],
+    }
+
+    extractions = json.load(open(f"{context_dir}/text.json"))
+    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
+    
+    #### ACT ####
     response = client.post(
-        "/pdf_extractions",
+        "/pdf_to_text",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
+    results = response.json()
+    job_id = results.get("id")
+    worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
     #### ASSERT ####
