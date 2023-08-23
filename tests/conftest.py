@@ -18,8 +18,8 @@ from lib.settings import settings
 # class TestEnvironment(BaseSettings):
 #     LIVE: bool = False
 #     TA1_UNIFIED_URL: str = "https://ta1:5"
-#     MIT_TR_URL: str = "http://mit:10"
-#     TDS_URL: str = "http://tds:15"
+#     MIT_TR_URL: str = "https://mit:10"
+#     TDS_URL: str = "https://tds:15"
 #     OPENAI_API_KEY: str = "foo"
 #     LOG_LEVEL: str = "INFO"
 
@@ -65,7 +65,7 @@ def client(redis):
 
 
 @pytest.fixture
-def http():
+def http_mock():
     # adapter = requests_mock.Adapter()
     # session = requests.Session()
     # session.mount('mock://', adapter)
@@ -74,7 +74,7 @@ def http():
 
 
 @pytest.fixture
-def file_storage(http):
+def file_storage(http_mock):
     storage = {}
 
     def get_filename(url):
@@ -82,7 +82,7 @@ def file_storage(http):
 
     def get_loc(request, _):
         filename = get_filename(request.url)
-        return {"url": f"https://filesave?filename={filename}"}
+        return {"url": f"mock://filesave?filename={filename}"}
 
     def save(request, context):
         filename = get_filename(request.url)
@@ -96,9 +96,9 @@ def file_storage(http):
         retrieve(get_filename(request.url)).encode()
 
     get_file_url = re.compile(f"(?:(?:upload)|(?:download))-url")
-    http.get(get_file_url, json=get_loc)
+    http_mock.get(get_file_url, json=get_loc)
     file_url = re.compile("filesave")
-    http.put(file_url, json=save)
-    http.get(file_url, content=retrieve_from_url)
+    http_mock.put(file_url, json=save)
+    http_mock.get(file_url, content=retrieve_from_url)
 
     yield retrieve
