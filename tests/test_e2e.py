@@ -80,3 +80,38 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, tds_artifact, file_
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
+
+
+@pytest.mark.resource("basic_code_to_amr")
+def test_code_to_amr(context_dir, http_mock, client, worker, tds_artifact, file_storage):
+    #### ARRANGE ####
+    code = open(f"{context_dir}/code.py").read()
+    tds_artifact["file_names"] = ["code.py"]
+    file_storage.upload("code.py", code)
+
+    query_params = {
+        "artifact_id": tds_artifact["id"],
+        "name": "test model",
+        "description": "test description",
+    }
+
+    amr = json.load(open(f"{context_dir}/amr.json"))
+    http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
+    http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+    http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    
+    #### ACT ####
+    response = client.post(
+        "/code_to_amr",
+        params=query_params,
+        headers={"Content-Type": "application/json"},
+    )
+    results = response.json()
+    job_id = results.get("id")
+    worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
+
+    #### ASSERT ####
+    assert results.get("status") == "queued"
+    assert status_response.status_code == 200
+    assert status_response.json().get("status") == "finished"

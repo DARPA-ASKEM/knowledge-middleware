@@ -87,12 +87,14 @@ def file_storage(http_mock):
         return {"status": "success"}
 
     def retrieve(filename):
-        return storage.get(filename, storage)
+        return storage[filename]
 
     def retrieve_from_url(request, _):
         retrieve(get_filename(request.url)).encode()
 
     def upload(filename, content):
+        if isinstance(content, dict):
+            content = json.dumps(content)
         if isinstance(content, str):
             content = BytesIO(content.encode())
         requests.put(f"mock://filesave?filename={quote_plus(filename)}", content)
