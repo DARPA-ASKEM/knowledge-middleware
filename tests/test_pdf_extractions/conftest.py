@@ -18,16 +18,15 @@ def tds(http_mock, file_storage):
         text += f"{d['content']}\n"
 
     # Mock the TDS artifact
-    artifact_id = "artifact-123"
     artifact = {
-        "id": artifact_id,
+        "id": "artifact-123",
         "name": "paper",
         "description": "test paper",
         "timestamp": "2023-07-17T19:11:43",
         "file_names": ["paper.pdf"],
         "metadata": {"text": text},
     }
-    artifact_url = f"{settings.TDS_URL}/artifacts/artifact-123"
+    artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
     http_mock.get(artifact_url, json=artifact)
     http_mock.put(artifact_url)
     content = BytesIO("some encoded PDF content goes here".encode())

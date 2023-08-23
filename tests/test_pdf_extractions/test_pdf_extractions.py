@@ -19,8 +19,6 @@ def test_pdf_extractions(client, worker, tds, file_storage):
         "description": None,
     }
 
-    r = requests.get("mock://tds:15/artifacts/artifact-123")
-
     # Call the endpoint
     response = client.post(
         "/pdf_extractions",
@@ -29,7 +27,7 @@ def test_pdf_extractions(client, worker, tds, file_storage):
     )
     results = response.json()
     assert results.get("status") == "queued"
-    job_id = results.get("job_id")
+    job_id = results.get("id")
 
     worker.work(burst=True)
 
@@ -39,9 +37,9 @@ def test_pdf_extractions(client, worker, tds, file_storage):
         headers={"Content-Type": "application/json"},
     )
     
-    status_response = client.get("/status/{job_id}")
+    status_response = client.get(f"/status/{job_id}")
     assert status_response.status_code == 200
-    assert results_response.get("status") == "finished"
+    assert status_response.json().get("status") == "finished"
     
     # results.get("result", {}).get(
     #     "job_error"
