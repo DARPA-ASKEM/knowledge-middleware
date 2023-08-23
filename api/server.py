@@ -9,8 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.models import EquationType, ExtractionJob
 from api.utils import create_job, fetch_job_status, get_redis
+from lib.settings import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+LOG_LEVEL = settings.LOG_LEVEL
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
     raise ValueError(f"Invalid log level: {LOG_LEVEL}")

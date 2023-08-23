@@ -17,8 +17,9 @@ from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
 from api.models import ExtractionJob
+from lib.settings import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+LOG_LEVEL = settings.LOG_LEVEL.upper()
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
     raise ValueError(f"Invalid log level: {LOG_LEVEL}")
@@ -28,8 +29,8 @@ logging.getLogger().setLevel(numeric_level)
 # REDIS CONNECTION AND QUEUE OBJECTS
 def get_redis():
     redis = Redis(
-        os.environ.get("REDIS_HOST", "redis.ta1-service"),
-        os.environ.get("REDIS_PORT", "6379"),
+        settings.REDIS_HOST,
+        settings.REDIS_PORT,
     )
 
 

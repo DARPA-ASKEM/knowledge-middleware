@@ -13,12 +13,13 @@ from worker.utils import (
     put_artifact_extraction_to_tds,
     set_provenance,
 )
+from lib.settings import settings
 
-TDS_API = os.getenv("TDS_URL")
-SKEMA_API = os.getenv("SKEMA_RS_URL")
-UNIFIED_API = os.getenv("TA1_UNIFIED_URL")
-MIT_API = os.getenv("MIT_TR_URL")
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+TDS_API = settings.TDS_URL
+SKEMA_API = settings.SKEMA_RS_URL
+UNIFIED_API = settings.TA1_UNIFIED_URL
+MIT_API = settings.MIT_TR_URL
+LOG_LEVEL = settings.LOG_LEVEL.upper()
 
 import logging
 
@@ -227,7 +228,7 @@ def pdf_extractions(*args, **kwargs):
 
 
 def data_card(*args, **kwargs):
-    openai_key = os.getenv("OPENAI_API_KEY")
+    openai_key = settings.OPENAI_API_KEY
 
     dataset_id = kwargs.get("dataset_id")
     artifact_id = kwargs.get("artifact_id")
@@ -308,7 +309,7 @@ def data_card(*args, **kwargs):
 
 
 def model_card(*args, **kwargs):
-    openai_key = os.getenv("OPENAI_API_KEY")
+    openai_key = settings.OPENAI_API_KEY
     model_id = kwargs.get("model_id")
     paper_artifact_id = kwargs.get("paper_artifact_id")
 

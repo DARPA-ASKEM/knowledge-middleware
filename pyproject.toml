@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Powell Fendley"]
 readme = "README.md"
-packages = [{include = "worker"}, {include = "api"}, {include = "tests"}]
+packages = [{include = "lib"}, {include = "worker"}, {include = "api"}, {include = "tests"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -34,6 +34,10 @@ pytest-cov = "^4.1.0"
 jsonschema = "^4.19.0"
 yamllint = "^1.32.0"
 poethepoet = "^0.22.0"
+requests-mock = "^1.11.0"
+
+[tool.pytest.ini_options]
+markers = ["example_dir"]
 
 [build-system]
 requires = ["poetry-core"]
