@@ -115,3 +115,39 @@ def test_code_to_amr(context_dir, http_mock, client, worker, tds_artifact, file_
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
+
+
+@pytest.mark.resource("basic_equations_to_amr")
+def test_equations_to_amr(context_dir, http_mock, client, worker, tds_artifact, file_storage):
+    #### ARRANGE ####
+    equations = open(f"{context_dir}/equations.txt").read()
+
+    query_params = {
+        "equation_type": "latex",
+        "model": "petrinet",
+        "name": "test model",
+        "description": "test description",
+    }
+
+
+    amr = json.load(open(f"{context_dir}/amr.json"))
+    http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
+    http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+    http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    
+    #### ACT ####
+    response = client.post(
+        "/equations_to_amr",
+        params=query_params,
+        data=equations,
+        headers={"Content-Type": "application/json"},
+    )
+    results = response.json()
+    job_id = results.get("id")
+    worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
+
+    #### ASSERT ####
+    assert results.get("status") == "queued"
+    assert status_response.status_code == 200
+    assert status_response.json().get("status") == "finished"
