@@ -36,7 +36,7 @@ services:
     container_name: worker-ta1-service
     build:
       context: ./
-      dockerfile: workers/Dockerfile
+      dockerfile: worker/Dockerfile
     env_file:
       - .env
     depends_on:
