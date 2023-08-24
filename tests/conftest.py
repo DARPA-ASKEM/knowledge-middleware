@@ -8,6 +8,7 @@ from urllib.parse import urlparse, parse_qs, quote_plus
 import json
 from collections import namedtuple
 from io import BytesIO
+from itertools import count
 
 import requests
 
@@ -111,19 +112,20 @@ def file_storage(http_mock):
 
 
 @pytest.fixture
-def tds_artifact(context_dir, http_mock, file_storage):
+def gen_tds_artifact(context_dir, http_mock, file_storage):
     # Mock the TDS artifact
-    artifact = {
-        "id": "artifact-123",
-        "name": "paper",
-        "description": "test paper",
-        "timestamp": "2023-07-17T19:11:43",
-        "file_names": [],
-        # "file_names": ["paper.pdf"],
-        # "metadata": {"text": text},
-        "metadata": {},
-    }
-    artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
-    http_mock.get(artifact_url, json=artifact)
-    http_mock.put(artifact_url)
-    yield artifact
+    counter = count()
+    def generate():
+        artifact = {
+            "id": f"artifact-{next(counter)}",
+            "name": "artifact",
+            "description": "test artifact",
+            "timestamp": "2023-07-17T19:11:43",
+            "file_names": [],
+            "metadata": {},
+        }
+        artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
+        http_mock.get(artifact_url, json=artifact)
+        http_mock.put(artifact_url)
+        return artifact
+    return generate
