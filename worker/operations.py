@@ -313,14 +313,18 @@ def model_card(*args, **kwargs):
     model_id = kwargs.get("model_id")
     paper_artifact_id = kwargs.get("paper_artifact_id")
 
-    code_artifact_id = find_source_code(model_id)
-    if code_artifact_id:
-        code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(
-            artifact_id=code_artifact_id
-        )
-        code_file = code_downloaded_artifact.decode("utf-8")
-    else:
-        logger.info(f"No associated code artifact found for model {model_id}")
+    try:
+        code_artifact_id = find_source_code(model_id)
+        if code_artifact_id:
+            code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(
+                artifact_id=code_artifact_id
+            )
+            code_file = code_downloaded_artifact.decode("utf-8")
+        else:
+            logger.info(f"No associated code artifact found for model {model_id}")
+            code_file = "No available code associated with model."
+    except Exception as e:
+        logger.error(f"Issue finding associated source code: {e}")
         code_file = "No available code associated with model."
 
     logger.debug(f"Code file head (250 chars): {code_file[:250]}")
@@ -351,26 +355,29 @@ def model_card(*args, **kwargs):
     logger.debug(f"TA 1 response object: {resp.json()}")
 
     if resp.status_code == 200:
-        card = resp.json()
-        sys.stdout.flush()
+        try:
+            card = resp.json()
+            sys.stdout.flush()
 
-        amr["description"] = card.get("DESCRIPTION")
-        if not amr.get("metadata", None):
-            amr["metadata"] = {"card": card}
-        else:
-            amr["metadata"]["card"] = card
+            amr["description"] = card.get("DESCRIPTION")
+            if not amr.get("metadata", None):
+                amr["metadata"] = {"card": card}
+            else:
+                amr["metadata"]["card"] = card
 
-        tds_resp = requests.put(f"{TDS_API}/models/{model_id}", json=amr)
-        if tds_resp.status_code == 200:
-            logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")
-            return {
-                "status": tds_resp.status_code,
-                "message": "Model card generated and updated in TDS",
-            }
-        else:
-            raise Exception(
-                f"Error when updating model {model_id} in TDS: {tds_resp.status_code}"
-            )
+            tds_resp = requests.put(f"{TDS_API}/models/{model_id}", json=amr)
+            if tds_resp.status_code == 200:
+                logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")
+                return {
+                    "status": tds_resp.status_code,
+                    "message": "Model card generated and updated in TDS",
+                }
+            else:
+                raise Exception(
+                    f"Error when updating model {model_id} in TDS: {tds_resp.status_code}"
+                )
+        except Exception as e:
+            raise Exception(f"Failed to generate model card for {model_id}: {e}")
 
     else:
         raise Exception(f"Bad response from TA1 for {model_id}: {resp.status_code}")
@@ -463,8 +470,11 @@ def code_to_amr(*args, **kwargs):
 
     amr_json = amr_response
 
-    amr_json = amr_response.json()
-    logger.debug(f"TA 1 response object: {amr_json}")
+    try:
+        amr_json = amr_response.json()
+        logger.debug(f"TA 1 response object: {amr_json}")
+    except:
+        logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
@@ -477,13 +487,19 @@ def code_to_amr(*args, **kwargs):
             model_id=tds_responses.get("model_id"),
         )
 
-        set_provenance(
-            tds_responses.get("model_id"),
-            "Model",
-            artifact_id,
-            "Artifact",
-            "EXTRACTED_FROM",
-        )
+        try:
+            set_provenance(
+                tds_responses.get("model_id"),
+                "Model",
+                artifact_id,
+                "Artifact",
+                "EXTRACTED_FROM",
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to store provenance tying model to code artifact: {e}"
+            )
+
         response = {
             "status_code": amr_response.status_code,
             "amr": amr_json,
