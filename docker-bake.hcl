@@ -50,7 +50,7 @@ target "ta1-service-api-base" {
 target "ta1-service-worker-base" {
   context = "."
   tags = tag("ta1-service-worker", "", "")
-  dockerfile = "workers/Dockerfile"
+  dockerfile = "worker/Dockerfile"
 }
 
 target "ta1-service-api" {
