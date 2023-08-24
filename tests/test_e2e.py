@@ -99,6 +99,8 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     }
 
     amr = json.load(open(f"{context_dir}/amr.json"))
+    http_mock.post(f"{settings.TDS_URL}/provenance", json={})
+    # http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json=tds_artifact["id"])
     http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
@@ -223,6 +225,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     file_storage.upload("code.py", code)
     
     amr = json.load(open(f"{context_dir}/amr.json"))
+    http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json={"result": [text_artifact["id"]]})
     http_mock.get(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id":text_artifact["id"], "model": amr})
     http_mock.put(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id": text_artifact["id"]})
     model_card = json.load(open(f"{context_dir}/model_card.json"))

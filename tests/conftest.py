@@ -67,7 +67,7 @@ def http_mock():
     # adapter = requests_mock.Adapter()
     # session = requests.Session()
     # session.mount('mock://', adapter)
-    with requests_mock.Mocker(real_http=False) as mocker:#, session=session) as mocker:
+    with requests_mock.Mocker(real_http=True) as mocker:#, session=session) as mocker:
         yield mocker
 
 
