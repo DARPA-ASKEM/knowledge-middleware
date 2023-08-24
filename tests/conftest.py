@@ -90,7 +90,7 @@ def file_storage(http_mock):
         return storage[filename]
 
     def retrieve_from_url(request, _):
-        retrieve(get_filename(request.url)).encode()
+        return retrieve(get_filename(request.url)).encode()
 
     def upload(filename, content):
         if isinstance(content, dict):

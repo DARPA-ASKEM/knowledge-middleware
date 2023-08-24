@@ -151,3 +151,52 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, tds_artifact, 
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
+
+
+
+@pytest.mark.resource("basic_profile_dataset")
+def test_profile_dataset(context_dir, http_mock, client, worker, tds_artifact, file_storage):
+    #### ARRANGE ####
+    CHAR_LIMIT = 250
+    text_json = json.load(open(f"{context_dir}/text.json"))
+    text = ""
+    for d in text_json:
+        text += f"{d['content']}\n"
+    tds_artifact["file_names"] = ["paper.pdf"]
+    tds_artifact["metadata"] = {"text": text[:CHAR_LIMIT]}
+    query_params = {
+        "artifact_id": tds_artifact["id"],
+    }
+    csvfile = open(f"{context_dir}/data.csv").read()
+    file_storage.upload("paper.pdf", "TEST TEXT")
+    file_storage.upload("data.csv", csvfile)
+
+    
+    dataset = {
+        "id": tds_artifact["id"],
+        "name": "data",
+        "description": "test data",
+        "timestamp": "2023-07-17T19:11:43",
+        "file_names": ["data.csv"],
+        "metadata": {},
+    }
+    http_mock.get(f"{settings.TDS_URL}/datasets/{dataset['id']}", json=dataset)
+    http_mock.put(f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]})
+    data_card = json.load(open(f"{context_dir}/data_card.json"))
+    http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
+
+    #### ACT ####
+    response = client.post(
+        f"/profile_dataset/{tds_artifact['id']}",
+        params=query_params,
+        headers={"Content-Type": "application/json"},
+    )
+    results = response.json()
+    job_id = results.get("id")
+    worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
+
+    #### ASSERT ####
+    assert results.get("status") == "queued"
+    assert status_response.status_code == 200
+    assert status_response.json().get("status") == "finished"
