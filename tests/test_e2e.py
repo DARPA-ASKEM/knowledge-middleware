@@ -22,7 +22,8 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
     file_storage.upload("paper.pdf", "TEST TEXT")
 
     extractions = json.load(open(f"{context_dir}/extractions.json"))
-    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
+    if not settings.LIVE:
+        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
 
     query_params = {
         "artifact_id": tds_artifact["id"],
@@ -65,7 +66,8 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     }
 
     extractions = json.load(open(f"{context_dir}/text.json"))
-    http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
+    if not settings.LIVE:
+        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
     
     #### ACT ####
     response = client.post(
@@ -100,10 +102,10 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
 
     amr = json.load(open(f"{context_dir}/amr.json"))
     http_mock.post(f"{settings.TDS_URL}/provenance", json={})
-    # http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json=tds_artifact["id"])
-    http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    if not settings.LIVE:
+        http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     
     #### ACT ####
     response = client.post(
@@ -136,9 +138,10 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
 
 
     amr = json.load(open(f"{context_dir}/amr.json"))
-    http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    if not settings.LIVE:
+        http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
     
     #### ACT ####
     response = client.post(
@@ -188,7 +191,8 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     http_mock.get(f"{settings.TDS_URL}/datasets/{dataset['id']}", json=dataset)
     http_mock.put(f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]})
     data_card = json.load(open(f"{context_dir}/data_card.json"))
-    http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
+    if not settings.LIVE:
+        http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
 
     #### ACT ####
     response = client.post(
@@ -229,7 +233,8 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     http_mock.get(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id":text_artifact["id"], "model": amr})
     http_mock.put(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id": text_artifact["id"]})
     model_card = json.load(open(f"{context_dir}/model_card.json"))
-    http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
+    if not settings.LIVE:
+        http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
 
     query_params = {"paper_artifact_id": text_artifact["id"]}
 
