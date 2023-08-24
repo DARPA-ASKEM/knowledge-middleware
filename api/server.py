@@ -4,13 +4,14 @@ import os
 from enum import Enum
 from typing import Annotated, List, Optional
 
-from fastapi import FastAPI, HTTPException, Path, status
+from fastapi import FastAPI, HTTPException, Path, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.models import EquationType, ExtractionJob
-from api.utils import create_job, fetch_job_status
+from api.utils import create_job, fetch_job_status, get_redis
+from lib.settings import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+LOG_LEVEL = settings.LOG_LEVEL
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
     raise ValueError(f"Invalid log level: {LOG_LEVEL}")
@@ -43,12 +44,12 @@ app = build_api()
 
 
 @app.get("/status/{extraction_job_id}")
-def get_status(extraction_job_id: str) -> ExtractionJob:
+def get_status(extraction_job_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     """
     Retrieve the status of a extraction
     """
 
-    extraction_job_status = fetch_job_status(extraction_job_id)
+    extraction_job_status = fetch_job_status(extraction_job_id, redis)
     if (
         isinstance(extraction_job_status, int)
         and extraction_job_status == status.HTTP_404_NOT_FOUND
@@ -67,6 +68,7 @@ def equations_to_amr(
     model: str = "petrinet",
     name: Optional[str] = None,
     description: Optional[str] = None,
+    redis = Depends(get_redis)
 ) -> ExtractionJob:
     """Post equations and store an AMR to TDS
 
@@ -89,14 +91,14 @@ def equations_to_amr(
         "description": description,
     }
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
 @app.post("/code_to_amr")
 def code_to_amr(
-    artifact_id: str, name: Optional[str] = None, description: Optional[str] = None
+    artifact_id: str, name: Optional[str] = None, description: Optional[str] = None, redis=Depends(get_redis)
 ) -> ExtractionJob:
     """
     Converts a code artifact to an AMR. Assumes that the code file is the first
@@ -112,13 +114,13 @@ def code_to_amr(
     operation_name = "operations.code_to_amr"
     options = {"artifact_id": artifact_id, "name": name, "description": description}
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
 @app.post("/pdf_to_text")
-def pdf_to_text(artifact_id: str) -> ExtractionJob:
+def pdf_to_text(artifact_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     """Run text extractions over pdfs and stores the text as metadata on the artifact
 
     Args:
@@ -128,7 +130,7 @@ def pdf_to_text(artifact_id: str) -> ExtractionJob:
 
     options = {"artifact_id": artifact_id}
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
@@ -140,6 +142,7 @@ async def pdf_extractions(
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
+    redis = Depends(get_redis)
 ) -> ExtractionJob:
     """Run text extractions over pdfs
 
@@ -157,14 +160,14 @@ async def pdf_extractions(
         "description": description,
     }
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
 @app.post("/profile_dataset/{dataset_id}")
 def profile_dataset(
-    dataset_id: str, artifact_id: Optional[str] = None
+    dataset_id: str, artifact_id: Optional[str] = None, redis=Depends(get_redis)
 ) -> ExtractionJob:
     """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which
     is expected to be some user uploaded document which has had its text extracted and stored to
@@ -183,13 +186,13 @@ def profile_dataset(
         "artifact_id": artifact_id,
     }
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, paper_artifact_id: str) -> ExtractionJob:
+def profile_model(model_id: str, paper_artifact_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code artifact
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
     has been extracted with `/pdf_to_text` and the code has been converted to an AMR
@@ -205,13 +208,13 @@ def profile_model(model_id: str, paper_artifact_id: str) -> ExtractionJob:
 
     options = {"model_id": model_id, "paper_artifact_id": paper_artifact_id}
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
 @app.post("/link_amr")
-def link_amr(artifact_id: str, model_id: str) -> ExtractionJob:
+def link_amr(artifact_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     raise HTTPException(status_code=501, detail="Endpoint is under development")
 
     operation_name = "operations.link_amr"
@@ -221,6 +224,6 @@ def link_amr(artifact_id: str, model_id: str) -> ExtractionJob:
         "model_id": model_id,
     }
 
-    resp = create_job(operation_name=operation_name, options=options)
+    resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp

@@ -23,7 +23,7 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: Install dependencies with Poetry
         run: |
-          poetry install
+          poetry install --with api
       - name: Run tests with coverage using Poetry
         run: >
           poetry run pytest tests --cov=./ --cov-report=term

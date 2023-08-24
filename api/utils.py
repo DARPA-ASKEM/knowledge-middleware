@@ -17,8 +17,9 @@ from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
 from api.models import ExtractionJob
+from lib.settings import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+LOG_LEVEL = settings.LOG_LEVEL.upper()
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
     raise ValueError(f"Invalid log level: {LOG_LEVEL}")
@@ -26,20 +27,15 @@ logging.basicConfig()
 logging.getLogger().setLevel(numeric_level)
 
 # REDIS CONNECTION AND QUEUE OBJECTS
-redis = Redis(
-    os.environ.get("REDIS_HOST", "redis.ta1-service"),
-    os.environ.get("REDIS_PORT", "6379"),
-)
-
-q = Queue(connection=redis, default_timeout=-1)
-
-
-def get_queue():
-    return q
+def get_redis():
+    redis = Redis(
+        settings.REDIS_HOST,
+        settings.REDIS_PORT,
+    )
 
 
-def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
-    q = get_queue()
+def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None, *, redis):
+    q = Queue(connection=redis, default_timeout=-1)
 
     if options is None:
         options = {}
@@ -61,7 +57,7 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
     if not job or force_restart:
         flattened_options = deepcopy(options)
     job = q.enqueue_call(
-        func=operation_name, args=[], kwargs=flattened_options, job_id=job_id
+        func=f"worker.{operation_name}", args=[], kwargs=flattened_options, job_id=job_id
     )
     if synchronous:
         timer = 0.0
@@ -91,7 +87,7 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None):
     return ExtractionJob(id=job_id, status=status, result=result)
 
 
-def fetch_job_status(job_id):
+def fetch_job_status(job_id, redis):
     """Fetch a job's results from RQ.
 
     Args:

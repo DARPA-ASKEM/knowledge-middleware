@@ -7,14 +7,14 @@ export LANG
 
 # Initializes submodules and copies environment file sample to env file.
 .PHONY:init
-init:
-	make envfile; \
-	git submodule update --init; \
+init:.env
+	poetry install --with api
+	git submodule update --init;
 
 # Environment file copy
-envfile:
+.env:
 ifeq ($(wildcard envfile),)
-	cp api.env.sample api.env; \
+	cp env.sample .env; \
 	echo -e "\nDon't forget to update 'envfile' with all your secrets!";
 endif
 

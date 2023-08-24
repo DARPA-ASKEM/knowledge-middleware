@@ -2,13 +2,15 @@ import io
 import json
 import os
 import sys
+import logging
 
 import pandas
 import requests
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()  # default to INFO if not set
+from lib.settings import settings
 
-import logging
+LOG_LEVEL = settings.LOG_LEVEL.upper()
+
 
 numeric_level = getattr(logging, LOG_LEVEL, None)
 if not isinstance(numeric_level, int):
@@ -23,7 +25,7 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TDS_API = os.getenv("TDS_URL")
+TDS_API = settings.TDS_URL
 
 
 def put_amr_to_tds(amr_payload, name=None, description=None):
