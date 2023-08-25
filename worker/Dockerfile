@@ -19,5 +19,5 @@ ENV REDIS_HOST redis
 ENV REDIS_PORT 6379
 
 COPY worker worker
-WORKDIR /worker
+COPY lib lib
 CMD rq worker --url redis://$REDIS_HOST:$REDIS_PORT high default low

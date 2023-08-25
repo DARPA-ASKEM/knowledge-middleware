@@ -16,8 +16,9 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-cache --with api
 
 COPY api ta1-service/api
+COPY lib ta1-service/lib
 WORKDIR /ta1-service
 
 EXPOSE 8000
-ENV PYTHONPATH=/ta1-service/api
-CMD [ "uvicorn", "server:app", "--reload", "--host", "0.0.0.0", "--port", "8000" ]
+ENV PYTHONPATH=/ta1-service
+CMD [ "uvicorn", "api.server:app", "--reload", "--host", "0.0.0.0", "--port", "8000" ]
