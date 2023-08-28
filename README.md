@@ -44,7 +44,10 @@ pytest --cov . tests
 
 ### Testing Configuration
 
-To modify your test configuration, edit the `tests/conftest.py` file. In particular note that setting `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
+Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
+
+To add additional scenarios, create a new directory in `tests/scenarios`. The directory must contain a `config.yaml` where each tests you wish to be run
+will be specified in `enabled`. 
 
 ## License
 
