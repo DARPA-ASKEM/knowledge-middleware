@@ -1,16 +1,22 @@
 import requests
 from jsonschema import validate, ValidationError
 from collections import defaultdict
-from os import listdir
+from os import listdir, path
 
 import yaml
 
 def get_parameterizations():
     selections = defaultdict(list)
     for pick in listdir("tests/scenarios"):
-        with open(f"tests/scenarios/{pick}/config.yaml") as file:
+        with open("tests/resources.yaml") as file:
+            spec = yaml.load(file, yaml.CLoader)
+        dir = f"tests/scenarios/{pick}" 
+        with open(f"{dir}/config.yaml") as file:
             config = yaml.load(file, yaml.CLoader)
             for selection in config["enabled"]:
+                for resource in spec[selection]:
+                    if not path.exists(dir + "/" + resource):
+                        raise Exception(f"Cannot test scenario '{pick}': Missing resource '{resource}'")
                 selections[selection].append(pick) 
     return selections
         

@@ -1,5 +1,5 @@
 ---
-pdf_extractions:
+pdf_extraction:
   - text.json
   - paper.pdf
   - extractions.json
