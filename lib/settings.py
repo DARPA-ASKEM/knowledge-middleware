@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    LIVE: bool = False
+    MOCK_TA1: bool = True
     REDIS_HOST: str = "redis.ta1-service"
     REDIS_PORT: int = 6379
     TA1_UNIFIED_URL: str = "http://ta1:5"

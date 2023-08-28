@@ -44,7 +44,7 @@ pytest --cov . tests
 
 ### Testing Configuration
 
-To modify your test configuration, edit the `tests/conftest.py` file. In particular note that setting `LIVE` to `TRUE` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
+To modify your test configuration, edit the `tests/conftest.py` file. In particular note that setting `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
 
 ## License
 
