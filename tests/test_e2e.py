@@ -6,10 +6,13 @@ import pytest
 import logging
 
 from lib.settings import settings
+from tests.test_utils import get_parameterizations
 
 logger = logging.getLogger(__name__)
 
-@pytest.mark.resource("basic_pdf_extraction")
+params = get_parameterizations()
+
+@pytest.mark.parametrize("resource", params["pdf_extraction"])
 def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -50,7 +53,7 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_pdf_to_text")
+@pytest.mark.parametrize("resource", params["pdf_to_text"])
 def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -86,7 +89,7 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_code_to_amr")
+@pytest.mark.parametrize("resource", params["code_to_amr"])
 def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
@@ -124,7 +127,7 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_equations_to_amr")
+@pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     #### ARRANGE ####
     equations = open(f"{context_dir}/equations.txt").read()
@@ -161,7 +164,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_profile_dataset")
+@pytest.mark.parametrize("resource", params["profile_dataset"])
 def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     CHAR_LIMIT = 250
@@ -211,7 +214,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     assert status_response.json().get("status") == "finished"
 
     
-@pytest.mark.resource("basic_profile_model")
+@pytest.mark.parametrize("resource", params["profile_model"])
 def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))

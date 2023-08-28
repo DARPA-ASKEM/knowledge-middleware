@@ -1,6 +1,19 @@
 import requests
 from jsonschema import validate, ValidationError
+from collections import defaultdict
+from os import listdir
 
+import yaml
+
+def get_parameterizations():
+    selections = defaultdict(list)
+    for pick in listdir("tests/scenarios"):
+        with open(f"tests/scenarios/{pick}/config.yaml") as file:
+            config = yaml.load(file, yaml.CLoader)
+            for selection in config["enabled"]:
+                selections[selection].append(pick) 
+    return selections
+        
 
 class AMR:
     def __init__(self, json_data):

@@ -1,0 +1,24 @@
+---
+pdf_extractions:
+  - text.json
+  - paper.pdf
+  - extractions.json
+pdf_to_text:
+  - text.json
+  - paper.pdf
+code_to_amr:
+  - code.py
+  - amr.json
+equations_to_amr:
+  - equations.txt
+  - amr.json
+profile_dataset:
+  - text.json
+  - paper.pdf
+  - data.csv
+  - data_card.json
+profile_model:
+  - text.json
+  - paper.pdf
+  - code.py
+  - amr.json

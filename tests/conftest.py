@@ -57,9 +57,8 @@ def client(redis):
 
 
 @pytest.fixture
-def context_dir(request):
-    chosen = request.node.get_closest_marker("resource").args[0]
-    yield f"./tests/resources/{chosen}" 
+def context_dir(resource):
+    yield f"./tests/scenarios/{resource}" 
 
 
 @pytest.fixture
