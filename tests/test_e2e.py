@@ -4,9 +4,10 @@ import requests
 
 import pytest
 import logging
+from rq.job import Job
 
 from lib.settings import settings
-from tests.test_utils import get_parameterizations
+from tests.utils import get_parameterizations, AMR
 
 logger = logging.getLogger(__name__)
 
@@ -121,11 +122,17 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job = Job.fetch(job_id, connection=worker.connection)
+    amr_instance = AMR(job.result["amr"])
+
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
 
+    assert (
+             amr_instance.is_valid()
+    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
@@ -157,11 +164,18 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
+    
+    job = Job.fetch(job_id, connection=worker.connection)
+    amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
+
+    assert (
+             amr_instance.is_valid()
+    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])

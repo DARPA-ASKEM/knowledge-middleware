@@ -24,47 +24,27 @@ def get_parameterizations():
 class AMR:
     def __init__(self, json_data):
         self.json_data = json_data
-        self.schema_url = self._transform_url(self.json_data.get("schema", None))
-        self.schema = self._fetch_schema()  # Fetch the schema during initialization
-        self.validation_error = None  # Store the validation error if any
-
-    def _transform_url(self, url):
-        """Transforms a GitHub URL into its raw format."""
-        if not url:
-            return None
-
-        if "raw.githubusercontent.com" in url:
-            return url
-
-        return url.replace("github.com", "raw.githubusercontent.com").replace(
-            "/blob", ""
-        )
-
-    def _fetch_schema(self):
-        """Private method to fetch the JSON schema from the specified URL."""
-        if not self.schema_url:
+        self.header = json_data["header"]
+        try:
+            self.schema_url = self.header["schema"]
+        except KeyError:
             raise ValueError("No schema URL specified in the input JSON.")
-
+        if "raw.githubusercontent.com" not in self.schema_url:
+            self.schema_url = self.schema_url.replace("github.com", "raw.githubusercontent.com").replace(
+                "/blob", ""
+        )
         response = requests.get(self.schema_url)
         response.raise_for_status()
-        return response.json()
+        self.schema = response.json()
+        self.validation_error = None
+
 
     def is_valid(self):
         """Validates the original JSON against the fetched JSON schema."""
-        if not self.schema:
-            raise ValueError(
-                "Schema is not available. Fetching might have failed during initialization."
-            )
-
         try:
             validate(instance=self.json_data, schema=self.schema)
-            return True
         except ValidationError as e:
-            self.validation_error = e
+            self.validation_error = str(e)
             return False
-
-    def get_validation_error(self):
-        """Retrieve the validation error message."""
-        if not self.validation_error:
-            return None
-        return str(self.validation_error)
+        else:
+            return True
