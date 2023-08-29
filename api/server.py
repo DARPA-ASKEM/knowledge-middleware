@@ -21,8 +21,8 @@ logging.getLogger().setLevel(numeric_level)
 
 def build_api(*args) -> FastAPI:
     api = FastAPI(
-        title="Terarium TA1 Middleware Service",
-        description="Middleware for managing interactions with various TA1 services.",
+        title="Terarium Knowledge Middleware Service",
+        description="Middleware for managing interactions with various services.",
         docs_url="/",
     )
     origins = [

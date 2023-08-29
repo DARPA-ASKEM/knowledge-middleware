@@ -1,12 +1,12 @@
 ---
 version: "3.9"
 networks:
-  ta1-service:
+  knowledge-middleware:
     driver: bridge
-    name: ta1-service
+    name: knowledge-middleware
 services:
   api:
-    container_name: api-ta1-service
+    container_name: api-knowledge-middleware
     build:
       context: ./
       dockerfile: api/Dockerfile
@@ -15,7 +15,7 @@ services:
     env_file:
       - .env
     networks:
-      - ta1-service
+      - knowledge-middleware
     depends_on:
       - redis
     volumes:
@@ -23,14 +23,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
   redis:
-    container_name: redis-ta1-service
+    container_name: redis-knowledge-middleware
     image: redis
     ports:
       - "6379:6379"
     networks:
-      - ta1-service
+      - knowledge-middleware
   rqworker:
-    container_name: worker-ta1-service
+    container_name: worker-knowledge-middleware
     build:
       context: ./
       dockerfile: worker/Dockerfile
@@ -39,4 +39,4 @@ services:
     depends_on:
       - redis
     networks:
-      - ta1-service
+      - knowledge-middleware

@@ -37,7 +37,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-# Worker jobs for TA1 services
+# Worker jobs for knowledge services
 def equations_to_amr(*args, **kwargs):
     equation_type = kwargs.get("equation_type")
     equations = kwargs.get("equations")
@@ -57,7 +57,7 @@ def equations_to_amr(*args, **kwargs):
 
     headers = {"Content-Type": "application/json"}
 
-    logger.info(f"Sending equations of type {equation_type} to TA1 at {url}")
+    logger.info(f"Sending equations of type {equation_type} to backend knowledge services at {url}")
     if equation_type == "mathml":
         amr_response = requests.put(
             url, data=json.dumps(put_payload, default=str), headers=headers
@@ -70,7 +70,7 @@ def equations_to_amr(*args, **kwargs):
         amr_json = amr_response.json()
         logger.debug(f"TA 1 response object: {amr_response}")
     except:
-        logger.error(f"Failed to parse response from TA1 Service: {amr_response.text}")
+        logger.error(f"Failed to parse response from backend knowledge service: {amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
@@ -108,11 +108,11 @@ def pdf_to_text(*args, **kwargs):
 
     try:
         logger.info(
-            f"Sending PDF to TA1 service with artifact id {artifact_id} at {unified_text_reading_url}"
+            f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, files=put_payload)
         logger.info(
-            f"Response received from TA1 with status code: {response.status_code}"
+            f"Response received from backend knowledge service with status code: {response.status_code}"
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {extraction_json}")
@@ -171,11 +171,11 @@ def pdf_extractions(*args, **kwargs):
 
     try:
         logger.info(
-            f"Sending PDF to TA1 service with artifact id {artifact_id} at {unified_text_reading_url}"
+            f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, json=payload)
         logger.info(
-            f"Response received from TA1 with status code: {response.status_code}"
+            f"Response received from backend knowledge service with status code: {response.status_code}"
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {response.text}")
@@ -184,14 +184,14 @@ def pdf_extractions(*args, **kwargs):
         if isinstance(outputs, dict):
             if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
                 raise ValueError(
-                    f"Malformed or empty response from TA1: {extraction_json}"
+                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
                 )
             else:
                 extraction_json = extraction_json.get("outputs").get("data")
         elif isinstance(outputs, list):
             if extraction_json.get("outputs")[0].get("data") is None:
                 raise ValueError(
-                    f"Malformed or empty response from TA1: {extraction_json}"
+                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
                 )
             else:
                 extraction_json = [extraction_json.get("outputs")[0].get("data")]
@@ -380,7 +380,7 @@ def model_card(*args, **kwargs):
             raise Exception(f"Failed to generate model card for {model_id}: {e}")
 
     else:
-        raise Exception(f"Bad response from TA1 for {model_id}: {resp.status_code}")
+        raise Exception(f"Bad response from backend knowledge service for {model_id}: {resp.status_code}")
 
 
 # dccde3a0-0132-430c-afd8-c67953298f48
@@ -438,7 +438,7 @@ def link_amr(*args, **kwargs):
             "message": "Model enriched and updated in TDS",
         }
     else:
-        raise Exception("Response from TA1 service was not 200: {response.text}")
+        raise Exception("Response from backend knowledge service was not 200: {response.text}")
 
 
 # 60e539e4-6969-4369-a358-c601a3a583da
@@ -459,13 +459,13 @@ def code_to_amr(*args, **kwargs):
     }
 
     logger.info(
-        f"Sending code to TA1 service with code id: {code_id} at {code_amr_workflow_url}"
+        f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
     amr_response = requests.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
     )
     logger.info(
-        f"Response received from TA1 with status code: {amr_response.status_code}"
+        f"Response received from backend knowledge service with status code: {amr_response.status_code}"
     )
 
     amr_json = amr_response
@@ -474,7 +474,7 @@ def code_to_amr(*args, **kwargs):
         amr_json = amr_response.json()
         logger.debug(f"TA 1 response object: {amr_json}")
     except:
-        logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
+        logger.error(f"Failed to parse response from backend knowledge service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
         metadata = amr_json.get("metadata",{})
