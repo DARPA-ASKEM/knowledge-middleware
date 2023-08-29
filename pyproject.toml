@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ta1-service"
+name = "knowledge-middleware"
 version = "1.6.0"
 description = ""
 authors = ["Powell Fendley"]

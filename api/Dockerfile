@@ -15,10 +15,10 @@ RUN pip install --no-cache-dir poetry==1.5.1
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-cache --with api
 
-COPY api ta1-service/api
-COPY lib ta1-service/lib
-WORKDIR /ta1-service
+COPY api knowledge-middleware/api
+COPY lib knowledge-middleware/lib
+WORKDIR /knowledge-middleware
 
 EXPOSE 8000
-ENV PYTHONPATH=/ta1-service
+ENV PYTHONPATH=/knowledge-middleware
 CMD [ "uvicorn", "api.server:app", "--reload", "--host", "0.0.0.0", "--port", "8000" ]
