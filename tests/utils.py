@@ -51,15 +51,15 @@ class AMR:
             return True
 
     def structural_similarity(self, standard):
-        return 1 - len(self.json_data["model"]["states"])/len(standard["model"]["states"])
+        return len(self.json_data["model"]["states"]) == len(standard["model"]["states"])
 
 
-def record_quality_check(context_dir, operation, test, error):
+def record_quality_check(context_dir, operation, test, passed):
     scenario = context_dir.split("/")[-1]
     makedirs("tests/output", exist_ok=True)
     with open(f"tests/output/qual.csv", "a", newline="") as file:
         result = csv.writer(file)
-        result.writerow([scenario, operation, test, error])
+        result.writerow([scenario, operation, test, passed])
 
 
 

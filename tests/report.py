@@ -10,8 +10,8 @@ def report():
     report = defaultdict(lambda: {"operations": defaultdict(dict)}) 
     with open("tests/output/qual.csv", "r", newline="") as file:
         qual = csv.reader(file)
-        for scenario, operation, test, error in qual:
-            report[scenario]["operations"][operation][test] = float(error)
+        for scenario, operation, test, passed in qual:
+            report[scenario]["operations"][operation][test] = bool(passed)
 
     with open("tests/output/tests.json", "r") as file:
         raw_tests = json.load(file)["tests"]
@@ -20,10 +20,10 @@ def report():
             # Don't worry we're not actually checking if brackets match
             match_result = re.match(re.compile(r"test_([a-z|_]+)\[([a-z|_]+)\]"), full_name)
             operation, scenario = match_result[1], match_result[2]
-            error = float(not testobj["outcome"] == "passed")
-            return (scenario, operation, "Integration", error)
-        for scenario, operation, test, error in map(get_case, raw_tests):
-            report[scenario]["operations"][operation][test] = error
+            passed = testobj["outcome"] == "passed"
+            return (scenario, operation, "Integration", passed)
+        for scenario, operation, test, passed in map(get_case, raw_tests):
+            report[scenario]["operations"][operation][test] = passed
 
     for scenario in report:
         with open(f"tests/scenarios/{scenario}/config.yaml") as file:
