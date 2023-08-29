@@ -1,7 +1,8 @@
 import requests
 from jsonschema import validate, ValidationError
 from collections import defaultdict
-from os import listdir, path
+from os import listdir, makedirs, path
+import csv
 
 import yaml
 
@@ -48,3 +49,17 @@ class AMR:
             return False
         else:
             return True
+
+    def structural_simularity(self, standard):
+        return len(self.json_data["model"]["states"])/len(standard["model"]["states"])
+
+
+def record_qual_result(context_dir, test, error):
+    scenario = context_dir.split("/")[-1]
+    makedirs("tests/output", exist_ok=True)
+    with open(f"tests/output/qual.csv", "a", newline="") as file:
+        result = csv.writer(file)
+        result.writerow([scenario, test, error])
+
+
+

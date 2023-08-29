@@ -1,20 +1,23 @@
 import json
 import os
-import requests
+import logging
+from shutil import rmtree
 
 import pytest
-import logging
+import requests
 from rq.job import Job
 
 from lib.settings import settings
-from tests.utils import get_parameterizations, AMR
+from tests.utils import get_parameterizations, record_qual_result, AMR
 
 logger = logging.getLogger(__name__)
 
 params = get_parameterizations()
+if os.path.exists("tests/output"): rmtree("tests/output")
+
 
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
@@ -134,6 +137,11 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
              amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
+    
+    #### QUALITATIVE POSTAMBLE ####
+    record_qual_result(context_dir, "Structural Simularity", amr_instance.structural_simularity(amr))
+    
+
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     #### ARRANGE ####
@@ -176,6 +184,10 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert (
              amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
+    
+
+    #### QUALITATIVE POSTAMBLE ####
+    record_qual_result(context_dir, "Structural Simularity", amr_instance.structural_simularity(amr))
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
