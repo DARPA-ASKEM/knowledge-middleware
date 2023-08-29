@@ -70,8 +70,12 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
 
 
 def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions=None, text=None, model_id=None
+    artifact_id, name, description, filename, extractions=None, text=None, model_id=None, code=False
 ):
+    """
+    Update an artifact or code object in TDS. If `code` is `True` this assumes you are 
+    updating `code`, otherwise you are updating an `artifact`
+    """
     if extractions and text:
         metadata = extractions[0]
         metadata["text"] = text
@@ -91,9 +95,13 @@ def put_artifact_extraction_to_tds(
         "file_names": [filename],
         "metadata": metadata,
     }
-    logger.info(f"Storing extraction to TDS for artifact: {artifact_id}")
-    # Create TDS artifact
-    tds_artifact = f"{TDS_API}/artifacts/{artifact_id}"
+    if code:
+        endpoint = "code"
+    else:
+        endpoint = "artifacts"
+    logger.info(f"Storing extraction to TDS for {endpoint}: {artifact_id}")
+    # patch TDS artifact/code
+    tds_artifact = f"{TDS_API}/{endpoint}/{artifact_id}"
     artifact_response = requests.put(tds_artifact, json=artifact_payload)
     logger.debug(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
@@ -101,8 +109,12 @@ def put_artifact_extraction_to_tds(
     return {"status": artifact_put_status}
 
 
-def get_artifact_from_tds(artifact_id):
-    tds_artifacts_url = f"{TDS_API}/artifacts/{artifact_id}"
+def get_artifact_from_tds(artifact_id, code=False):
+    if code:
+        endpoint = "code"
+    else:
+        endpoint = "artifacts"
+    tds_artifacts_url = f"{TDS_API}/{endpoint}/{artifact_id}"
 
     artifact = requests.get(tds_artifacts_url)
     artifact_json = artifact.json()
@@ -111,7 +123,7 @@ def get_artifact_from_tds(artifact_id):
         0
     ]  # Assumes only one file will be present for now.
 
-    download_url = f"{TDS_API}/artifacts/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
+    download_url = f"{TDS_API}/{endpoint}/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
     artifact_download_url = requests.get(download_url)
 
     presigned_download = artifact_download_url.json().get("url")
@@ -120,7 +132,7 @@ def get_artifact_from_tds(artifact_id):
 
     downloaded_artifact = requests.get(artifact_download_url.json().get("url"))
 
-    logger.info(f"ARTIFACT RETRIEVAL STATUS:{downloaded_artifact.status_code}")
+    logger.info(f"{endpoint.upper()} RETRIEVAL STATUS:{downloaded_artifact.status_code}")
 
     return artifact_json, downloaded_artifact.content
 
