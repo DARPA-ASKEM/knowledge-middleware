@@ -448,7 +448,7 @@ def code_to_amr(*args, **kwargs):
     description = kwargs.get("description")
 
     code_json, downloaded_code = get_artifact_from_tds(code_id, code=True)
-
+    
     code_blob = downloaded_code.decode("utf-8")
     logger.info(code_blob[:250])
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
@@ -477,6 +477,9 @@ def code_to_amr(*args, **kwargs):
         logger.error(f"Failed to parse response from TA1 Service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
+        metadata = amr_json.get("metadata",{})
+        metadata["code_id"] = code_id
+        amr_json["metadata"] = metadata
         tds_responses = put_amr_to_tds(amr_json, name, description)
         logger.info(f"TDS Response: {tds_responses}")
 

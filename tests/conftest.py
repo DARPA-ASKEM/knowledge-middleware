@@ -128,6 +128,7 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
         }
         if code:
             artifact["filename"] = "code.py"
+            artifact["language"] = "python"
         else:
             artifact["file_names"]: []
         artifact_url = f"{settings.TDS_URL}/{_type}/{artifact['id']}"
