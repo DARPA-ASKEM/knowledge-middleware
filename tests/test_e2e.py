@@ -139,7 +139,7 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
 
     
     #### QUALITATIVE POSTAMBLE ####
-    record_qual_result(context_dir, "Structural Simularity", amr_instance.structural_simularity(amr))
+    record_qual_result(context_dir, "code_to_amr", "Structural Similarity", amr_instance.structural_similarity(amr))
     
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
@@ -187,7 +187,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     
 
     #### QUALITATIVE POSTAMBLE ####
-    record_qual_result(context_dir, "Structural Simularity", amr_instance.structural_simularity(amr))
+    record_qual_result(context_dir, "equations_to_amr", "Structural Similarity", amr_instance.structural_similarity(amr))
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
