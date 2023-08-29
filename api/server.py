@@ -21,8 +21,8 @@ logging.getLogger().setLevel(numeric_level)
 
 def build_api(*args) -> FastAPI:
     api = FastAPI(
-        title="Terarium TA1 Middleware Service",
-        description="Middleware for managing interactions with various TA1 services.",
+        title="Terarium Knowledge Middleware Service",
+        description="Middleware for managing interactions with various services.",
         docs_url="/",
     )
     origins = [
@@ -98,21 +98,21 @@ def equations_to_amr(
 
 @app.post("/code_to_amr")
 def code_to_amr(
-    artifact_id: str, name: Optional[str] = None, description: Optional[str] = None, redis=Depends(get_redis)
+    code_id: str, name: Optional[str] = None, description: Optional[str] = None, redis=Depends(get_redis)
 ) -> ExtractionJob:
     """
-    Converts a code artifact to an AMR. Assumes that the code file is the first
-    file (and only) attached to the artifact.
+    Converts a code object to an AMR. Assumes that the code file is the first
+    file (and only) attached to the code.
 
     Args:
     ```
-        artifact_id (str): the id of the code artifact
+        code_id (str): the id of the code
         name (str, optional): the name to set on the newly created model
         description (str, optional): the description to set on the newly created model
     ```
     """
     operation_name = "operations.code_to_amr"
-    options = {"artifact_id": artifact_id, "name": name, "description": description}
+    options = {"code_id": code_id, "name": name, "description": description}
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 

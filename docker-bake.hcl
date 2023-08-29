@@ -28,11 +28,11 @@ function "check_suffix" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 group "prod" {
-  targets = ["ta1-service-api", "ta1-service-worker"]
+  targets = ["knowledge-middleware-api", "knowledge-middleware-worker"]
 }
 
 group "default" {
-  targets = ["ta1-service-api-base", "ta1-service-worker-base"]
+  targets = ["knowledge-middleware-api-base", "knowledge-middleware-worker-base"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -41,22 +41,22 @@ target "_platforms" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "ta1-service-api-base" {
+target "knowledge-middleware-api-base" {
   context = "."
-  tags = tag("ta1-service-api", "", "")
+  tags = tag("knowledge-middleware-api", "", "")
   dockerfile = "api/Dockerfile"
 }
 
-target "ta1-service-worker-base" {
+target "knowledge-middleware-worker-base" {
   context = "."
-  tags = tag("ta1-service-worker", "", "")
+  tags = tag("knowledge-middleware-worker", "", "")
   dockerfile = "worker/Dockerfile"
 }
 
-target "ta1-service-api" {
-  inherits = ["_platforms", "ta1-service-api-base"]
+target "knowledge-middleware-api" {
+  inherits = ["_platforms", "knowledge-middleware-api-base"]
 }
 
-target "ta1-service-worker" {
-  inherits = ["_platforms", "ta1-service-worker-base"]
+target "knowledge-middleware-worker" {
+  inherits = ["_platforms", "knowledge-middleware-worker-base"]
 }

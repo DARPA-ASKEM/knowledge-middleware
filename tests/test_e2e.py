@@ -4,12 +4,16 @@ import requests
 
 import pytest
 import logging
+from rq.job import Job
 
 from lib.settings import settings
+from tests.utils import get_parameterizations, AMR
 
 logger = logging.getLogger(__name__)
 
-@pytest.mark.resource("basic_pdf_extraction")
+params = get_parameterizations()
+
+@pytest.mark.parametrize("resource", params["pdf_extraction"])
 def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -22,7 +26,7 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
     file_storage.upload("paper.pdf", "TEST TEXT")
 
     extractions = json.load(open(f"{context_dir}/extractions.json"))
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
 
     query_params = {
@@ -50,7 +54,7 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_pdf_to_text")
+@pytest.mark.parametrize("resource", params["pdf_to_text"])
 def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -66,7 +70,7 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     }
 
     extractions = json.load(open(f"{context_dir}/text.json"))
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
     
     #### ACT ####
@@ -86,16 +90,16 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     assert status_response.json().get("status") == "finished"
 
 
-@pytest.mark.resource("basic_code_to_amr")
+@pytest.mark.parametrize("resource", params["code_to_amr"])
 def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
-    tds_artifact = gen_tds_artifact()
-    tds_artifact["file_names"] = ["code.py"]
+    tds_code = gen_tds_artifact(code=True)
+    tds_code["file_names"] = ["code.py"]
     file_storage.upload("code.py", code)
 
     query_params = {
-        "artifact_id": tds_artifact["id"],
+        "code_id": tds_code["id"],
         "name": "test model",
         "description": "test description",
     }
@@ -104,7 +108,7 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     http_mock.post(f"{settings.TDS_URL}/provenance", json={})
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     
     #### ACT ####
@@ -118,13 +122,19 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job = Job.fetch(job_id, connection=worker.connection)
+    amr_instance = AMR(job.result["amr"])
+
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
 
+    assert (
+             amr_instance.is_valid()
+    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
-@pytest.mark.resource("basic_equations_to_amr")
+@pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     #### ARRANGE ####
     equations = open(f"{context_dir}/equations.txt").read()
@@ -140,7 +150,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     amr = json.load(open(f"{context_dir}/amr.json"))
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
     
     #### ACT ####
@@ -154,14 +164,21 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
+    
+    job = Job.fetch(job_id, connection=worker.connection)
+    amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
 
+    assert (
+             amr_instance.is_valid()
+    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
-@pytest.mark.resource("basic_profile_dataset")
+
+@pytest.mark.parametrize("resource", params["profile_dataset"])
 def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     CHAR_LIMIT = 250
@@ -191,7 +208,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     http_mock.get(f"{settings.TDS_URL}/datasets/{dataset['id']}", json=dataset)
     http_mock.put(f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]})
     data_card = json.load(open(f"{context_dir}/data_card.json"))
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
 
     #### ACT ####
@@ -211,7 +228,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     assert status_response.json().get("status") == "finished"
 
     
-@pytest.mark.resource("basic_profile_model")
+@pytest.mark.parametrize("resource", params["profile_model"])
 def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -233,7 +250,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     http_mock.get(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id":text_artifact["id"], "model": amr})
     http_mock.put(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id": text_artifact["id"]})
     model_card = json.load(open(f"{context_dir}/model_card.json"))
-    if not settings.LIVE:
+    if settings.MOCK_TA1:
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
 
     query_params = {"paper_artifact_id": text_artifact["id"]}

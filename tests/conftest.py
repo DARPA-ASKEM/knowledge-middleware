@@ -57,9 +57,8 @@ def client(redis):
 
 
 @pytest.fixture
-def context_dir(request):
-    chosen = request.node.get_closest_marker("resource").args[0]
-    yield f"./tests/resources/{chosen}" 
+def context_dir(resource):
+    yield f"./tests/scenarios/{resource}" 
 
 
 @pytest.fixture
@@ -115,16 +114,24 @@ def file_storage(http_mock):
 def gen_tds_artifact(context_dir, http_mock, file_storage):
     # Mock the TDS artifact
     counter = count()
-    def generate():
+    def generate(code=False):
+        if code:
+            _type = "code"
+        else:
+            _type = "artifacts"
         artifact = {
-            "id": f"artifact-{next(counter)}",
-            "name": "artifact",
-            "description": "test artifact",
+            "id": f"{_type}-{next(counter)}",
+            "name": _type,
+            "description": f"test {_type}",
             "timestamp": "2023-07-17T19:11:43",
-            "file_names": [],
             "metadata": {},
         }
-        artifact_url = f"{settings.TDS_URL}/artifacts/{artifact['id']}"
+        if code:
+            artifact["filename"] = "code.py"
+            artifact["language"] = "python"
+        else:
+            artifact["file_names"]: []
+        artifact_url = f"{settings.TDS_URL}/{_type}/{artifact['id']}"
         http_mock.get(artifact_url, json=artifact)
         http_mock.put(artifact_url)
         return artifact

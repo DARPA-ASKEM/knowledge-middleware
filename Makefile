@@ -9,6 +9,7 @@ export LANG
 .PHONY:init
 init:.env
 	poetry install --with api
+	poetry run pre-commit install
 	git submodule update --init;
 
 # Environment file copy

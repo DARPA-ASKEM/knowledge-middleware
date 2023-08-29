@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ta1-service"
+name = "knowledge-middleware"
 version = "1.6.0"
 description = ""
 authors = ["Powell Fendley"]
@@ -35,6 +35,8 @@ jsonschema = "^4.19.0"
 yamllint = "^1.32.0"
 poethepoet = "^0.22.0"
 requests-mock = "^1.11.0"
+pyyaml = "^6.0.1"
+pre-commit = "^3.3.3"
 
 [tool.pytest.ini_options]
 markers = ["resource"]
