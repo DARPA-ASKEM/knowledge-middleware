@@ -97,12 +97,12 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
 def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
-    tds_artifact = gen_tds_artifact()
-    tds_artifact["file_names"] = ["code.py"]
+    tds_code = gen_tds_artifact(code=True)
+    tds_code["file_names"] = ["code.py"]
     file_storage.upload("code.py", code)
 
     query_params = {
-        "artifact_id": tds_artifact["id"],
+        "code_id": tds_code["id"],
         "name": "test model",
         "description": "test description",
     }
@@ -137,7 +137,6 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
              amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
-    
     #### QUALITATIVE POSTAMBLE ####
     record_quality_check(context_dir, "code_to_amr", "Structural Similarity", amr_instance.structural_similarity(amr))
     
@@ -184,7 +183,6 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert (
              amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
-    
 
     #### QUALITATIVE POSTAMBLE ####
     record_quality_check(context_dir, "equations_to_amr", "Structural Similarity", amr_instance.structural_similarity(amr))

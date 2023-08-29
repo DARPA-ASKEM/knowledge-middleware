@@ -61,5 +61,3 @@ def record_quality_check(context_dir, operation, test, passed):
         result = csv.writer(file)
         result.writerow([scenario, operation, test, passed])
 
-
-

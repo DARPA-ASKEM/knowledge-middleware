@@ -443,23 +443,23 @@ def link_amr(*args, **kwargs):
 
 # 60e539e4-6969-4369-a358-c601a3a583da
 def code_to_amr(*args, **kwargs):
-    artifact_id = kwargs.get("artifact_id")
+    code_id = kwargs.get("code_id")
     name = kwargs.get("name")
     description = kwargs.get("description")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
-
-    code_blob = downloaded_artifact.decode("utf-8")
+    code_json, downloaded_code = get_artifact_from_tds(code_id, code=True)
+    
+    code_blob = downloaded_code.decode("utf-8")
     logger.info(code_blob[:250])
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
     request_payload = {
-        "files": [artifact_json.get("file_names")[0]],
+        "files": [code_json.get("filename")],
         "blobs": [code_blob],
     }
 
     logger.info(
-        f"Sending code to backend knowledge service with artifact id: {artifact_id} at {code_amr_workflow_url}"
+        f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
     amr_response = requests.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
@@ -477,27 +477,32 @@ def code_to_amr(*args, **kwargs):
         logger.error(f"Failed to parse response from backend knowledge service:\n{amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
+        metadata = amr_json.get("metadata",{})
+        metadata["code_id"] = code_id
+        amr_json["metadata"] = metadata
         tds_responses = put_amr_to_tds(amr_json, name, description)
+        logger.info(f"TDS Response: {tds_responses}")
 
         put_artifact_extraction_to_tds(
-            artifact_id=artifact_id,
-            name=artifact_json.get("name", None),
-            filename=artifact_json.get("file_names")[0],
-            description=artifact_json.get("description", None),
+            artifact_id=code_id,
+            name=code_json.get("name", None),
+            filename=code_json.get("filename"),
+            description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
+            code_language=code_json.get("language")
         )
 
         try:
             set_provenance(
                 tds_responses.get("model_id"),
                 "Model",
-                artifact_id,
-                "Artifact",
+                code_id,
+                "Code",
                 "EXTRACTED_FROM",
             )
         except Exception as e:
             logger.error(
-                f"Failed to store provenance tying model to code artifact: {e}"
+                f"Failed to store provenance tying model to code: {e}"
             )
 
         response = {
