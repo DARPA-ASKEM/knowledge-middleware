@@ -28,7 +28,7 @@ logging.getLogger().setLevel(numeric_level)
 
 # REDIS CONNECTION AND QUEUE OBJECTS
 def get_redis():
-    redis = Redis(
+    return Redis(
         settings.REDIS_HOST,
         settings.REDIS_PORT,
     )

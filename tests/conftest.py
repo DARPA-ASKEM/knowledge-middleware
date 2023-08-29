@@ -124,9 +124,12 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
             "name": _type,
             "description": f"test {_type}",
             "timestamp": "2023-07-17T19:11:43",
-            "file_names": [],
             "metadata": {},
         }
+        if code:
+            artifact["filename"] = "code.py"
+        else:
+            artifact["file_names"]: []
         artifact_url = f"{settings.TDS_URL}/{_type}/{artifact['id']}"
         http_mock.get(artifact_url, json=artifact)
         http_mock.put(artifact_url)

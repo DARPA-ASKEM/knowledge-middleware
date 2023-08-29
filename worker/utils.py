@@ -70,7 +70,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
 
 
 def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions=None, text=None, model_id=None, code=False
+    artifact_id, name, description, filename, extractions=None, text=None, model_id=None, code_language=None
 ):
     """
     Update an artifact or code object in TDS. If `code` is `True` this assumes you are 
@@ -95,8 +95,10 @@ def put_artifact_extraction_to_tds(
         "file_names": [filename],
         "metadata": metadata,
     }
-    if code:
+    if code_language:
         endpoint = "code"
+        artifact_payload["filename"] = artifact_payload.pop("file_names")[0]
+        artifact_payload["language"] = code_language
     else:
         endpoint = "artifacts"
     logger.info(f"Storing extraction to TDS for {endpoint}: {artifact_id}")
@@ -115,13 +117,16 @@ def get_artifact_from_tds(artifact_id, code=False):
     else:
         endpoint = "artifacts"
     tds_artifacts_url = f"{TDS_API}/{endpoint}/{artifact_id}"
-
+    logger.info(tds_artifacts_url)
     artifact = requests.get(tds_artifacts_url)
     artifact_json = artifact.json()
-
-    filename = artifact_json.get("file_names")[
-        0
-    ]  # Assumes only one file will be present for now.
+    logger.info(artifact_json)
+    if code:
+        filename = artifact_json.get("filename")
+    else:
+        filename = artifact_json.get("file_names")[
+            0
+        ]  # Assumes only one file will be present for now.
 
     download_url = f"{TDS_API}/{endpoint}/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
     artifact_download_url = requests.get(download_url)

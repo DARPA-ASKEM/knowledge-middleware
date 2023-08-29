@@ -454,7 +454,7 @@ def code_to_amr(*args, **kwargs):
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
     request_payload = {
-        "files": [code_json.get("file_names")[0]],
+        "files": [code_json.get("filename")],
         "blobs": [code_blob],
     }
 
@@ -478,14 +478,15 @@ def code_to_amr(*args, **kwargs):
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description)
+        logger.info(f"TDS Response: {tds_responses}")
 
         put_artifact_extraction_to_tds(
             artifact_id=code_id,
             name=code_json.get("name", None),
-            filename=code_json.get("file_names")[0],
+            filename=code_json.get("filename"),
             description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
-            code=True
+            code_language=code_json.get("language")
         )
 
         try:
