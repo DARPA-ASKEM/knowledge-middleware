@@ -54,7 +54,7 @@ class AMR:
         return 1 - len(self.json_data["model"]["states"])/len(standard["model"]["states"])
 
 
-def record_qual_result(context_dir, operation, test, error):
+def record_quality_check(context_dir, operation, test, error):
     scenario = context_dir.split("/")[-1]
     makedirs("tests/output", exist_ok=True)
     with open(f"tests/output/qual.csv", "a", newline="") as file:
