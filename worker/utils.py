@@ -28,7 +28,7 @@ logger.addHandler(handler)
 TDS_API = settings.TDS_URL
 
 
-def put_amr_to_tds(amr_payload, name=None, description=None):
+def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     # Expects json amr payload and puts it to TDS models and model-configurations, returning an ID.
 
     headers = {"Content-Type": "application/json"}
@@ -41,32 +41,38 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
     logger.debug(amr_payload)
 
     # Create TDS model
-    tds_models = f"{TDS_API}/models"
-    model_response = requests.post(tds_models, json=amr_payload, headers=headers)
+    if model_id:
+        tds_models = f"{TDS_API}/models/{model_id}"
+        model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+        logger.info(f"Updated model in TDS with id {model_id}")
+        return {"model_id": model_id}
+    else:
+        tds_models = f"{TDS_API}/models"
+        model_response = requests.post(tds_models, json=amr_payload, headers=headers)
 
-    model_id = model_response.json().get("id")
+        model_id = model_response.json().get("id")
 
-    # Create TDS model configuration
-    tds_model_configurations = TDS_API + "/model_configurations"
-    configuration_payload = {
-        "model_id": model_id,
-        "name": amr_payload.get("name"),
-        "description": amr_payload.get("description"),
-        "model_version": amr_payload.get("model_version"),
-        "calibrated": False,
-        "configuration": json.loads(json.dumps(amr_payload)),
-    }
-    config_response = requests.post(
-        tds_model_configurations,
-        data=json.dumps(configuration_payload, default=str),
-        headers=headers,
-    )
+        # Create TDS model configuration
+        tds_model_configurations = TDS_API + "/model_configurations"
+        configuration_payload = {
+            "model_id": model_id,
+            "name": amr_payload.get("name"),
+            "description": amr_payload.get("description"),
+            "model_version": amr_payload.get("model_version"),
+            "calibrated": False,
+            "configuration": json.loads(json.dumps(amr_payload)),
+        }
+        config_response = requests.post(
+            tds_model_configurations,
+            data=json.dumps(configuration_payload, default=str),
+            headers=headers,
+        )
 
-    config_id = config_response.json().get("id")
+        config_id = config_response.json().get("id")
 
-    logger.info(f"Created model in TDS with id {model_id}")
-    logger.info(f"Created model config in TDS with id {config_id}")
-    return {"model_id": model_id, "configuration_id": config_id}
+        logger.info(f"Created model in TDS with id {model_id}")
+        logger.info(f"Created model config in TDS with id {config_id}")
+        return {"model_id": model_id, "configuration_id": config_id}
 
 
 def put_artifact_extraction_to_tds(

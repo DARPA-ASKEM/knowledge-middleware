@@ -66,6 +66,7 @@ def equations_to_amr(
     payload: List[str],
     equation_type: EquationType,
     model: str = "petrinet",
+    model_id: Optional[str] = None,
     name: Optional[str] = None,
     description: Optional[str] = None,
     redis = Depends(get_redis)
@@ -77,6 +78,7 @@ def equations_to_amr(
         payload (List[str]): A list of LaTeX or MathML strings representing the functions that are used to convert to AMR
         equation_type (str): [latex, mathml]
         model (str, optional): AMR model return type. Defaults to "petrinet". Options: "regnet", "petrinet".
+        model_id (str, optional): the id of the model (to update) based on the set of equations
         name (str, optional): the name to set on the newly created model
         description (str, optional): the description to set on the newly created model
     ```
@@ -87,6 +89,7 @@ def equations_to_amr(
         "equations": payload,
         "equation_type": equation_type.value,
         "model": model,
+        "model_id": model_id,
         "name": name,
         "description": description,
     }
