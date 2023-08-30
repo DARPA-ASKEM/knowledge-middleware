@@ -37,6 +37,8 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
         amr_payload["name"] = name
     if description:
         amr_payload["description"] = description
+    if model_id:
+        amr_payload["id"] = model_id
 
     logger.debug(amr_payload)
 
@@ -44,6 +46,8 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     if model_id:
         tds_models = f"{TDS_API}/models/{model_id}"
         model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+        if model_response.status_code != 200:
+            raise Exception(f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}")
         logger.info(f"Updated model in TDS with id {model_id}")
         return {"model_id": model_id}
     else:
