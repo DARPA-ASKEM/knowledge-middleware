@@ -49,7 +49,13 @@ Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints 
 To add additional scenarios, create a new directory in `tests/scenarios`. The directory must contain a `config.yaml` where each tests you wish to be run
 will be specified in `enabled`. 
 
+The `.env` will be used to specify the `MOCK_TA1` setting as well as the appropriate endpoints and can be passed into the test suite with:
+```
+poetry shell && export $(cat .env | xargs) && pytest -s
+```
+
 Run `poetry run poe report`, to generate `tests/output/report.json` which contains the status of each scenario and operation.
+
 
 ## License
 

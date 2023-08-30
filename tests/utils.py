@@ -4,11 +4,14 @@ from collections import defaultdict
 from os import listdir, makedirs, path
 import csv
 
+from lib.settings import settings
+
 import yaml
 
 def get_parameterizations():
     selections = defaultdict(list)
-    for pick in listdir("tests/scenarios"):
+    options = listdir("tests/scenarios") if not settings.MOCK_TA1 else ["basic"]
+    for pick in options:
         with open("tests/resources.yaml") as file:
             spec = yaml.load(file, yaml.CLoader)
         dir = f"tests/scenarios/{pick}" 

@@ -28,8 +28,8 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
     tds_artifact["metadata"] = {"text": text}
     file_storage.upload("paper.pdf", "TEST TEXT")
 
-    extractions = json.load(open(f"{context_dir}/extractions.json"))
     if settings.MOCK_TA1:
+        extractions = json.load(open(f"{context_dir}/extractions.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
 
     query_params = {
@@ -60,10 +60,6 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
 @pytest.mark.parametrize("resource", params["pdf_to_text"])
 def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
-    text_json = json.load(open(f"{context_dir}/text.json"))
-    text = ""
-    for d in text_json:
-        text += f"{d['content']}\n"
     tds_artifact = gen_tds_artifact()
     tds_artifact["file_names"] = ["paper.pdf"]
     file_storage.upload("paper.pdf", "TEST TEXT")
@@ -72,8 +68,8 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
         "artifact_id": tds_artifact["id"],
     }
 
-    extractions = json.load(open(f"{context_dir}/text.json"))
     if settings.MOCK_TA1:
+        extractions = json.load(open(f"{context_dir}/text.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
     
     #### ACT ####
@@ -107,11 +103,11 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
         "description": "test description",
     }
 
-    amr = json.load(open(f"{context_dir}/amr.json"))
     http_mock.post(f"{settings.TDS_URL}/provenance", json={})
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
     if settings.MOCK_TA1:
+        amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     
     #### ACT ####
@@ -217,8 +213,8 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     }
     http_mock.get(f"{settings.TDS_URL}/datasets/{dataset['id']}", json=dataset)
     http_mock.put(f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]})
-    data_card = json.load(open(f"{context_dir}/data_card.json"))
     if settings.MOCK_TA1:
+        data_card = json.load(open(f"{context_dir}/data_card.json"))
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
 
     #### ACT ####
@@ -259,8 +255,8 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json={"result": [text_artifact["id"]]})
     http_mock.get(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id":text_artifact["id"], "model": amr})
     http_mock.put(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id": text_artifact["id"]})
-    model_card = json.load(open(f"{context_dir}/model_card.json"))
     if settings.MOCK_TA1:
+        model_card = json.load(open(f"{context_dir}/model_card.json"))
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
 
     query_params = {"paper_artifact_id": text_artifact["id"]}
