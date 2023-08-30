@@ -8,12 +8,8 @@ import yaml
 
 def get_parameterizations():
     selections = defaultdict(list)
-    for pick in listdir("tests/scenarios"):
-        # If we are not doing live testing, for now we can't test anything but the basic
-        # scenario since we don't have the appropriate resources (e.g. pregenerated AMRs, etc)
-        if settings.MOCK_TA1:
-            if pick != "basic":
-                continue
+    options = listdir("tests/scenarios") if not settings.MOCK_TA1 else ["basic"]
+    for pick in options:
         with open("tests/resources.yaml") as file:
             spec = yaml.load(file, yaml.CLoader)
         dir = f"tests/scenarios/{pick}" 
