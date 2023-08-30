@@ -12,4 +12,4 @@ api.env
 # Python
 __pycache__
 
-tests/output*
+tests/output/*
