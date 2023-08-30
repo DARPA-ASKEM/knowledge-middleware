@@ -1,0 +1,7 @@
+---
+name: "SIDARTHE"
+description: "Scenario to process SIDARTHE paper and code"
+enabled:
+  - pdf_extraction
+  - pdf_to_text
+  - code_to_amr
