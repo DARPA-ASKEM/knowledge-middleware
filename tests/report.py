@@ -21,7 +21,7 @@ def report():
             match_result = re.match(re.compile(r"test_([a-z|_]+)\[([a-z|_]+)\]"), full_name)
             operation, scenario = match_result[1], match_result[2]
             passed = testobj["outcome"] == "passed"
-            return (scenario, operation, "Integration", passed)
+            return (scenario, operation, "Integration Status", passed)
         for scenario, operation, test, passed in map(get_case, raw_tests):
             report[scenario]["operations"][operation][test] = passed
 
