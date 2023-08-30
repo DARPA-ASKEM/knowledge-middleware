@@ -34,9 +34,9 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     headers = {"Content-Type": "application/json"}
 
     if name:
-        amr_payload["name"] = name
+        amr_payload["header"]["name"] = name
     if description:
-        amr_payload["description"] = description
+        amr_payload["header"]["description"] = description
     if model_id:
         amr_payload["id"] = model_id
 
