@@ -22,10 +22,20 @@ tests = list(test_results.keys())
 
 dataframes = {name: pd.DataFrame(index=scenarios, columns=operations) for name in tests}
 
+st.sidebar.markdown("""
+# TA1
+
+TA1 correctness and quality checks.
+    
+The current metrics are
+Status of `knowledge-middleware` integration,
+F-Score on the conversions to AMR, and the estimated time saved by the modeler. 
+""")
 for test, results in test_results.items():
     df = dataframes[test]
     for (scenario_name, operation), result in results.items():
         df.at[scenario_name, operation] = result
     st.write(f"### {test}")
+    df.replace({False: "❌", True: "✅", None: ""}, inplace=True)
     df
     
