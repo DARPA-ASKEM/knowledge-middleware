@@ -10,8 +10,8 @@ def report():
     report = defaultdict(lambda: {"operations": defaultdict(dict)}) 
     with open("tests/output/qual.csv", "r", newline="") as file:
         qual = csv.reader(file)
-        for scenario, operation, test, passed in qual:
-            report[scenario]["operations"][operation][test] = bool(passed)
+        for scenario, operation, test, result in qual:
+            report[scenario]["operations"][operation][test] = result
 
     with open("tests/output/tests.json", "r") as file:
         raw_tests = json.load(file)["tests"]
