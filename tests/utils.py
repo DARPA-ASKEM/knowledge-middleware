@@ -8,7 +8,9 @@ import yaml
 
 def get_parameterizations():
     selections = defaultdict(list)
-    options = listdir("tests/scenarios") if not settings.MOCK_TA1 else ["basic"]
+    ta1_services = [settings.TA1_UNIFIED_URL, settings.SKEMA_RS_URL, settings.MIT_TR_URL]
+    mock_ta1 = any(map(lambda url: url[:4].lower() == "mock", ta1_services))
+    options = listdir("tests/scenarios") if not mock_ta1 else ["basic"]
     for pick in options:
         with open("tests/resources.yaml") as file:
             spec = yaml.load(file, yaml.CLoader)

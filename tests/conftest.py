@@ -11,13 +11,12 @@ from io import BytesIO
 from itertools import count
 
 import requests
-
-import requests
 import requests_mock
 from rq import SimpleWorker, Queue
 from fastapi.testclient import TestClient
 from fakeredis import FakeStrictRedis
 from api.server import app, get_redis
+from worker.utils import SESSION
 from lib.settings import settings
 
 
@@ -63,10 +62,9 @@ def context_dir(resource):
 
 @pytest.fixture
 def http_mock():
-    # adapter = requests_mock.Adapter()
-    # session = requests.Session()
-    # session.mount('mock://', adapter)
-    with requests_mock.Mocker(real_http=True) as mocker:#, session=session) as mocker:
+    adapter = requests_mock.Adapter()
+    SESSION.mount('mock://', adapter)
+    with requests_mock.Mocker(real_http=True, session=SESSION) as mocker:
         yield mocker
 
 
@@ -97,7 +95,7 @@ def file_storage(http_mock):
             content = json.dumps(content)
         if isinstance(content, str):
             content = BytesIO(content.encode())
-        requests.put(f"mock://filesave?filename={quote_plus(filename)}", content)
+        SESSION.put(f"mock://filesave?filename={quote_plus(filename)}", content)
 
     get_file_url = re.compile(f"(?:(?:upload)|(?:download))-url")
     http_mock.get(get_file_url, json=get_loc)

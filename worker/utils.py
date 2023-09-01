@@ -27,6 +27,7 @@ logger.addHandler(handler)
 
 TDS_API = settings.TDS_URL
 
+SESSION = requests.Session()
 
 def put_amr_to_tds(amr_payload, name=None, description=None):
     # Expects json amr payload and puts it to TDS models and model-configurations, returning an ID.
@@ -42,7 +43,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
 
     # Create TDS model
     tds_models = f"{TDS_API}/models"
-    model_response = requests.post(tds_models, json=amr_payload, headers=headers)
+    model_response = SESSION.post(tds_models, json=amr_payload, headers=headers)
 
     model_id = model_response.json().get("id")
 
@@ -56,7 +57,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
         "calibrated": False,
         "configuration": json.loads(json.dumps(amr_payload)),
     }
-    config_response = requests.post(
+    config_response = SESSION.post(
         tds_model_configurations,
         data=json.dumps(configuration_payload, default=str),
         headers=headers,
@@ -104,7 +105,7 @@ def put_artifact_extraction_to_tds(
     logger.info(f"Storing extraction to TDS for {endpoint}: {artifact_id}")
     # patch TDS artifact/code
     tds_artifact = f"{TDS_API}/{endpoint}/{artifact_id}"
-    artifact_response = requests.put(tds_artifact, json=artifact_payload)
+    artifact_response = SESSION.put(tds_artifact, json=artifact_payload)
     logger.debug(f"TDS response: {artifact_response.text}")
     artifact_put_status = artifact_response.status_code
 
@@ -118,7 +119,7 @@ def get_artifact_from_tds(artifact_id, code=False):
         endpoint = "artifacts"
     tds_artifacts_url = f"{TDS_API}/{endpoint}/{artifact_id}"
     logger.info(tds_artifacts_url)
-    artifact = requests.get(tds_artifacts_url)
+    artifact = SESSION.get(tds_artifacts_url)
     artifact_json = artifact.json()
     logger.info(artifact_json)
     if code:
@@ -129,13 +130,13 @@ def get_artifact_from_tds(artifact_id, code=False):
         ]  # Assumes only one file will be present for now.
 
     download_url = f"{TDS_API}/{endpoint}/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
-    artifact_download_url = requests.get(download_url)
+    artifact_download_url = SESSION.get(download_url)
 
     presigned_download = artifact_download_url.json().get("url")
 
     logger.info(presigned_download)
 
-    downloaded_artifact = requests.get(artifact_download_url.json().get("url"))
+    downloaded_artifact = SESSION.get(artifact_download_url.json().get("url"))
 
     logger.info(f"{endpoint.upper()} RETRIEVAL STATUS:{downloaded_artifact.status_code}")
 
@@ -145,7 +146,7 @@ def get_artifact_from_tds(artifact_id, code=False):
 def get_dataset_from_tds(dataset_id):
     tds_datasets_url = f"{TDS_API}/datasets/{dataset_id}"
 
-    dataset = requests.get(tds_datasets_url)
+    dataset = SESSION.get(tds_datasets_url)
     dataset_json = dataset.json()
 
     logger.info(f"DATASET RESPONSE JSON: {dataset_json}")
@@ -153,11 +154,11 @@ def get_dataset_from_tds(dataset_id):
     dataframes = []
     for filename in dataset_json.get("file_names", []):
         gen_download_url = f"{TDS_API}/datasets/{dataset_id}/download-url?dataset_id={dataset_id}&filename={filename}"
-        dataset_download_url = requests.get(gen_download_url)
+        dataset_download_url = SESSION.get(gen_download_url)
 
         logger.info(f"{dataset_download_url} {dataset_download_url.json().get('url')}")
 
-        downloaded_dataset = requests.get(dataset_download_url.json().get("url"))
+        downloaded_dataset = SESSION.get(dataset_download_url.json().get("url"))
 
         logger.info(downloaded_dataset)
 
@@ -179,7 +180,7 @@ def get_dataset_from_tds(dataset_id):
 
 def get_model_from_tds(model_id):
     tds_model_url = f"{TDS_API}/models/{model_id}"
-    model = requests.get(tds_model_url)
+    model = SESSION.get(tds_model_url)
     return model
 
 
@@ -201,7 +202,7 @@ def set_provenance(left_id, left_type, right_id, right_type, relation_type):
     tds_provenance = f"{TDS_API}/provenance"
     logger.info(f"Storing provenance to {tds_provenance}")
     try:
-        provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+        provenance_resp = SESSION.post(tds_provenance, json=provenance_payload)
     except Exception as e:
         logger.error(e)
         logger.info(provenance_resp.text)
@@ -224,7 +225,7 @@ def find_source_code(model_id):
     payload = {"root_id": model_id, "root_type": "Model"}
 
     tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
-    resp = requests.post(tds_provenance, json=payload)
+    resp = SESSION.post(tds_provenance, json=payload)
     logger.info(f"Provenance code lookup for model ID {model_id}: {resp.json()}")
     results = resp.json().get("result", [])
     if len(results) > 0:

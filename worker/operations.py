@@ -3,8 +3,8 @@ import json
 import os
 import sys
 
-import requests
 from worker.utils import (
+    SESSION,
     find_source_code,
     get_artifact_from_tds,
     get_dataset_from_tds,
@@ -59,11 +59,11 @@ def equations_to_amr(*args, **kwargs):
 
     logger.info(f"Sending equations of type {equation_type} to backend knowledge services at {url}")
     if equation_type == "mathml":
-        amr_response = requests.put(
+        amr_response = SESSION.put(
             url, data=json.dumps(put_payload, default=str), headers=headers
         )
     elif equation_type == "latex":
-        amr_response = requests.post(
+        amr_response = SESSION.post(
             url, data=json.dumps(put_payload, default=str), headers=headers
         )
     try:
@@ -110,7 +110,7 @@ def pdf_to_text(*args, **kwargs):
         logger.info(
             f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
         )
-        response = requests.post(unified_text_reading_url, files=put_payload)
+        response = SESSION.post(unified_text_reading_url, files=put_payload)
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
         )
@@ -173,7 +173,7 @@ def pdf_extractions(*args, **kwargs):
         logger.info(
             f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
         )
-        response = requests.post(unified_text_reading_url, json=payload)
+        response = SESSION.post(unified_text_reading_url, json=payload)
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
         )
@@ -261,7 +261,7 @@ def data_card(*args, **kwargs):
 
     url = f"{MIT_API}/cards/get_data_card"
     logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
-    resp = requests.post(url, params=params, files=files)
+    resp = SESSION.post(url, params=params, files=files)
     if resp.status_code != 200:
         raise Exception(f"Failed response from MIT: {resp.status_code}")
 
@@ -296,7 +296,7 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
-    tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    tds_resp = SESSION.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status please check TDS api logs: {tds_resp.status_code}"
@@ -350,7 +350,7 @@ def model_card(*args, **kwargs):
     url = f"{MIT_API}/cards/get_model_card"
     logger.info(f"Sending model {model_id} to MIT service at {url}")
 
-    resp = requests.post(url, params=params, files=files)
+    resp = SESSION.post(url, params=params, files=files)
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
@@ -365,7 +365,7 @@ def model_card(*args, **kwargs):
             else:
                 amr["metadata"]["card"] = card
 
-            tds_resp = requests.put(f"{TDS_API}/models/{model_id}", json=amr)
+            tds_resp = SESSION.put(f"{TDS_API}/models/{model_id}", json=amr)
             if tds_resp.status_code == 200:
                 logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")
                 return {
@@ -393,7 +393,7 @@ def link_amr(*args, **kwargs):
 
     tds_models_url = f"{TDS_API}/models/{model_id}"
 
-    model = requests.get(tds_models_url)
+    model = SESSION.get(tds_models_url)
     model_json = model.json()
     model_amr = model_json.get("model")
 
@@ -418,7 +418,7 @@ def link_amr(*args, **kwargs):
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
 
-    response = requests.post(skema_amr_linking_url, files=files, params=params)
+    response = SESSION.post(skema_amr_linking_url, files=files, params=params)
     logger.debug(f"TA 1 response object: {response.json()}")
 
     if response.status_code == 200:
@@ -429,7 +429,7 @@ def link_amr(*args, **kwargs):
 
         new_model_payload = model_json
 
-        update_response = requests.put(
+        update_response = SESSION.put(
             f"{tds_models_url}/{model_id}", data=new_model_payload
         )
 
@@ -461,7 +461,7 @@ def code_to_amr(*args, **kwargs):
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
-    amr_response = requests.post(
+    amr_response = SESSION.post(
         code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
     )
     logger.info(
