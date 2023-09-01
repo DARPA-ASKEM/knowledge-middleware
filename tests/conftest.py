@@ -20,6 +20,17 @@ from worker.utils import SESSION
 from lib.settings import settings
 
 
+class StrictMocker(requests_mock.Mocker):
+    def register_uri(self, *args, **kwargs):
+        url = args[1] if isinstance(args[1], str) else args[1].pattern
+        if "http://" in url or "https://" in url:
+            return
+
+        kwargs['_real_http'] = kwargs.pop('real_http', False)
+        kwargs.setdefault('json_encoder', self._json_encoder)
+        return self._adapter.register_uri(*args, **kwargs)
+
+
 @pytest.fixture(autouse=True)
 def loghandler():
     LOG_LEVEL = settings.LOG_LEVEL.upper()
@@ -64,7 +75,7 @@ def context_dir(resource):
 def http_mock():
     adapter = requests_mock.Adapter()
     SESSION.mount('mock://', adapter)
-    with requests_mock.Mocker(real_http=True, session=SESSION) as mocker:
+    with StrictMocker(real_http=True, session=SESSION) as mocker:
         yield mocker
 
 

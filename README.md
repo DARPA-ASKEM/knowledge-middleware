@@ -44,12 +44,12 @@ pytest --cov . tests
 
 ### Testing Configuration
 
-Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
+Set environment variable for each service to use `mock://{what-ever-you-want}` to mock the payloads sent to that service.
 
 To add additional scenarios, create a new directory in `tests/scenarios`. The directory must contain a `config.yaml` where each tests you wish to be run
 will be specified in `enabled`. 
 
-The `.env` will be used to specify the `MOCK_TA1` setting as well as the appropriate endpoints and can be passed into the test suite with:
+The `.env` will be used to specify the used URLs as well as the appropriate endpoints and can be passed into the test suite with:
 
 ```
 poetry shell && export $(cat .env | xargs) && pytest -s
