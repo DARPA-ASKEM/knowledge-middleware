@@ -47,8 +47,7 @@ gen-report = "tests.report:report"
 [tool.poe.tasks]
 _test = "pytest --json-report --json-report-file=tests/output/tests.json"
 _report = "gen-report"
-_html = "python3 tests/create_table.py"
-report = ["_test", "_report", "_html"]
+report = ["_test", "_report"]
 
 [tool.pytest.ini_options]
 markers = ["resource"]

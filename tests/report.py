@@ -15,15 +15,16 @@ def report():
 
     with open("tests/output/tests.json", "r") as file:
         raw_tests = json.load(file)["tests"]
-        def get_case(testobj):
+        def add_case(testobj):
             full_name = testobj["nodeid"].split("::")[-1]
             # Don't worry we're not actually checking if brackets match
             match_result = re.match(re.compile(r"test_([a-z|_]+)\[([a-z|_]+)\]"), full_name)
             operation, scenario = match_result[1], match_result[2]
             passed = testobj["outcome"] == "passed"
-            return (scenario, operation, "Integration Status", passed)
-        for scenario, operation, test, passed in map(get_case, raw_tests):
-            report[scenario]["operations"][operation][test] = passed
+            duration = testobj["call"]["duration"]
+            report[scenario]["operations"][operation]["Integration Status"] = passed
+            report[scenario]["operations"][operation]["Execution Time"] = duration
+        for testobj in raw_tests: add_case(testobj)
 
     for scenario in report:
         with open(f"tests/scenarios/{scenario}/config.yaml") as file:

@@ -17,7 +17,7 @@ for scenario, content in report.items():
 
 scenarios = [report[scenario]["name"] for scenario in report.keys()]
 operations = list(reduce(lambda left, right: left.union(right), [set(content["operations"].keys()) for content in report.values()], set()))
-tests = list(test_results.keys())
+tests = sorted(test_results.keys(), reverse=True)
 
 
 dataframes = {name: pd.DataFrame(index=scenarios, columns=operations) for name in tests}
@@ -31,8 +31,9 @@ The current metrics are
 Status of `knowledge-middleware` integration,
 F-Score on the conversions to AMR, and the estimated time saved by the modeler. 
 """)
-for test, results in test_results.items():
+for test in tests:
     df = dataframes[test]
+    results = test_results[test]
     for (scenario_name, operation), result in results.items():
         df.at[scenario_name, operation] = result
     st.write(f"### {test}")

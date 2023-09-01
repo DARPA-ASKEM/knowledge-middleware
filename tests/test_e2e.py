@@ -135,7 +135,6 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
 
     #### POSTAMBLE ####
     record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
-    record_quality_check(context_dir, "code_to_amr", "Estimated Time of Completion", 0)
     
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
@@ -183,7 +182,6 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
 
     #### POSTAMBLE ####
     record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
-    record_quality_check(context_dir, "code_to_amr", "Estimated Time of Completion", 0)
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
