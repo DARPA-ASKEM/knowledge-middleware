@@ -42,6 +42,7 @@ def equations_to_amr(*args, **kwargs):
     equation_type = kwargs.get("equation_type")
     equations = kwargs.get("equations")
     model = kwargs.get("model")
+    model_id = kwargs.get("model_id")
     name = kwargs.get("name")
     description = kwargs.get("description")
 
@@ -73,7 +74,7 @@ def equations_to_amr(*args, **kwargs):
         logger.error(f"Failed to parse response from backend knowledge service: {amr_response.text}")
 
     if amr_response.status_code == 200 and amr_json:
-        tds_responses = put_amr_to_tds(amr_json, name, description)
+        tds_responses = put_amr_to_tds(amr_json, name, description, model_id)
 
         response = {
             "status_code": amr_response.status_code,
