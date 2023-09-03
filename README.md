@@ -56,6 +56,7 @@ poetry shell && export $(cat .env | xargs) && pytest -s
 
 Run `poetry run poe report`, to generate `tests/output/report.json` which contains the status of each scenario and operation.
 
+Once the report has been generated, run `poetry run streamlit run tests/Home.py` to run the web interface into the test suite, which will be available at `http://localhost:8501`.
 
 ## License
 
