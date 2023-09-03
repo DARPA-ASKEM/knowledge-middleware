@@ -58,6 +58,8 @@ Run `poetry run poe report`, to generate `tests/output/report.json` which contai
 
 Once the report has been generated, run `poetry run streamlit run tests/Home.py` to run the web interface into the test suite, which will be available at `http://localhost:8501`.
 
+> Note: if the tests fail, `poetry poe` will exit and not generate a report. To work around this, run `pytest --json-report --json-report-file=tests/output/tests.json` then `python tests/report.py` manually.
+
 ## License
 
 [Apache License 2.0](LICENSE)

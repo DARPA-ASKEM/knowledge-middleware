@@ -380,7 +380,7 @@ def model_card(*args, **kwargs):
             raise Exception(f"Failed to generate model card for {model_id}: {e}")
 
     else:
-        raise Exception(f"Bad response from backend knowledge service for {model_id}: {resp.status_code}")
+        raise Exception(f"Bad response from TA1 service for {model_id}: {resp.status_code}")
 
 
 # dccde3a0-0132-430c-afd8-c67953298f48

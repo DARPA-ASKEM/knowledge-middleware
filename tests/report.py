@@ -1,5 +1,6 @@
 import json
 import csv
+import os
 import re
 from collections import defaultdict
 
@@ -8,10 +9,11 @@ import yaml
 def report():
     # TODO: Make this into a predefined struct
     report = defaultdict(lambda: {"operations": defaultdict(dict)}) 
-    with open("tests/output/qual.csv", "r", newline="") as file:
-        qual = csv.reader(file)
-        for scenario, operation, test, result in qual:
-            report[scenario]["operations"][operation][test] = result
+    if os.path.exists("tests/output/qual.csv"):
+        with open("tests/output/qual.csv", "r", newline="") as file:
+            qual = csv.reader(file)
+            for scenario, operation, test, result in qual:
+                report[scenario]["operations"][operation][test] = result
 
     with open("tests/output/tests.json", "r") as file:
         raw_tests = json.load(file)["tests"]
@@ -21,9 +23,11 @@ def report():
             match_result = re.match(re.compile(r"test_([a-z|_]+)\[([a-z|_]+)\]"), full_name)
             operation, scenario = match_result[1], match_result[2]
             passed = testobj["outcome"] == "passed"
-            duration = testobj["call"]["duration"]
+            duration = round(testobj["call"]["duration"],2)
             report[scenario]["operations"][operation]["Integration Status"] = passed
             report[scenario]["operations"][operation]["Execution Time"] = duration
+            logs = testobj["call"]["stderr"]
+            report[scenario]["operations"][operation]["Logs"] = logs
         for testobj in raw_tests: add_case(testobj)
 
     for scenario in report:
@@ -34,3 +38,6 @@ def report():
 
     with open("tests/output/report.json", "w") as file:
         json.dump(report, file, indent=2)
+
+if __name__ == "__main__":
+    report()
