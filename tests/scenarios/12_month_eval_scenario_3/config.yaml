@@ -1,0 +1,7 @@
+---
+name: "12 Month Eval Scenario #3"
+description: "12 month evaluation scenario 3: SEIRV Model"
+enabled:
+  - pdf_extraction
+  - pdf_to_text
+  - code_to_amr

@@ -1,0 +1,6 @@
+---
+name: "CHIME SVIIvR"
+description: "Scenario for CHIME SVIIvR model"
+enabled:
+  - code_to_amr
+  - equations_to_amr
