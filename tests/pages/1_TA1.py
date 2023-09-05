@@ -73,7 +73,7 @@ F-Score on the conversions to AMR, and the estimated time saved by the modeler.
 """)
 st.write("### Scenario Overview")
 scenarios_overview = ""
-for kk, vv in report.items():
+for kk, vv in sorted(report.items(), key=lambda item: item[1]['name']):
     scenarios_overview += f"- **{vv['name']}**: {vv['description']}\n"
 st.write(scenarios_overview)
 
@@ -85,4 +85,5 @@ for test in tests:
     st.write(f"### {test}")
     df.replace({False: "❌", True: "✅", None: ""}, inplace=True)
     df.columns = [custom_title(col) for col in df.columns]
+    df = df.sort_index()
     df
