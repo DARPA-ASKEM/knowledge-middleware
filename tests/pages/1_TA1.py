@@ -65,11 +65,13 @@ dataframes = {name: pd.DataFrame(index=scenarios, columns=operations) for name i
 st.sidebar.markdown("""
 # TA1
 
-TA1 correctness and quality checks.
+TA1 integration status and quality metrics.
     
-The current metrics are
-Status of `knowledge-middleware` integration,
-F-Score on the conversions to AMR, and the estimated time saved by the modeler. 
+The current metrics are:
+- Status of `knowledge-middleware` integration
+- F-score for conversion of code/equations to AMR
+- Execution time
+- Application logs
 """)
 st.write("### Scenario Overview")
 scenarios_overview = ""
