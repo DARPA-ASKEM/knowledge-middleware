@@ -37,7 +37,8 @@ def format_timestamp_from_filename(filename):
 timestamp_to_filename = {format_timestamp_from_filename(f): f for f in report_files}
 
 # Let the user select a report based on formatted timestamps
-selected_timestamp = st.selectbox("# Select a report", list(timestamp_to_filename.keys()))
+st.title("TA1 Integration Dashboard")
+selected_timestamp = st.selectbox("Select a report", list(timestamp_to_filename.keys()))
 
 # Map back to the original file name
 selected_report = timestamp_to_filename[selected_timestamp]

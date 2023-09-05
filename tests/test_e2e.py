@@ -13,8 +13,6 @@ from tests.utils import get_parameterizations, record_quality_check, AMR
 logger = logging.getLogger(__name__)
 
 params = get_parameterizations()
-if os.path.exists("tests/output"): rmtree("tests/output")
-
 
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
 def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
