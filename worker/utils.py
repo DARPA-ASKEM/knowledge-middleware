@@ -144,10 +144,8 @@ def put_code_extraction_to_tds(
 
 def get_document_from_tds(document_id, code=False):
     tds_documents_url = f"{TDS_API}/documents/{document_id}"
-    logger.info(tds_documents_url)
     document = requests.get(tds_documents_url)
     document_json = document.json()
-    logger.info(document_json)
     if code:
         filename = document_json.get("filename")
     else:
@@ -175,12 +173,7 @@ def get_code_from_tds(code_id, code=False):
     code = requests.get(tds_codes_url)
     code_json = code.json()
     logger.info(code_json)
-    if code:
-        filename = code_json.get("filename")
-    else:
-        filename = code_json.get("file_names")[
-            0
-        ]  # Assumes only one file will be present for now.
+    filename = code_json.get("filename")
 
     download_url = f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
     code_download_url = requests.get(download_url)

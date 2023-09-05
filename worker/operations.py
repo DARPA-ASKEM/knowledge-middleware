@@ -326,6 +326,7 @@ def model_card(*args, **kwargs):
             logger.info(f"No associated code artifact found for model {model_id}")
             code_file = "No available code associated with model."
     except Exception as e:
+        # TODO: Figure how how to assert that we are properly finding the code file in tests
         logger.error(f"Issue finding associated source code: {e}")
         code_file = "No available code associated with model."
 
