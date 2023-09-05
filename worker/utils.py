@@ -69,77 +69,98 @@ def put_amr_to_tds(amr_payload, name=None, description=None):
     return {"model_id": model_id, "configuration_id": config_id}
 
 
-def put_artifact_extraction_to_tds(
-    artifact_id, name, description, filename, extractions=None, text=None, model_id=None, code_language=None
+def put_document_extraction_to_tds(
+    document_id, name, description, filename, extractions=None, text=None, model_id=None
 ):
     """
-    Update an artifact or code object in TDS. If `code` is `True` this assumes you are 
-    updating `code`, otherwise you are updating an `artifact`
+    Update an document or code object in TDS.
     """
     if extractions and text:
         metadata = extractions[0]
-        metadata["text"] = text
+        # metadata["text"] = text
     elif extractions:
         metadata = extractions[0]
-    elif text:
-        metadata = {"text": text}
+    # elif text:
+    #     metadata = {"text": text}
     elif model_id:
         metadata = {"model_id": model_id}
     else:
         metadata = {}
 
-    artifact_payload = {
+    # TODO: mbp update document payload
+    document_payload = {
         "username": "extraction_service",
         "name": name,
         "description": description,
         "file_names": [filename],
+        "text": text,
         "metadata": metadata,
     }
-    if code_language:
-        endpoint = "code"
-        artifact_payload["filename"] = artifact_payload.pop("file_names")[0]
-        artifact_payload["language"] = code_language
-    else:
-        endpoint = "artifacts"
-    logger.info(f"Storing extraction to TDS for {endpoint}: {artifact_id}")
-    # patch TDS artifact/code
-    tds_artifact = f"{TDS_API}/{endpoint}/{artifact_id}"
-    artifact_response = requests.put(tds_artifact, json=artifact_payload)
-    logger.debug(f"TDS response: {artifact_response.text}")
-    artifact_put_status = artifact_response.status_code
+    logger.info(f"Storing document to TDS: {document_id}")
+    # Update document in TDS
+    document_url = f"{TDS_API}/documents/{document_id}"
+    document_response = requests.put(document_url, json=document_payload)
+    logger.debug(f"TDS response: {document_response.text}")
+    document_put_status = document_response.status_code
 
-    return {"status": artifact_put_status}
+    return {"status": document_put_status}
 
 
-def get_artifact_from_tds(artifact_id, code=False):
+def get_document_from_tds(document_id, code=False):
+    tds_documents_url = f"{TDS_API}/documents/{document_id}"
+    logger.info(tds_documents_url)
+    print(f"About to call GET {tds_documents_url}")
+    document = requests.get(tds_documents_url)
+    document_json = document.json()
+    print(document_json)
+    print(f"Called {tds_documents_url}")
+    logger.info(document_json)
     if code:
-        endpoint = "code"
+        filename = document_json.get("filename")
     else:
-        endpoint = "artifacts"
-    tds_artifacts_url = f"{TDS_API}/{endpoint}/{artifact_id}"
-    logger.info(tds_artifacts_url)
-    artifact = requests.get(tds_artifacts_url)
-    artifact_json = artifact.json()
-    logger.info(artifact_json)
-    if code:
-        filename = artifact_json.get("filename")
-    else:
-        filename = artifact_json.get("file_names")[
+        filename = document_json.get("file_names")[
             0
         ]  # Assumes only one file will be present for now.
 
-    download_url = f"{TDS_API}/{endpoint}/{artifact_id}/download-url?artifact_id={artifact_id}&filename={filename}"
-    artifact_download_url = requests.get(download_url)
+    download_url = f"{TDS_API}/documents/{document_id}/download-url?document_id={document_id}&filename={filename}"
+    document_download_url = requests.get(download_url)
 
-    presigned_download = artifact_download_url.json().get("url")
+    presigned_download = document_download_url.json().get("url")
 
     logger.info(presigned_download)
 
-    downloaded_artifact = requests.get(artifact_download_url.json().get("url"))
+    downloaded_document = requests.get(document_download_url.json().get("url"))
 
-    logger.info(f"{endpoint.upper()} RETRIEVAL STATUS:{downloaded_artifact.status_code}")
+    logger.info(f"DOCUMENT RETRIEVAL STATUS:{downloaded_document.status_code}")
 
-    return artifact_json, downloaded_artifact.content
+    return document_json, downloaded_document.content
+
+
+def get_code_from_tds(code_id, code=False):
+    tds_codes_url = f"{TDS_API}/code/{code_id}"
+    logger.info(tds_codes_url)
+    code = requests.get(tds_codes_url)
+    code_json = code.json()
+    logger.info(code_json)
+    if code:
+        filename = code_json.get("filename")
+    else:
+        filename = code_json.get("file_names")[
+            0
+        ]  # Assumes only one file will be present for now.
+
+    download_url = f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
+    code_download_url = requests.get(download_url)
+
+    presigned_download = code_download_url.json().get("url")
+
+    logger.info(presigned_download)
+
+    downloaded_code = requests.get(code_download_url.json().get("url"))
+
+    logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
+
+    return code_json, downloaded_code.content
 
 
 def get_dataset_from_tds(dataset_id):

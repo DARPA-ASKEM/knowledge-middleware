@@ -20,17 +20,19 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
     text = ""
     for d in text_json:
         text += f"{d['content']}\n"
-    tds_artifact = gen_tds_artifact()
-    tds_artifact["file_names"] = ["paper.pdf"]
-    tds_artifact["metadata"] = {"text": text}
+    tds_artifact = gen_tds_artifact(
+        file_names=["paper.pdf"],
+        text=text,
+    )
     file_storage.upload("paper.pdf", "TEST TEXT")
+    document_id = tds_artifact["id"]
 
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/extractions.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
 
     query_params = {
-        "artifact_id": tds_artifact["id"],
+        "document_id": document_id,
         "annotate_skema": True,
         "annotate_mit": True,
         "name": None,
@@ -57,12 +59,13 @@ def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifac
 @pytest.mark.parametrize("resource", params["pdf_to_text"])
 def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
-    tds_artifact = gen_tds_artifact()
-    tds_artifact["file_names"] = ["paper.pdf"]
+    tds_artifact = gen_tds_artifact(
+        file_names=["paper.pdf"]
+    )
     file_storage.upload("paper.pdf", "TEST TEXT")
 
     query_params = {
-        "artifact_id": tds_artifact["id"],
+        "document_id": tds_artifact["id"],
     }
 
     if settings.MOCK_TA1:
@@ -90,7 +93,10 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
 def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
-    tds_code = gen_tds_artifact(code=True)
+    tds_code = gen_tds_artifact(
+        code=True,
+        file_names=["code.py"]
+    )
     tds_code["file_names"] = ["code.py"]
     file_storage.upload("code.py", code)
 
@@ -119,6 +125,7 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     status_response = client.get(f"/status/{job_id}")
 
     job = Job.fetch(job_id, connection=worker.connection)
+    print(job)
     amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####

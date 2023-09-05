@@ -6,11 +6,12 @@ import sys
 import requests
 from worker.utils import (
     find_source_code,
-    get_artifact_from_tds,
+    get_code_from_tds,
+    get_document_from_tds,
     get_dataset_from_tds,
     get_model_from_tds,
     put_amr_to_tds,
-    put_artifact_extraction_to_tds,
+    put_document_extraction_to_tds,
     set_provenance,
 )
 from lib.settings import settings
@@ -92,23 +93,23 @@ def equations_to_amr(*args, **kwargs):
 
 def pdf_to_text(*args, **kwargs):
     # Get options
-    artifact_id = kwargs.get("artifact_id")
+    document_id = kwargs.get("document_id")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(
-        artifact_id=artifact_id
-    )  # Assumes  downloaded artifact is PDF, doesn't type check
-    filename = artifact_json.get("file_names")[0]
+    document_json, downloaded_document = get_document_from_tds(
+        document_id=document_id
+    )  # Assumes  downloaded document is PDF, doesn't type check
+    filename = document_json.get("file_names")[0]
 
     # Try to feed text to the unified service
     unified_text_reading_url = f"{UNIFIED_API}/text-reading/cosmos_to_json"
 
     put_payload = [
-        ("pdf", (filename, io.BytesIO(downloaded_artifact), "application/pdf"))
+        ("pdf", (filename, io.BytesIO(downloaded_document), "application/pdf"))
     ]
 
     try:
         logger.info(
-            f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
+            f"Sending PDF to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, files=put_payload)
         logger.info(
@@ -126,24 +127,24 @@ def pdf_to_text(*args, **kwargs):
             f"with status code {response.status_code}"
         ) from None
 
-    artifact_response = put_artifact_extraction_to_tds(
-        artifact_id=artifact_id,
-        name=artifact_json.get("name", None),
-        description=artifact_json.get("description", None),
+    document_response = put_document_extraction_to_tds(
+        document_id=document_id,
+        name=document_json.get("name", None),
+        description=document_json.get("description", None),
         filename=filename,
         text=text,
     )
 
-    if artifact_response.get("status") == 200:
+    if document_response.get("status") == 200:
         response = {
             "extraction_status_code": response.status_code,
             "extraction": extraction_json,
-            "tds_status_code": artifact_response.get("status"),
+            "tds_status_code": document_response.get("status"),
         }
     else:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status"
-            f"{artifact_response.get('status')} please check TDS api logs."
+            f"{document_response.get('status')} please check TDS api logs."
         ) from None
 
     return response
@@ -151,18 +152,20 @@ def pdf_to_text(*args, **kwargs):
 
 def pdf_extractions(*args, **kwargs):
     # Get options
-    artifact_id = kwargs.get("artifact_id")
+    document_id = kwargs.get("document_id")
     annotate_skema = kwargs.get("annotate_skema")
     annotate_mit = kwargs.get("annotate_mit")
     name = kwargs.get("name")
     description = kwargs.get("description")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+    print("About to call get_document_from_tds")
+    document_json, downloaded_document = get_document_from_tds(document_id=document_id)
+    print("get_document_from_tds complete")
 
-    text = artifact_json.get("metadata", {}).get("text", None)
+    text = document_json.get("text", None)
     if not text:
         raise Exception(
-            "No text found in paper artifact, please ensure to submit to /pdf_to_text endpoint."
+            "No text found in paper document, please ensure to submit to /pdf_to_text endpoint."
         )
 
     # Try to feed text to the unified service
@@ -171,7 +174,7 @@ def pdf_extractions(*args, **kwargs):
 
     try:
         logger.info(
-            f"Sending PDF to backend knowledge service with artifact id {artifact_id} at {unified_text_reading_url}"
+            f"Sending PDF to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, json=payload)
         logger.info(
@@ -198,30 +201,30 @@ def pdf_extractions(*args, **kwargs):
                 logging.info("HERE!")
 
     except ValueError:
-        raise ValueError(f"Extraction for artifact {artifact_id} failed.")
+        raise ValueError(f"Extraction for document {document_id} failed.")
 
-    artifact_response = put_artifact_extraction_to_tds(
-        artifact_id=artifact_id,
-        name=name if name is not None else artifact_json.get("name"),
+    document_response = put_document_extraction_to_tds(
+        document_id=document_id,
+        name=name if name is not None else document_json.get("name"),
         description=description
         if description is not None
-        else artifact_json.get("description"),
-        filename=artifact_json.get("file_names")[0],
+        else document_json.get("description"),
+        filename=document_json.get("file_names")[0],
         extractions=extraction_json,
-        text=artifact_json["metadata"].get("text", None),
+        text=document_json.get("text", None),
     )
 
-    if artifact_response.get("status") == 200:
+    if document_response.get("status") == 200:
         response = {
             "extraction_status_code": response.status_code,
             "extraction": extraction_json,
-            "tds_status_code": artifact_response.get("status"),
+            "tds_status_code": document_response.get("status"),
             "error": None,
         }
     else:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status"
-            f"{artifact_response.get('status')} please check TDS api logs."
+            f"{document_response.get('status')} please check TDS api logs."
         ) from None
 
     return response
@@ -234,11 +237,11 @@ def data_card(*args, **kwargs):
     artifact_id = kwargs.get("artifact_id")
 
     if artifact_id:
-        artifact_json, downloaded_artifact = get_artifact_from_tds(
-            artifact_id=artifact_id
+        document_json, downloaded_artifact = get_document_from_tds(
+            document_id=artifact_id
         )
         doc_file = (
-            artifact_json["metadata"]
+            document_json
             .get("text", "There is no documentation for this dataset")
             .encode()
         )
@@ -311,13 +314,13 @@ def data_card(*args, **kwargs):
 def model_card(*args, **kwargs):
     openai_key = settings.OPENAI_API_KEY
     model_id = kwargs.get("model_id")
-    paper_artifact_id = kwargs.get("paper_artifact_id")
+    paper_document_id = kwargs.get("paper_document_id")
 
     try:
         code_artifact_id = find_source_code(model_id)
         if code_artifact_id:
-            code_artifact_json, code_downloaded_artifact = get_artifact_from_tds(
-                artifact_id=code_artifact_id
+            code_artifact_json, code_downloaded_artifact = get_code_from_tds(
+                code_id=code_artifact_id
             )
             code_file = code_downloaded_artifact.decode("utf-8")
         else:
@@ -329,11 +332,11 @@ def model_card(*args, **kwargs):
 
     logger.debug(f"Code file head (250 chars): {code_file[:250]}")
 
-    paper_artifact_json, paper_downloaded_artifact = get_artifact_from_tds(
-        artifact_id=paper_artifact_id
+    paper_document_json, paper_downloaded_document = get_document_from_tds(
+        document_id=paper_document_id
     )
     text_file = (
-        paper_artifact_json["metadata"]
+        paper_document_json
         .get("text", "There is no documentation for this model")
         .encode()
     )
@@ -447,7 +450,7 @@ def code_to_amr(*args, **kwargs):
     name = kwargs.get("name")
     description = kwargs.get("description")
 
-    code_json, downloaded_code = get_artifact_from_tds(code_id, code=True)
+    code_json, downloaded_code = get_code_from_tds(code_id, code=True)
     
     code_blob = downloaded_code.decode("utf-8")
     logger.info(code_blob[:250])
@@ -483,8 +486,8 @@ def code_to_amr(*args, **kwargs):
         tds_responses = put_amr_to_tds(amr_json, name, description)
         logger.info(f"TDS Response: {tds_responses}")
 
-        put_artifact_extraction_to_tds(
-            artifact_id=code_id,
+        put_document_extraction_to_tds(
+            document_id=code_id,
             name=code_json.get("name", None),
             filename=code_json.get("filename"),
             description=code_json.get("description", None),
