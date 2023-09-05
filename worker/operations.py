@@ -263,7 +263,7 @@ def data_card(*args, **kwargs):
     logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
     resp = requests.post(url, params=params, files=files)
     if resp.status_code != 200:
-        raise Exception(f"Failed response from MIT: {resp.status_code}")
+        raise Exception(f"Failed response from MIT: {resp.status_code}, {resp.text}")
 
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")

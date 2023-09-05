@@ -1,5 +1,6 @@
 import json
 import csv
+import datetime
 import os
 import re
 from collections import defaultdict
@@ -20,14 +21,18 @@ def report():
         def add_case(testobj):
             full_name = testobj["nodeid"].split("::")[-1]
             # Don't worry we're not actually checking if brackets match
-            match_result = re.match(re.compile(r"test_([a-z|_]+)\[([a-z|_]+)\]"), full_name)
+            pattern = r"test_([a-z0-9_]+)\[([a-z0-9_]+)\]"
+            match_result = re.match(pattern, full_name, re.IGNORECASE)
             operation, scenario = match_result[1], match_result[2]
             passed = testobj["outcome"] == "passed"
             duration = round(testobj["call"]["duration"],2)
             report[scenario]["operations"][operation]["Integration Status"] = passed
             report[scenario]["operations"][operation]["Execution Time"] = duration
-            logs = testobj["call"]["stderr"]
-            report[scenario]["operations"][operation]["Logs"] = logs
+            try:
+                logs = testobj["call"]["stderr"]
+                report[scenario]["operations"][operation]["Logs"] = logs
+            except Exception as e:
+                print(f"Unable to obtain logs for {full_name}: {e}")
         for testobj in raw_tests: add_case(testobj)
 
     for scenario in report:
@@ -36,7 +41,9 @@ def report():
             report[scenario]["name"] = spec["name"]
             report[scenario]["description"] = spec["description"]
 
-    with open("tests/output/report.json", "w") as file:
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"tests/output/report_{timestamp}.json"
+    with open(filename, "w") as file:
         json.dump(report, file, indent=2)
 
 if __name__ == "__main__":
