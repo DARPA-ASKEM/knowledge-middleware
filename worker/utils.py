@@ -80,8 +80,6 @@ def put_document_extraction_to_tds(
         # metadata["text"] = text
     elif extractions:
         metadata = extractions[0]
-    # elif text:
-    #     metadata = {"text": text}
     elif model_id:
         metadata = {"model_id": model_id}
     else:
@@ -106,14 +104,49 @@ def put_document_extraction_to_tds(
     return {"status": document_put_status}
 
 
+def put_code_extraction_to_tds(
+    code_id, name, description, filename, extractions=None, text=None, model_id=None, code_language=None
+):
+    """
+    Update a code object in TDS.
+    """
+    if extractions and text:
+        metadata = extractions[0]
+        metadata["text"] = text
+    elif extractions:
+        metadata = extractions[0]
+    elif text:
+        metadata = {"text": text}
+    elif model_id:
+        metadata = {"model_id": model_id}
+    else:
+        metadata = {}
+
+    code_payload = {
+        "username": "extraction_service",
+        "name": name,
+        "description": description,
+        "file_names": [filename],
+        "metadata": metadata,
+    }
+    if code_language:
+        code_payload["filename"] = code_payload.pop("file_names")[0]
+        code_payload["language"] = code_language
+    logger.info(f"Storing extraction to TDS for code: {code_id}")
+    # patch TDS code/code
+    tds_code = f"{TDS_API}/code/{code_id}"
+    code_response = requests.put(tds_code, json=code_payload)
+    logger.debug(f"TDS response: {code_response.text}")
+    code_put_status = code_response.status_code
+
+    return {"status": code_put_status}
+
+
 def get_document_from_tds(document_id, code=False):
     tds_documents_url = f"{TDS_API}/documents/{document_id}"
     logger.info(tds_documents_url)
-    print(f"About to call GET {tds_documents_url}")
     document = requests.get(tds_documents_url)
     document_json = document.json()
-    print(document_json)
-    print(f"Called {tds_documents_url}")
     logger.info(document_json)
     if code:
         filename = document_json.get("filename")

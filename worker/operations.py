@@ -11,6 +11,7 @@ from worker.utils import (
     get_dataset_from_tds,
     get_model_from_tds,
     put_amr_to_tds,
+    put_code_extraction_to_tds,
     put_document_extraction_to_tds,
     set_provenance,
 )
@@ -158,9 +159,7 @@ def pdf_extractions(*args, **kwargs):
     name = kwargs.get("name")
     description = kwargs.get("description")
 
-    print("About to call get_document_from_tds")
     document_json, downloaded_document = get_document_from_tds(document_id=document_id)
-    print("get_document_from_tds complete")
 
     text = document_json.get("text", None)
     if not text:
@@ -486,8 +485,8 @@ def code_to_amr(*args, **kwargs):
         tds_responses = put_amr_to_tds(amr_json, name, description)
         logger.info(f"TDS Response: {tds_responses}")
 
-        put_document_extraction_to_tds(
-            document_id=code_id,
+        put_code_extraction_to_tds(
+            code_id=code_id,
             name=code_json.get("name", None),
             filename=code_json.get("filename"),
             description=code_json.get("description", None),

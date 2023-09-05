@@ -238,29 +238,34 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     text = ""
     for d in text_json:
         text += f"{d['content']}\n"
-    text_artifact = gen_tds_artifact()
-    text_artifact["file_names"] = ["paper.pdf"]
-    text_artifact["metadata"] = {"text": text}
+    document = gen_tds_artifact(
+        file_names=["paper.pdf"],
+        metadata={},
+        text=text,
+    )
     file_storage.upload("paper.pdf", "TEST TEXT")
 
     code = open(f"{context_dir}/code.py").read()
-    code_artifact = gen_tds_artifact()
-    code_artifact["file_names"] = ["code.py"]
+    code_artifact = gen_tds_artifact(
+        code=True,
+        file_names=["code.py"]
+
+    )
     file_storage.upload("code.py", code)
     
     amr = json.load(open(f"{context_dir}/amr.json"))
-    http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json={"result": [text_artifact["id"]]})
-    http_mock.get(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id":text_artifact["id"], "model": amr})
-    http_mock.put(f"{settings.TDS_URL}/models/{text_artifact['id']}", json={"id": text_artifact["id"]})
+    http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json={"result": [document["id"]]})
+    http_mock.get(f"{settings.TDS_URL}/models/{document['id']}", json={"id":document["id"], "model": amr})
+    http_mock.put(f"{settings.TDS_URL}/models/{document['id']}", json={"id": document["id"]})
     if settings.MOCK_TA1:
         model_card = json.load(open(f"{context_dir}/model_card.json"))
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
 
-    query_params = {"paper_artifact_id": text_artifact["id"]}
+    query_params = {"paper_document_id": document["id"]}
 
     #### ACT ####
     response = client.post(
-        f"/profile_model/{text_artifact['id']}",
+        f"/profile_model/{document['id']}",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
