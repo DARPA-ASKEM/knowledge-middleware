@@ -107,6 +107,8 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
+    elif os.path.exists(f"{context_dir}/amr.json"):
+        amr = json.load(open(f"{context_dir}/amr.json"))        
     
     #### ACT ####
     response = client.post(
@@ -149,12 +151,13 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "description": "test description",
     }
 
-
-    amr = json.load(open(f"{context_dir}/amr.json"))
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
     if settings.MOCK_TA1:
+        amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
+    elif os.path.exists(f"{context_dir}/amr.json"):
+        amr = json.load(open(f"{context_dir}/amr.json"))
     
     #### ACT ####
     response = client.post(
@@ -164,6 +167,8 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
+    logger.info("ENDPOINT RESPONSE")
+    logger.info(response.text)
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
