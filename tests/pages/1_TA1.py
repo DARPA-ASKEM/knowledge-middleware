@@ -1,4 +1,7 @@
 import json
+import datetime
+import os
+import re
 from functools import reduce
 from collections import defaultdict
 
@@ -14,8 +17,34 @@ def custom_title(s):
     capitalized_words = [word.upper() if word in FULL_CAPS else word.title() for word in words]
     return ' '.join(capitalized_words)
 
+# Get a list of all report files with timestamp
+report_dir = "tests/output/"
+report_files = [f for f in os.listdir(report_dir) if re.match(r'report_\d{8}_\d{6}\.json', f)]
+report_files.sort(reverse=True)  # Sort the files so the most recent is on top
 
-with open("tests/output/report.json") as file:
+def format_timestamp_from_filename(filename):
+    # Extract timestamp from filename
+    match = re.search(r'report_(\d{8})_(\d{6})\.json', filename)
+    if match:
+        date_part, time_part = match.groups()
+        # Convert to datetime object
+        dt = datetime.datetime.strptime(f"{date_part}{time_part}", '%Y%m%d%H%M%S')
+        # Return formatted string
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+    return None
+
+# Create a mapping of formatted timestamp to filename
+timestamp_to_filename = {format_timestamp_from_filename(f): f for f in report_files}
+
+# Let the user select a report based on formatted timestamps
+st.title("TA1 Integration Dashboard")
+selected_timestamp = st.selectbox("Select a report", list(timestamp_to_filename.keys()))
+
+# Map back to the original file name
+selected_report = timestamp_to_filename[selected_timestamp]
+
+# Open the selected report
+with open(os.path.join(report_dir, selected_report)) as file:
     report = json.load(file)
 
 test_results = defaultdict(lambda: defaultdict())
@@ -36,15 +65,17 @@ dataframes = {name: pd.DataFrame(index=scenarios, columns=operations) for name i
 st.sidebar.markdown("""
 # TA1
 
-TA1 correctness and quality checks.
+TA1 integration status and quality metrics.
     
-The current metrics are
-Status of `knowledge-middleware` integration,
-F-Score on the conversions to AMR, and the estimated time saved by the modeler. 
+The current metrics are:
+- Status of `knowledge-middleware` integration
+- F-score for conversion of code/equations to AMR
+- Execution time
+- Application logs
 """)
 st.write("### Scenario Overview")
 scenarios_overview = ""
-for kk, vv in report.items():
+for kk, vv in sorted(report.items(), key=lambda item: item[1]['name']):
     scenarios_overview += f"- **{vv['name']}**: {vv['description']}\n"
 st.write(scenarios_overview)
 
@@ -56,4 +87,5 @@ for test in tests:
     st.write(f"### {test}")
     df.replace({False: "❌", True: "✅", None: ""}, inplace=True)
     df.columns = [custom_title(col) for col in df.columns]
+    df = df.sort_index()
     df
