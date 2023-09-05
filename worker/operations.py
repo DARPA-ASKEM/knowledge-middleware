@@ -264,7 +264,7 @@ def data_card(*args, **kwargs):
     logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
     resp = requests.post(url, params=params, files=files)
     if resp.status_code != 200:
-        raise Exception(f"Failed response from MIT: {resp.status_code}")
+        raise Exception(f"Failed response from MIT: {resp.status_code}, {resp.text}")
 
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
@@ -381,7 +381,7 @@ def model_card(*args, **kwargs):
             raise Exception(f"Failed to generate model card for {model_id}: {e}")
 
     else:
-        raise Exception(f"Bad response from backend knowledge service for {model_id}: {resp.status_code}")
+        raise Exception(f"Bad response from TA1 service for {model_id}: {resp.status_code}")
 
 
 # dccde3a0-0132-430c-afd8-c67953298f48

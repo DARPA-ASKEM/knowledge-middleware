@@ -1,6 +1,6 @@
 ---
-name: "Fake Scenario"
-description: "A fake scenario to test if basic integration is working."
+name: "Basic Integration"
+description: "A basic scenario for testing core integration."
 enabled:
   - pdf_extraction
   - pdf_to_text

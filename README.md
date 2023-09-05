@@ -50,10 +50,15 @@ To add additional scenarios, create a new directory in `tests/scenarios`. The di
 will be specified in `enabled`. 
 
 The `.env` will be used to specify the `MOCK_TA1` setting as well as the appropriate endpoints and can be passed into the test suite with:
-
 ```
 poetry shell && export $(cat .env | xargs) && pytest -s
 ```
+
+Run `poetry run poe report`, to generate `tests/output/report.json` which contains the status of each scenario and operation.
+
+Once the report has been generated, run `poetry run streamlit run tests/Home.py` to run the web interface into the test suite, which will be available at `http://localhost:8501`.
+
+> Note: if the tests fail, `poetry poe` will exit and not generate a report. To work around this, run `pytest --json-report --json-report-file=tests/output/tests.json` then `python tests/report.py` manually.
 
 ## License
 

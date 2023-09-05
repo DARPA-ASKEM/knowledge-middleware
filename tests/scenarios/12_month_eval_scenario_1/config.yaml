@@ -1,0 +1,5 @@
+---
+name: "12 Month Eval Secnario #1"
+description: "12 month evaluation scenario 1: SEIRHD model"
+enabled:
+  - code_to_amr

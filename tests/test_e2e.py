@@ -1,20 +1,21 @@
 import json
 import os
-import requests
+import logging
+from shutil import rmtree
 
 import pytest
-import logging
+import requests
 from rq.job import Job
 
 from lib.settings import settings
-from tests.utils import get_parameterizations, AMR
+from tests.utils import get_parameterizations, record_quality_check, AMR
 
 logger = logging.getLogger(__name__)
 
 params = get_parameterizations()
 
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extractions(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
@@ -106,6 +107,8 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
+    elif os.path.exists(f"{context_dir}/amr.json"):
+        amr = json.load(open(f"{context_dir}/amr.json"))        
     
     #### ACT ####
     response = client.post(
@@ -127,8 +130,13 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     assert status_response.json().get("status") == "finished"
 
     assert (
-             amr_instance.is_valid()
+            amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
+
+    #### POSTAMBLE ####
+    if 'amr' in locals():
+        record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
+    
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
@@ -142,12 +150,13 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "description": "test description",
     }
 
-
-    amr = json.load(open(f"{context_dir}/amr.json"))
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
     if settings.MOCK_TA1:
+        amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
+    elif os.path.exists(f"{context_dir}/amr.json"):
+        amr = json.load(open(f"{context_dir}/amr.json"))
     
     #### ACT ####
     response = client.post(
@@ -157,6 +166,8 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         headers={"Content-Type": "application/json"},
     )
     results = response.json()
+    logger.info("ENDPOINT RESPONSE")
+    logger.info(response.text)
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
@@ -170,8 +181,12 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert status_response.json().get("status") == "finished"
 
     assert (
-             amr_instance.is_valid()
+            amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
+
+    #### POSTAMBLE ####
+    if 'amr' in locals():
+        record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
