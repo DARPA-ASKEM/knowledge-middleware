@@ -134,7 +134,7 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
         else:
             artifact["file_names"] = []
 
-        # Override any defaults or extaned with provided extra params
+        # Override any defaults or extend with provided extra params
         artifact.update(extra_params)
 
         if settings.MOCK_TDS:

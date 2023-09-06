@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 params = get_parameterizations()
 
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
     for d in text_json:
         text += f"{d['content']}\n"
     tds_artifact = gen_tds_artifact(
-        id="test_pdf_extractions",
+        id=f"test_pdf_extractions_{resource}",
         file_names=["paper.pdf"],
         text=text,
     )
@@ -59,10 +59,10 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
 
 
 @pytest.mark.parametrize("resource", params["pdf_to_text"])
-def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
     tds_artifact = gen_tds_artifact(
-        id="test_pdf_to_text",
+        id=f"test_pdf_to_text_{resource}",
         file_names=["paper.pdf"]
     )
     file_storage.upload("paper.pdf", "TEST TEXT")
@@ -93,12 +93,12 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
 
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
-def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
     tds_code = gen_tds_artifact(
         code=True,
-        id="test_code_to_amr",
+        id=f"test_code_to_amr_{resource}",
         file_names=["code.py"]
     )
     tds_code["file_names"] = ["code.py"]
@@ -201,7 +201,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
-def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
     CHAR_LIMIT = 250
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -209,7 +209,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     for d in text_json:
         text += f"{d['content']}\n"
     tds_artifact = gen_tds_artifact(
-        id="test_profile_dataset",
+        id=f"test_profile_dataset_{resource}",
         file_names=["paper.pdf"],
         metadata={"text": text[:CHAR_LIMIT]},
     )
@@ -253,14 +253,14 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
 
     
 @pytest.mark.parametrize("resource", params["profile_model"])
-def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage):
+def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
     for d in text_json:
         text += f"{d['content']}\n"
     document = gen_tds_artifact(
-        id="test_profile_model_document",
+        id=f"test_profile_model_document_{resource}",
         file_names=["paper.pdf"],
         metadata={},
         text=text,
@@ -269,7 +269,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
 
     code = open(f"{context_dir}/code.py").read()
     code_artifact = gen_tds_artifact(
-        id="test_profile_model_code",
+        id=f"test_profile_model_code_{resource}",
         code=True,
         file_names=["code.py"]
 
@@ -302,7 +302,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_model_card", json=model_card)
 
     query_params = {
-        "paper_document_id": document["id"],
+        "document_id": document["id"],
         "": "",
     }
 
