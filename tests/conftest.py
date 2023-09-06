@@ -6,6 +6,7 @@ import sys
 import re
 from urllib.parse import urlparse, parse_qs, quote_plus 
 import json
+import time
 from collections import namedtuple
 from io import BytesIO
 from itertools import count
@@ -145,3 +146,13 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
                 
         return artifact
     return generate
+
+@pytest.mark.tryfirst
+def pytest_runtest_protocol(item, nextitem):
+    """
+    Runs between tests, add a sleep to introduce delay when
+    making external calls
+    """
+    if not settings.MOCK_TA1:
+        if nextitem:  # Check if there's a next item
+            time.sleep(90)  # Sleep for 60 seconds

@@ -1,7 +1,9 @@
 import requests
 from jsonschema import validate, ValidationError
 from collections import defaultdict
-from os import listdir, path
+from os import listdir, makedirs, path
+import csv
+
 from lib.settings import settings
 
 import yaml
@@ -50,3 +52,15 @@ class AMR:
             return False
         else:
             return True
+
+    def f1(self, standard):
+        return len(self.json_data["model"]["states"]) / len(standard["model"]["states"])
+
+
+def record_quality_check(context_dir, operation, test, result):
+    scenario = context_dir.split("/")[-1]
+    makedirs("tests/output", exist_ok=True)
+    with open(f"tests/output/qual.csv", "a", newline="") as file:
+        row = csv.writer(file)
+        row.writerow([scenario, operation, test, result])
+
