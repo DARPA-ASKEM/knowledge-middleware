@@ -8,7 +8,7 @@ export LANG
 # Initializes submodules and copies environment file sample to env file.
 .PHONY:init
 init:.env
-	poetry install --with api
+	poetry install
 	poetry run pre-commit install
 	git submodule update --init;
 
