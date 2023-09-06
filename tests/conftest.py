@@ -115,26 +115,35 @@ def file_storage(http_mock):
 def gen_tds_artifact(context_dir, http_mock, file_storage):
     # Mock the TDS artifact
     counter = count()
-    def generate(code=False):
+    def generate(code=False, **extra_params):
         if code:
             _type = "code"
         else:
-            _type = "artifacts"
+            _type = "documents"
         artifact = {
             "id": f"{_type}-{next(counter)}",
             "name": _type,
             "description": f"test {_type}",
             "timestamp": "2023-07-17T19:11:43",
             "metadata": {},
+            "username": "n/a",
         }
         if code:
             artifact["filename"] = "code.py"
             artifact["language"] = "python"
         else:
-            artifact["file_names"]: []
-        artifact_url = f"{settings.TDS_URL}/{_type}/{artifact['id']}"
-        http_mock.get(artifact_url, json=artifact)
-        http_mock.put(artifact_url)
+            artifact["file_names"] = []
+
+        # Override any defaults or extend with provided extra params
+        artifact.update(extra_params)
+
+        if settings.MOCK_TDS:
+            artifact_url = f"{settings.TDS_URL}/{_type}/{artifact['id']}"
+            http_mock.get(artifact_url, json=artifact)
+            http_mock.put(artifact_url)
+        else:
+            result = requests.post(f"{settings.TDS_URL}/{_type}", json=artifact)
+                
         return artifact
     return generate
 
