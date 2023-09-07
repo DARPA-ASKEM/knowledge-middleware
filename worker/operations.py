@@ -2,6 +2,7 @@ import io
 import json
 import os
 import sys
+import time
 
 import requests
 from worker.utils import (
@@ -15,7 +16,7 @@ from worker.utils import (
     put_document_extraction_to_tds,
     set_provenance,
 )
-from lib.settings import settings
+from lib.settings import settings, ExtractionServices
 
 TDS_API = settings.TDS_URL
 SKEMA_API = settings.SKEMA_RS_URL
@@ -93,15 +94,7 @@ def equations_to_amr(*args, **kwargs):
         ) from None
 
 
-def pdf_to_text(*args, **kwargs):
-    # Get options
-    document_id = kwargs.get("document_id")
-
-    document_json, downloaded_document = get_document_from_tds(
-        document_id=document_id
-    )  # Assumes  downloaded document is PDF, doesn't type check
-    filename = document_json.get("file_names")[0]
-
+def skema_extraction(document_id, filename, downloaded_document):
     # Try to feed text to the unified service
     unified_text_reading_url = f"{UNIFIED_API}/text-reading/cosmos_to_json"
 
@@ -119,15 +112,103 @@ def pdf_to_text(*args, **kwargs):
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {extraction_json}")
-        text = ""
-        for d in extraction_json:
-            text += f"{d['content']}\n"
+        text = "\n".join([
+           record["content"] for record in extraction_json
+        ])
 
     except ValueError:
         raise Exception(
             f"Extraction failure: {response.text}"
             f"with status code {response.status_code}"
         ) from None
+
+    return text, response.status_code, extraction_json
+
+def cosmos_extraction(document_id, filename, downloaded_document, force_run=False):
+    MAX_EXECTION_TIME = 600
+    POLLING_INTERVAL = 5
+    MAX_ITERATIONS = MAX_EXECTION_TIME // POLLING_INTERVAL
+
+    cosmos_text_extraction_url = f"{settings.COSMOS_URL}/process/"
+
+    put_payload = [
+        ("pdf", (filename, io.BytesIO(downloaded_document), "application/pdf"))
+    ]
+    data_form = {
+        "compress_images": False,
+        "use_cache": (not force_run),
+    }
+
+    try:
+        logger.info(
+            f"Sending PDF to backend knowledge service with document id {document_id} at {cosmos_text_extraction_url}"
+        )
+        response = requests.post(cosmos_text_extraction_url, files=put_payload, data=data_form)
+        logger.info(
+            f"Response received from backend knowledge service with status code: {response.status_code}"
+        )
+        extraction_json = response.json()
+        logger.debug("COSMOS response object: %s", extraction_json)
+        status_endpoint = extraction_json["status_endpoint"]
+        result_endpoint = f"{extraction_json['result_endpoint']}/text"
+
+        job_done = False
+
+        for i in range(MAX_ITERATIONS):
+            status = requests.get(status_endpoint)
+            status_data = status.json()
+            logger.info("Polled status endpoint %s times:\n%s", i+1, status_data)
+            job_done = status_data['error'] or status_data['job_completed']
+            if job_done:
+                break
+            time.sleep(POLLING_INTERVAL)
+
+        if not job_done:
+            logger.error("ERROR: Job not complete after %s seconds.", MAX_EXECTION_TIME)
+            raise Exception(f"Job not complete after {MAX_EXECTION_TIME} seconds.")
+        elif status_data['error']:
+            logger.error("An unexpected error occurred: %s", {status_data["error"]})
+            raise Exception(f"An error occurred when processing in Cosmos: {status_data['error']}")
+
+        result = requests.get(result_endpoint)
+        logger.debug(f"result response: %s", result.text[80:])
+
+        extraction_json = result.json()
+        text = "\n".join([
+           record["content"] for record in extraction_json
+        ])
+
+    except ValueError:
+        raise Exception(
+            f"Extraction failure: {response.text}"
+            f"with status code {response.status_code}"
+        ) from None
+
+    return text, response.status_code, extraction_json
+
+
+def pdf_to_text(*args, **kwargs):
+    # Get options
+    document_id = kwargs.get("document_id")
+
+    document_json, downloaded_document = get_document_from_tds(
+        document_id=document_id
+    )  # Assumes  downloaded document is PDF, doesn't type check
+    filename = document_json.get("file_names")[0]
+
+    match settings.PDF_EXTRACTOR:
+        case ExtractionServices.SKEMA:
+            text, status_code, extraction_json = skema_extraction(
+                document_id=document_id,
+                filename=filename,
+                downloaded_document=downloaded_document
+            )
+        case ExtractionServices.COSMOS:
+            text, status_code, extraction_json = cosmos_extraction(
+                document_id=document_id,
+                filename=filename,
+                downloaded_document=downloaded_document
+            )
 
     document_response = put_document_extraction_to_tds(
         document_id=document_id,
@@ -139,7 +220,7 @@ def pdf_to_text(*args, **kwargs):
 
     if document_response.get("status") == 200:
         response = {
-            "extraction_status_code": response.status_code,
+            "extraction_status_code": status_code,
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
         }
@@ -452,7 +533,7 @@ def code_to_amr(*args, **kwargs):
     description = kwargs.get("description")
 
     code_json, downloaded_code = get_code_from_tds(code_id, code=True)
-    
+
     code_blob = downloaded_code.decode("utf-8")
     logger.info(code_blob[:250])
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"

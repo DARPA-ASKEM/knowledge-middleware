@@ -65,8 +65,8 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
         id=f"test_pdf_to_text_{resource}",
         file_names=["paper.pdf"]
     )
-    file_storage.upload("paper.pdf", "TEST TEXT")
-
+    pdf_file = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf_file)
     query_params = {
         "document_id": tds_artifact["id"],
     }
@@ -74,7 +74,7 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/text.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
-    
+
     #### ACT ####
     response = client.post(
         "/pdf_to_text",
@@ -118,8 +118,8 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
     elif os.path.exists(f"{context_dir}/amr.json"):
-        amr = json.load(open(f"{context_dir}/amr.json"))        
-    
+        amr = json.load(open(f"{context_dir}/amr.json"))
+
     #### ACT ####
     response = client.post(
         "/code_to_amr",
@@ -147,7 +147,7 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     #### POSTAMBLE ####
     if 'amr' in locals():
         record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
-    
+
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
@@ -168,7 +168,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
     elif os.path.exists(f"{context_dir}/amr.json"):
         amr = json.load(open(f"{context_dir}/amr.json"))
-    
+
     #### ACT ####
     response = client.post(
         "/equations_to_amr",
@@ -182,7 +182,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
-    
+
     job = Job.fetch(job_id, connection=worker.connection)
     amr_instance = AMR(job.result["amr"])
 
@@ -220,7 +220,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     file_storage.upload("paper.pdf", "TEST TEXT")
     file_storage.upload("data.csv", csvfile)
 
-    
+
     dataset = {
         "id": tds_artifact["id"],
         "name": "data",
@@ -251,7 +251,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     assert status_response.status_code == 200
     assert status_response.json().get("status") == "finished"
 
-    
+
 @pytest.mark.parametrize("resource", params["profile_model"])
 def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
     #### ARRANGE ####
@@ -275,7 +275,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
 
     )
     file_storage.upload("code.py", code)
-    
+
     model_id = "test_profile_model"
     amr = json.load(open(f"{context_dir}/amr.json"))
     if settings.MOCK_TDS:
@@ -286,7 +286,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
         amr["id"] = model_id
         requests.post(f"{settings.TDS_URL}/models", json=amr)
         requests.post(
-            f"{settings.TDS_URL}/provenance", 
+            f"{settings.TDS_URL}/provenance",
             json={
                 "timestamp": "2023-09-05T17:41:18.187841",
                 "relation_type": "EXTRACTED_FROM",
