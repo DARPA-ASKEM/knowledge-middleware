@@ -123,15 +123,15 @@ def code_to_amr(
 
 
 @app.post("/pdf_to_text")
-def pdf_to_text(artifact_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-    """Run text extractions over pdfs and stores the text as metadata on the artifact
+def pdf_to_text(document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+    """Run text extractions over pdfs and stores the text on the document
 
     Args:
-        `artifact_id`: the id of the artifact to process
+        `document_id`: the id of the document to process
     """
     operation_name = "operations.pdf_to_text"
 
-    options = {"artifact_id": artifact_id}
+    options = {"document_id": document_id}
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
@@ -140,7 +140,7 @@ def pdf_to_text(artifact_id: str, redis=Depends(get_redis)) -> ExtractionJob:
 
 @app.post("/pdf_extractions")
 async def pdf_extractions(
-    artifact_id: str,
+    document_id: str,
     annotate_skema: bool = True,
     annotate_mit: bool = True,
     name: str = None,
@@ -156,7 +156,7 @@ async def pdf_extractions(
 
     # text_content = text_content[: len(text_content) // 2]
     options = {
-        "artifact_id": artifact_id,
+        "document_id": document_id,
         "annotate_skema": annotate_skema,
         "annotate_mit": annotate_mit,
         "name": name,
@@ -170,23 +170,23 @@ async def pdf_extractions(
 
 @app.post("/profile_dataset/{dataset_id}")
 def profile_dataset(
-    dataset_id: str, artifact_id: Optional[str] = None, redis=Depends(get_redis)
+    dataset_id: str, document_id: Optional[str] = None, redis=Depends(get_redis)
 ) -> ExtractionJob:
-    """Profile dataset with MIT's profiling service. This optionally accepts an `artifact_id` which
-    is expected to be some user uploaded document which has had its text extracted and stored to
-    `metadata.text`.
+    """Profile dataset with MIT's profiling service. This optionally accepts an `document_id` which
+    is expected to be some user uploaded document which has had its text extracted and stored as 
+    the `text` element on the document.
 
-    > NOTE: if nothing is found within `metadata.text` of the artifact then it is ignored.
+    > NOTE: if nothing is found within `text` of the document then it is ignored.
 
     Args:
         dataset_id: the id of the dataset to profile
-        artifact_id [optional]: the id of the artifact (paper/document) associated with the dataset.
+        document_id [optional]: the id of the document (paper/resource) associated with the dataset.
     """
     operation_name = "operations.data_card"
 
     options = {
         "dataset_id": dataset_id,
-        "artifact_id": artifact_id,
+        "document_id": document_id,
     }
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
@@ -195,8 +195,8 @@ def profile_dataset(
 
 
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, paper_artifact_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-    """Profile model with MIT's profiling service. This takes in a paper and code artifact
+def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+    """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
     has been extracted with `/pdf_to_text` and the code has been converted to an AMR
     with `/code_to_amr`
@@ -205,11 +205,11 @@ def profile_model(model_id: str, paper_artifact_id: str, redis=Depends(get_redis
 
     Args:
         model_id: the id of the model to profile
-        paper_artifact_id: the id of the paper artifact
+        paper_document_id: the id of the paper document
     """
     operation_name = "operations.model_card"
 
-    options = {"model_id": model_id, "paper_artifact_id": paper_artifact_id}
+    options = {"model_id": model_id, "paper_document_id": document_id}
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
@@ -217,13 +217,13 @@ def profile_model(model_id: str, paper_artifact_id: str, redis=Depends(get_redis
 
 
 @app.post("/link_amr")
-def link_amr(artifact_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+def link_amr(document_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     raise HTTPException(status_code=501, detail="Endpoint is under development")
 
     operation_name = "operations.link_amr"
 
     options = {
-        "artifact_id": artifact_id,
+        "document_id": document_id,
         "model_id": model_id,
     }
 
