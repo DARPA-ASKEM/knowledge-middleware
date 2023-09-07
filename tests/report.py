@@ -6,6 +6,11 @@ import re
 from collections import defaultdict
 
 import yaml
+import pytest
+
+def test(output_file="tests/output/tests.json"):
+    pytest.main(["--json-report", f"--json-report-file={output_file}"])
+
 
 def report():
     # TODO: Make this into a predefined struct

@@ -29,10 +29,11 @@ pre-commit = "^3.3.3"
 
 
 [tool.poetry.scripts]
+status-test = "tests.report:test"
 gen-report = "tests.report:report"
 
 [tool.poe.tasks]
-_test = "pytest --json-report --json-report-file=tests/output/tests.json"
+_test = "status-test"
 _report = "gen-report"
 report = ["_test", "_report"]
 
