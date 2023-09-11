@@ -1,10 +1,8 @@
 ---
-name: Tests
+name: Report
 on:
-  workflow_dispatch: null
-  pull_request:
-    branches:
-      - main
+  schedule:
+    - cron: "0 1 * * 1"
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,13 +22,6 @@ jobs:
       - name: Install dependencies with Poetry
         run: |
           poetry install
-      - name: Run tests with coverage using Poetry
+      - name: Run report
         run: >
-          poetry run pytest tests --cov=./ --cov-report=term
-          --cov-report=xml:coverage.xml
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          fail_ci_if_error: true
+          MOCK_TA1=FALSE poetry run poe report 

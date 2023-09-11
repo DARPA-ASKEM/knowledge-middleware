@@ -1,4 +1,18 @@
-from pydantic_settings import BaseSettings
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Patch AWS Key Names
+prod_names = {
+    "AWS_PROD_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID", 
+    "AWS_PROD_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
+    "AWS_PROD_BUCKET": "BUCKET"
+}
+
+for from_var, to_var in prod_names.items():
+    value = os.environ.get(from_var, None)
+    if value:
+        os.environ[to_var] = value
+
 
 class Settings(BaseSettings):
     MOCK_TA1: bool = True
@@ -11,6 +25,9 @@ class Settings(BaseSettings):
     TDS_URL: str = "http://tds:15"
     OPENAI_API_KEY: str = "foo"
     LOG_LEVEL: str = "INFO"
+    AWS_ACCESS_KEY_ID: str = "NA"
+    AWS_SECRET_ACCESS_KEY: str = "NA"
+    BUCKET: str = "NA"
 
 
 settings = Settings()
