@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     TDS_URL: str = "http://tds:15"
     OPENAI_API_KEY: str = "foo"
     LOG_LEVEL: str = "INFO"
+    AWS_ACCESS_KEY_ID: str = "NA"
+    AWS_SECRET_ACCESS_KEY: str = "NA"
+    BUCKET: str = "NA"
 
 
 settings = Settings()

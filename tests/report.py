@@ -7,6 +7,9 @@ from collections import defaultdict
 
 import yaml
 import pytest
+import boto3
+
+from lib.settings import settings
 
 def test(output_file="tests/output/tests.json"):
     pytest.main(["--json-report", f"--json-report-file={output_file}"])
@@ -47,9 +50,14 @@ def report():
             report[scenario]["description"] = spec["description"]
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"tests/output/report_{timestamp}.json"
-    with open(filename, "w") as file:
+    filename = f"report_{timestamp}.json"
+    fullpath = os.path.join("tests/output", "filename")
+    with open(fullpath, "w") as file:
         json.dump(report, file, indent=2)
+
+    s3 = boto3.client("s3")
+    full_handle = os.path.join("ta1", filename)
+    s3.upload_file(fullpath, settings.BUCKET, full_handle)
 
 if __name__ == "__main__":
     report()
