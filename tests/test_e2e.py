@@ -14,8 +14,11 @@ logger = logging.getLogger(__name__)
 
 params = get_parameterizations()
 
+
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
+def test_pdf_extraction(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
@@ -31,7 +34,10 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
 
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/extractions.json"))
-        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True", json=extractions)
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True",
+            json=extractions,
+        )
 
     query_params = {
         "document_id": document_id,
@@ -55,15 +61,18 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["pdf_to_text"])
-def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
+def test_pdf_to_text(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
     #### ARRANGE ####
     tds_artifact = gen_tds_artifact(
-        id=f"test_pdf_to_text_{resource}",
-        file_names=["paper.pdf"]
+        id=f"test_pdf_to_text_{resource}", file_names=["paper.pdf"]
     )
     file_storage.upload("paper.pdf", "TEST TEXT")
 
@@ -73,8 +82,10 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
 
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/text.json"))
-        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
-    
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
+        )
+
     #### ACT ####
     response = client.post(
         "/pdf_to_text",
@@ -89,17 +100,19 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
-def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
+def test_code_to_amr(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
     tds_code = gen_tds_artifact(
-        code=True,
-        id=f"test_code_to_amr_{resource}",
-        file_names=["code.py"]
+        code=True, id=f"test_code_to_amr_{resource}", file_names=["code.py"]
     )
     tds_code["file_names"] = ["code.py"]
     file_storage.upload("code.py", code)
@@ -116,10 +129,12 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
         http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
-        http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr)
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr
+        )
     elif os.path.exists(f"{context_dir}/amr.json"):
-        amr = json.load(open(f"{context_dir}/amr.json"))        
-    
+        amr = json.load(open(f"{context_dir}/amr.json"))
+
     #### ACT ####
     response = client.post(
         "/code_to_amr",
@@ -132,21 +147,26 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     status_response = client.get(f"/status/{job_id}")
 
     job = Job.fetch(job_id, connection=worker.connection)
-    if job.result is not None: amr_instance = AMR(job.result["amr"])
+    if job.result is not None:
+        amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
     assert (
-            amr_instance.is_valid()
+        amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
     #### POSTAMBLE ####
-    if 'amr' in locals():
-        record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
-    
+    if "amr" in locals():
+        record_quality_check(
+            context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr)
+        )
+
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
@@ -160,14 +180,24 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "description": "test description",
     }
 
+    query_params_config_test = {
+        "equation_type": "latex",
+        "model": "petrinet",
+        "model_id": "test_id",
+        "name": "test model",
+        "description": "test description",
+    }
+
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
     http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
-        http_mock.post(f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr)
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/workflows/latex/equations-to-amr", json=amr
+        )
     elif os.path.exists(f"{context_dir}/amr.json"):
         amr = json.load(open(f"{context_dir}/amr.json"))
-    
+
     #### ACT ####
     response = client.post(
         "/equations_to_amr",
@@ -181,26 +211,48 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
-    
+
     job = Job.fetch(job_id, connection=worker.connection)
-    if job.result is not None: amr_instance = AMR(job.result["amr"])
+    if job.result is not None:
+        amr_instance = AMR(job.result["amr"])
+
+    # Tests the equation to AMR with a predefined model_id.
+    response_config = client.post(
+        "/equations_to_amr",
+        params=query_params_config_test,
+        data=equations,
+        headers={"Content-Type": "application/json"},
+    )
+    results_config_test = response_config.json()
+    job_id_config = results_config_test.get("id")
+    status_response_config = client.get(f"/status/{job_id_config}")
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
     assert (
-            amr_instance.is_valid()
+        amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
+    # Assertions for predefined model id.
+    assert results_config_test.get("status") == "queued"
+    assert status_response_config.status_code == 200
+
     #### POSTAMBLE ####
-    if 'amr' in locals():
-        record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
+    if "amr" in locals():
+        record_quality_check(
+            context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr)
+        )
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
-def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
+def test_profile_dataset(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
     #### ARRANGE ####
     CHAR_LIMIT = 250
     text_json = json.load(open(f"{context_dir}/text.json"))
@@ -219,7 +271,6 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     file_storage.upload("paper.pdf", "TEST TEXT")
     file_storage.upload("data.csv", csvfile)
 
-    
     dataset = {
         "id": tds_artifact["id"],
         "name": "data",
@@ -229,7 +280,9 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
         "metadata": {},
     }
     http_mock.get(f"{settings.TDS_URL}/datasets/{dataset['id']}", json=dataset)
-    http_mock.put(f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]})
+    http_mock.put(
+        f"{settings.TDS_URL}/datasets/{dataset['id']}", json={"id": dataset["id"]}
+    )
     if settings.MOCK_TA1:
         data_card = json.load(open(f"{context_dir}/data_card.json"))
         http_mock.post(f"{settings.MIT_TR_URL}/cards/get_data_card", json=data_card)
@@ -248,10 +301,15 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
-    
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+
+
 @pytest.mark.parametrize("resource", params["profile_model"])
-def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
+def test_profile_model(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
     #### ARRANGE ####
     text_json = json.load(open(f"{context_dir}/text.json"))
     text = ""
@@ -267,24 +325,26 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
 
     code = open(f"{context_dir}/code.py").read()
     code_artifact = gen_tds_artifact(
-        id=f"test_profile_model_code_{resource}",
-        code=True,
-        file_names=["code.py"]
-
+        id=f"test_profile_model_code_{resource}", code=True, file_names=["code.py"]
     )
     file_storage.upload("code.py", code)
-    
+
     model_id = "test_profile_model"
     amr = json.load(open(f"{context_dir}/amr.json"))
     if settings.MOCK_TDS:
-        http_mock.post(f"{settings.TDS_URL}/provenance/search?search_type=models_from_code", json={"result": [code_artifact["id"]]})
-        http_mock.get(f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id, "model": amr})
+        http_mock.post(
+            f"{settings.TDS_URL}/provenance/search?search_type=models_from_code",
+            json={"result": [code_artifact["id"]]},
+        )
+        http_mock.get(
+            f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id, "model": amr}
+        )
         http_mock.put(f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id})
     else:
         amr["id"] = model_id
         requests.post(f"{settings.TDS_URL}/models", json=amr)
         requests.post(
-            f"{settings.TDS_URL}/provenance", 
+            f"{settings.TDS_URL}/provenance",
             json={
                 "timestamp": "2023-09-05T17:41:18.187841",
                 "relation_type": "EXTRACTED_FROM",
@@ -292,7 +352,7 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
                 "left_type": "Model",
                 "right": code_artifact["id"],
                 "right_type": "Code",
-            }
+            },
         )
 
     if settings.MOCK_TA1:
@@ -318,4 +378,6 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
