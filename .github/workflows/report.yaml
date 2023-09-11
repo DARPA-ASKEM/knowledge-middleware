@@ -1,6 +1,7 @@
 ---
 name: Report
 on:
+  workflow_call:
   schedule:
     - cron: "0 1 * * 1"
 jobs:
