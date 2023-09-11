@@ -28,4 +28,4 @@ jobs:
           poetry install
       - name: Run report
         run: >
-          MOCK_TA1=FALSE poetry run poe report 
+          MOCK_TA1=TRUE poetry run poe report 
