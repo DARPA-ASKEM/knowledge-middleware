@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 1 * * 1"
+  pull_request:
+    branches:
+      - main
 jobs:
   test:
     runs-on: ubuntu-latest
