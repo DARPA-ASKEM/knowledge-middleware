@@ -55,7 +55,7 @@ def test_pdf_extraction(context_dir, http_mock, client, worker, gen_tds_artifact
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["pdf_to_text"])
@@ -89,7 +89,7 @@ def test_pdf_to_text(context_dir, http_mock, client, worker, gen_tds_artifact, f
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
@@ -132,13 +132,12 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     status_response = client.get(f"/status/{job_id}")
 
     job = Job.fetch(job_id, connection=worker.connection)
-    print(job)
-    amr_instance = AMR(job.result["amr"])
+    if job.result is not None: amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
 
     assert (
             amr_instance.is_valid()
@@ -184,12 +183,12 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     status_response = client.get(f"/status/{job_id}")
     
     job = Job.fetch(job_id, connection=worker.connection)
-    amr_instance = AMR(job.result["amr"])
+    if job.result is not None: amr_instance = AMR(job.result["amr"])
 
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
 
     assert (
             amr_instance.is_valid()
@@ -249,8 +248,7 @@ def test_profile_dataset(context_dir, http_mock, client, worker, gen_tds_artifac
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
-
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
     
 @pytest.mark.parametrize("resource", params["profile_model"])
 def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource):
@@ -320,4 +318,4 @@ def test_profile_model(context_dir, http_mock, client, worker, gen_tds_artifact,
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
