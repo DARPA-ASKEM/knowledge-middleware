@@ -47,36 +47,45 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
         tds_models = f"{TDS_API}/models/{model_id}"
         model_response = requests.put(tds_models, json=amr_payload, headers=headers)
         if model_response.status_code != 200:
-            raise Exception(f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}")
+            raise Exception(
+                f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}"
+            )
         logger.info(f"Updated model in TDS with id {model_id}")
-        return {"model_id": model_id}
+        # return {"model_id": model_id}
     else:
         tds_models = f"{TDS_API}/models"
         model_response = requests.post(tds_models, json=amr_payload, headers=headers)
 
         model_id = model_response.json().get("id")
 
-        # Create TDS model configuration
-        tds_model_configurations = TDS_API + "/model_configurations"
-        configuration_payload = {
-            "model_id": model_id,
-            "name": amr_payload.get("name"),
-            "description": amr_payload.get("description"),
-            "model_version": amr_payload.get("model_version"),
-            "calibrated": False,
-            "configuration": json.loads(json.dumps(amr_payload)),
-        }
-        config_response = requests.post(
-            tds_model_configurations,
-            data=json.dumps(configuration_payload, default=str),
-            headers=headers,
-        )
-
-        config_id = config_response.json().get("id")
-
         logger.info(f"Created model in TDS with id {model_id}")
-        logger.info(f"Created model config in TDS with id {config_id}")
-        return {"model_id": model_id, "configuration_id": config_id}
+
+    # Create TDS model configuration
+    tds_model_configurations = TDS_API + "/model_configurations"
+    configuration_payload = {
+        "model_id": model_id,
+        "name": amr_payload.get("name")
+        if amr_payload.get("name") is not None
+        else amr_payload.get("header").get("name"),
+        "description": amr_payload.get("description")
+        if amr_payload.get("description") is not None
+        else amr_payload.get("header").get("description"),
+        "model_version": amr_payload.get("model_version")
+        if amr_payload.get("model_version") is not None
+        else amr_payload.get("header").get("model_version"),
+        "calibrated": False,
+        "configuration": json.loads(json.dumps(amr_payload)),
+    }
+    config_response = requests.post(
+        tds_model_configurations,
+        data=json.dumps(configuration_payload, default=str),
+        headers=headers,
+    )
+
+    config_id = config_response.json().get("id")
+
+    logger.info(f"Created model config in TDS with id {config_id}")
+    return {"model_id": model_id, "configuration_id": config_id}
 
 
 def put_document_extraction_to_tds(
@@ -115,7 +124,14 @@ def put_document_extraction_to_tds(
 
 
 def put_code_extraction_to_tds(
-    code_id, name, description, filename, extractions=None, text=None, model_id=None, code_language=None
+    code_id,
+    name,
+    description,
+    filename,
+    extractions=None,
+    text=None,
+    model_id=None,
+    code_language=None,
 ):
     """
     Update a code object in TDS.
@@ -185,7 +201,9 @@ def get_code_from_tds(code_id, code=False):
     logger.info(code_json)
     filename = code_json.get("filename")
 
-    download_url = f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
+    download_url = (
+        f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
+    )
     code_download_url = requests.get(download_url)
 
     presigned_download = code_download_url.json().get("url")
