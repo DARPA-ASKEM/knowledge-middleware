@@ -74,17 +74,15 @@ def test_pdf_to_text(
     tds_artifact = gen_tds_artifact(
         id=f"test_pdf_to_text_{resource}", file_names=["paper.pdf"]
     )
-    file_storage.upload("paper.pdf", "TEST TEXT")
-
+    pdf_file = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf_file)
     query_params = {
         "document_id": tds_artifact["id"],
     }
 
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/text.json"))
-        http_mock.post(
-            f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
-        )
+        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
 
     #### ACT ####
     response = client.post(
@@ -162,10 +160,8 @@ def test_code_to_amr(
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
     #### POSTAMBLE ####
-    if "amr" in locals():
-        record_quality_check(
-            context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr)
-        )
+    if 'amr' in locals():
+        record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
 
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
@@ -327,9 +323,7 @@ def test_profile_dataset(
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert (
-        status_response.json().get("status") == "finished"
-    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["profile_model"])
