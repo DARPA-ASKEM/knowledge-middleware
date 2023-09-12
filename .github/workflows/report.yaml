@@ -3,7 +3,7 @@ name: Report
 on:
   schedule:
     - cron: "0 1 * * 1"
-  pull_request:
+  push:
     branches:
       - main
   workflow_dispatch:
