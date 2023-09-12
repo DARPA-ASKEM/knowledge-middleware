@@ -468,13 +468,15 @@ def model_card(*args, **kwargs):
         raise Exception(f"Bad response from TA1 service for {model_id}: {resp.status_code}")
 
 
-# dccde3a0-0132-430c-afd8-c67953298f48
-# 77a2dffb-08b3-4f6e-bfe5-83d27ed259c4
 def link_amr(*args, **kwargs):
-    artifact_id = kwargs.get("artifact_id")
+    document_id = kwargs.get("document_id")
     model_id = kwargs.get("model_id")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+    document_json, downloaded_document = get_document_from_tds(
+        document_id=document_id
+    )
+
+    extractions = document_json.get('metadata',{})
 
     tds_models_url = f"{TDS_API}/models/{model_id}"
 
@@ -482,7 +484,7 @@ def link_amr(*args, **kwargs):
     model_json = model.json()
     model_amr = model_json.get("model")
 
-    logging.info(model_amr)
+    logging.debug(model_amr)
 
     jsonified_amr = json.dumps(model_amr).encode("utf-8")
 
@@ -494,7 +496,7 @@ def link_amr(*args, **kwargs):
         ),
         "text_extractions_file": (
             "extractions.json",
-            io.BytesIO(downloaded_artifact),
+            io.BytesIO(extractions),
             "application/json",
         ),
     }
@@ -502,24 +504,23 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-
+    logger.info(f"Sending model {model_id} and document {document_id} for linking")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
     logger.debug(f"TA 1 response object: {response.json()}")
 
     if response.status_code == 200:
         enriched_amr = response.json()
 
-        model_json["model"] = enriched_amr
-        model_id = model_json.get("id")
-
-        new_model_payload = model_json
-
-        update_response = requests.put(
-            f"{tds_models_url}/{model_id}", data=new_model_payload
-        )
+        tds_models = f"{tds_models_url}/{model_id}"
+        model_response = requests.put(tds_models, json=enriched_amr)
+        if model_response.status_code != 200:
+            raise Exception(
+                f"Cannot update model {model_id} in TDS with payload:\n\n {enriched_amr}"
+            )
+        logger.info(f"Updated enriched model in TDS with id {model_id}")
 
         return {
-            "status": update_response.status_code,
+            "status": model_response.status_code,
             "message": "Model enriched and updated in TDS",
         }
     else:
