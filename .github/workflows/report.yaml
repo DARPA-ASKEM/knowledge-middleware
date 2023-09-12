@@ -10,6 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: "non-terarium ta1 deployments"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -32,4 +33,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_PROD_SECRET_ACCESS_KEY}}
           BUCKET: ${{secrets.AWS_PROD_BUCKET}}
         run: >
-          MOCK_TA1=FALSE poetry run poe report 
+          poetry run poe report 
