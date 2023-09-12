@@ -1,11 +1,10 @@
 ---
 name: Report
-on:
-  schedule:
-    - cron: "0 1 * * 1"
+on: workflow_dispatch
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: "non-terarium ta1 deployments"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -23,5 +22,13 @@ jobs:
         run: |
           poetry install
       - name: Run report
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_PROD_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_PROD_SECRET_ACCESS_KEY}}
+          BUCKET: ${{secrets.AWS_PROD_BUCKET}}
+          SKEMA_RS_URL: ${{vars.SKEMA_RS_URL}}
+          TA1_UNIFIED_URL: ${{vars.TA1_UNIFIED_URL}}
+          MIT_TR_URL: ${{vars.MIT_TR_URL}}
+          MOCK_TA1: ${{vars.MOCK_TA1}}
         run: >
-          MOCK_TA1=FALSE poetry run poe report 
+          poetry run poe report 
