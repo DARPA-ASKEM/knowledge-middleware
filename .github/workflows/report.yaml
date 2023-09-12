@@ -32,4 +32,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_PROD_SECRET_ACCESS_KEY}}
           BUCKET: ${{secrets.AWS_PROD_BUCKET}}
         run: >
-          MOCK_TA1=TRUE poetry run poe report 
+          MOCK_TA1=FALSE poetry run poe report 
