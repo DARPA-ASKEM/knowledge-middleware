@@ -173,7 +173,7 @@ def profile_dataset(
     dataset_id: str, document_id: Optional[str] = None, redis=Depends(get_redis)
 ) -> ExtractionJob:
     """Profile dataset with MIT's profiling service. This optionally accepts an `document_id` which
-    is expected to be some user uploaded document which has had its text extracted and stored as 
+    is expected to be some user uploaded document which has had its text extracted and stored as
     the `text` element on the document.
 
     > NOTE: if nothing is found within `text` of the document then it is ignored.

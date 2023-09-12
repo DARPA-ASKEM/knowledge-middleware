@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 import logging
 import sys
 import re
-from urllib.parse import urlparse, parse_qs, quote_plus 
+from urllib.parse import urlparse, parse_qs, quote_plus
 import json
 import time
 from collections import namedtuple
@@ -59,7 +59,7 @@ def client(redis):
 
 @pytest.fixture
 def context_dir(resource):
-    yield f"./tests/scenarios/{resource}" 
+    yield f"./tests/scenarios/{resource}"
 
 
 @pytest.fixture
@@ -84,14 +84,14 @@ def file_storage(http_mock):
 
     def save(request, context):
         filename = get_filename(request.url)
-        storage[filename] = request.body.read().decode("utf-8")
+        storage[filename] = request.body.read()
         return {"status": "success"}
 
     def retrieve(filename):
         return storage[filename]
 
     def retrieve_from_url(request, _):
-        return retrieve(get_filename(request.url)).encode()
+        return retrieve(get_filename(request.url))
 
     def upload(filename, content):
         if isinstance(content, dict):
@@ -143,7 +143,9 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
             http_mock.put(artifact_url)
         else:
             result = requests.post(f"{settings.TDS_URL}/{_type}", json=artifact)
-                
+            if result.status_code >= 400:
+                raise requests.HTTPError("Error adding generated artifact to TDS")
+
         return artifact
     return generate
 
