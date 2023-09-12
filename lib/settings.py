@@ -1,5 +1,18 @@
+import os
 from enum import Enum
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Patch AWS Key Names
+prod_names = {
+    "AWS_PROD_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
+    "AWS_PROD_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
+    "AWS_PROD_BUCKET": "BUCKET"
+}
+
+for from_var, to_var in prod_names.items():
+    value = os.environ.get(from_var, None)
+    if value:
+        os.environ[to_var] = value
 
 
 class ExtractionServices(Enum):
@@ -20,7 +33,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = "foo"
     LOG_LEVEL: str = "INFO"
     PDF_EXTRACTOR: ExtractionServices = "cosmos"
-
+    AWS_ACCESS_KEY_ID: str = "NA"
+    AWS_SECRET_ACCESS_KEY: str = "NA"
+    BUCKET: str = "NA"
 
 
 settings = Settings()
