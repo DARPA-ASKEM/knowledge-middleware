@@ -144,8 +144,8 @@ def test_code_to_amr(context_dir, http_mock, client, worker, gen_tds_artifact, f
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
     #### POSTAMBLE ####
-    if 'amr' in locals():
-        record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
+    # if 'amr' in locals():
+    #     record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
     
 
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
@@ -195,8 +195,8 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
     #### POSTAMBLE ####
-    if 'amr' in locals():
-        record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
+    # if 'amr' in locals():
+    #     record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
 
 
 @pytest.mark.parametrize("resource", params["profile_dataset"])
