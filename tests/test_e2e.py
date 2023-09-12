@@ -171,6 +171,15 @@ def test_code_to_amr(
 @pytest.mark.parametrize("resource", params["equations_to_amr"])
 def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     #### ARRANGE ####
+
+    # Function to store written model configurations for later assertions.
+    storage = []
+
+    def write_to_fake_configs(req, resp):
+        json_body = json.loads(req._request.body)
+        storage.append(json_body)
+        return {"id": "configuration_test_id"}
+
     equations = open(f"{context_dir}/equations.txt").read()
 
     query_params = {
@@ -183,13 +192,16 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     query_params_config_test = {
         "equation_type": "latex",
         "model": "petrinet",
-        "model_id": "test_id",
-        "name": "test model",
-        "description": "test description",
+        "model_id": "test2",
+        "name": "test model 2",
+        "description": "test description 2",
     }
 
     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-    http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
+    http_mock.post(
+        f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
+    )
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
@@ -199,6 +211,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         amr = json.load(open(f"{context_dir}/amr.json"))
 
     #### ACT ####
+    # Case 1
     response = client.post(
         "/equations_to_amr",
         params=query_params,
@@ -216,18 +229,25 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     if job.result is not None:
         amr_instance = AMR(job.result["amr"])
 
+    # Case 2
     # Tests the equation to AMR with a predefined model_id.
-    response_config = client.post(
+    config_response = client.post(
         "/equations_to_amr",
         params=query_params_config_test,
         data=equations,
         headers={"Content-Type": "application/json"},
     )
-    results_config_test = response_config.json()
+    logger.info(f"CONFIG RESP: {config_response}")
+    results_config_test = config_response.json()
     job_id_config = results_config_test.get("id")
-    status_response_config = client.get(f"/status/{job_id_config}")
+    status_config_response = client.get(f"/status/{job_id_config}")
+
+    job_id = results_config_test.get("id")
+    worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
 
     #### ASSERT ####
+    # Case 1
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert (
@@ -238,9 +258,15 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         amr_instance.is_valid()
     ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
-    # Assertions for predefined model id.
+    assert len(storage) >= 1
+    assert storage[0].get("model_id") == "test"
+
+    # Case 2
+    # Assertions for predefined model id case.
     assert results_config_test.get("status") == "queued"
-    assert status_response_config.status_code == 200
+    assert status_config_response.status_code == 200
+
+    assert storage[1].get("model_id") == "test2"
 
     #### POSTAMBLE ####
     if "amr" in locals():
