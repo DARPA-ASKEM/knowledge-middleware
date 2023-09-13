@@ -478,25 +478,26 @@ def link_amr(*args, **kwargs):
 
     extractions = document_json.get('metadata',{})
 
-    tds_models_url = f"{TDS_API}/models/{model_id}"
+    tds_model_url = f"{TDS_API}/models/{model_id}"
 
-    model = requests.get(tds_models_url)
+    model = requests.get(tds_model_url)
     model_json = model.json()
     model_amr = model_json.get("model")
 
     logging.debug(model_amr)
 
-    jsonified_amr = json.dumps(model_amr).encode("utf-8")
+    stringified_amr = json.dumps(model_amr).encode("utf-8")
+    stringified_extractions = json.dumps(extractions).encode("utf-8")
 
     files = {
         "amr_file": (
             "amr.json",
-            io.BytesIO(jsonified_amr),
+            io.BytesIO(stringified_amr),
             "application/json",
         ),
         "text_extractions_file": (
             "extractions.json",
-            io.BytesIO(extractions),
+            io.BytesIO(stringified_extractions),
             "application/json",
         ),
     }
@@ -511,8 +512,7 @@ def link_amr(*args, **kwargs):
     if response.status_code == 200:
         enriched_amr = response.json()
 
-        tds_models = f"{tds_models_url}/{model_id}"
-        model_response = requests.put(tds_models, json=enriched_amr)
+        model_response = requests.put(tds_model_url, json=enriched_amr)
         if model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {enriched_amr}"

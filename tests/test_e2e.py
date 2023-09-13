@@ -420,6 +420,8 @@ def test_link_amr(
         metadata=extractions
     )
 
+    file_storage.upload("paper.pdf", "TEST PDF")
+
     # overwrite model_id with the response in case TDS is NOT mocked and we get
     # back a real model ID
     model_id = gen_tds_model(model_id=model_id, amr=amr)    

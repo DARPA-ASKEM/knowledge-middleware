@@ -143,6 +143,7 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
             http_mock.put(artifact_url)
         else:
             result = requests.post(f"{settings.TDS_URL}/{_type}", json=artifact)
+            artifact['id'] = result.json()['id']
             if result.status_code >= 400:
                 raise requests.HTTPError("Error adding generated artifact to TDS")
 
