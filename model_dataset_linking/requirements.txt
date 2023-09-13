@@ -1,2 +1,4 @@
 langchain
 chromadb
+bs4
+requests

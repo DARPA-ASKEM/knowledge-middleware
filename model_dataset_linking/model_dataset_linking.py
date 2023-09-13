@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 DATASET_TEMPLATE="""\
-The information below describes a feature in a dataset.
+The information below describes a feature in a dataset with epidemiology data.
 
 Here is some information on the entire dataset:  
 dataset name: {obj_name}
-dataset description: {obj_description}}
+dataset description: {obj_description}
                                      
 Here is some information on the feature itself:
 feature name: {column_name}
@@ -14,26 +14,25 @@ data_type: {column_data_type}
 feature unit type: {column_units}
 feature numerical stats:  {column_column_stats}
 feature concept : {column_concept}
-    
 """
 # add to model template
 MODEL_TEMPLATE="""\
-The information below describes a feature in a model.
+The information below describes a feature in a epidemiological model.
 
-Here is some information on the entire dataset:  
+Here is some information on the entire model:  
 model name: {obj_name}
-model description: {obj_description}}
-                                     
+model description: {obj_description}                                  
 """
 
 GROUND_CHUNK_TEMPLATE="""\
 name: {ground_name}
 description: {ground_description}
 synonyms: {ground_synonyms}
-context: {ground_context}
-units: {ground_unit_title}, {ground_units_description}
-type: {ground_type}
 """
+# context: {ground_context}
+# units: {ground_unit_title}, {ground_units_description}
+# type: {ground_type}
+# """
 
 from typing import Dict, List
 from langchain.vectorstores import Chroma
@@ -56,18 +55,11 @@ DEFAULT_K = 4
 
 # to do: add api format to functions for live demo by end of week
 # to do: add evaluation data/script
-# to do: add other retrieval options (like kg hops)
-# to do: finish get model info (getting 404),
-# use pubmed article abstract and name - https://pubmed.ncbi.nlm.nih.gov/16615206/, 
-# use disease info? - https://disease-ontology.org/term/DOID:1116/#
-# use carrier info? - https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+# to do: add other retrieval options (like dkg hops)
 # use model type in description?
-# to do: try different embedders or similarity search params
+# to do: try different embedders or similarity search params (is another embedder better at passage level embedding)
 # to do: parallelize
-# to do: test on dummy data
-# to do: add filtering by object_type to chromadb
-# to do: add correct object format to text block formatting
-# to do: finish/test get grounding info
+# to do: test on dummy data - need better data.. or need to understand models better, time to start getting eval dataset..
 # to do: use data cards or other MIT apis or at least use for eval generation?
 
 
@@ -1008,15 +1000,61 @@ def get_model_info(model_id):
     "accept": "application/json",
     }
     res=requests.get(base+end)
-    out=res.json().pop(["timestamp","semantics"])
+    out=res.json()
+    #not using these for now
+    out.pop("timestamp")
+    out.pop("semantics")
     return out
+
+def get_model_refs(pubmed_ref):
+    """
+    
+
+    Parameters
+    ----------
+    pubmed_ref : str
+        Pubmed identifier in the form of 123424512
+
+    Returns
+    -------
+    {"article_title":str,"abstract":str}
+    Returns the name and abstract strings for the pubmed article
+
+    """
+    import requests
+    from bs4 import BeautifulSoup
+    try:
+        # Construct the URL using the article ID
+        url = f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_ref}/"
+
+        # Fetch the webpage content
+        response = requests.get(url)
+        response.raise_for_status() # Check if the request was successful
+
+        # Parse the webpage content
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Find and extract the article title and author name
+        article_title = soup.find('h1', class_='heading-title').get_text(strip=True)
+
+        # Find and extract the abstract
+        abstract_section = soup.find('div', class_='abstract-content selected')
+        if abstract_section:
+            abstract_text = abstract_section.get_text(strip=True)
+        else:
+            abstract_text = "Abstract not found"
+
+        return {"article_title": article_title, "abstract": abstract_text}
+    except requests.exceptions.RequestException as e:
+        return f"Failed to retrieve the webpage: {e}"
+    except AttributeError as e:
+        return f"Failed to extract data from the webpage: {e}"
 
 def prettify(ranked_list):
     """takes a list of tuples of (document:Document, score:float), gets some 
     information and puts it into a format for response"""
     
     return [{'dataset_id':feature[0].metadata['object_id'],
-             'dataset_name':feature[0].metadata['object_name'],
              'feature_name':feature[0].metadata['name'],
              'score':feature[1]} for feature in ranked_list]
 
@@ -1034,7 +1072,17 @@ def find_dataset_features(model_id,feature_name=None,dataset_ids=None):
     Datasets is a list of dataset ids. These ids are used to filter the dataset of embeddings.
     If dataset ids is None then try all datasets.
     
-    Returns a dictonary of ranked lists with each key being a feature name requested.
+    Returns a dictonary of ranked lists with each key being a feature name requested. 
+    Note that for the scores listed in the ranked lists higher is worse.
+    
+    Example Usage: 
+        #all dataset case - 
+        dataset_features=find_dataset_features('biomd0000000249-model-id')
+        #few datasets case - 
+        dataset_features=find_dataset_features('biomd0000000249-model-id',dataset_ids=['0fe1cf32-305d-41fa-8810-3647c9031d45','de6be6cb-b9a0-4959-b5c6-3745576adfc3','6d8cab47-e206-4b50-a745-2bda112d0892'])
+        # for a specific feature
+        dataset_features=find_dataset_features('biomd0000000249-model-id',feature_name='S')
+        
     """
     from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
     from langchain.vectorstores import Chroma
@@ -1051,42 +1099,69 @@ def find_dataset_features(model_id,feature_name=None,dataset_ids=None):
     )
     
     vectorstore=ChromaPlus(persist_directory="./chroma_db", embedding_function=cached_embedder)
-    try: #check for model_id in vector store
-        feature_embeds = vectorstore.get(where={'id':model_id},include=['embeddings', 'documents', 'metadatas'])['embeddings']
-    except:  #if not there embed it
-        model_info=get_model_info(model_id)
-        embed([model_info])
-        model_embed= vectorstore.get(where={'id':model_id})
+    model_info=get_model_info(model_id)
+    model_embeds=vectorstore.get(where={'object_id':model_id})
+    if len(model_embeds['ids'])==0:embed([model_info]) #if model is not embedded, embed it now.
+    results={}
+    #to parallelize
+    #fix multiple calls to vector store
+    #could add further filters to make more efficient based on the feature..
+    for feature in model_info['model']['states']:
+        if feature_name is not None:
+            if feature['name'] not in feature_name:continue
+        filter_terms={"$and":[{"object_type": {
+            "$eq": 'model'
+        }},{"object_id": {
+            "$eq": model_id
+        }},
+           {"name": {
+               "$eq": feature['name']
+           }} ]}    
+        feature_embed = vectorstore.get(where=filter_terms,include=['embeddings', 'documents', 'metadatas'])['embeddings']
+        #filter by feature
+        #find matches in vector store using object_ids filter
+        if dataset_ids==None:
+            filter_terms={"object_type": {
+                "$eq": 'dataset'
+            }}
+            top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(feature_embed,filter=filter_terms, k=5)
+        else:
+            if len(dataset_ids)==1:
+                filter_terms={"$and":[{"object_type": {
+                    "$eq": 'dataset'
+                }},{"object_id": {
+                    "$eq": dataset_ids[0]
+                }}]}
+            else:
+                filter_terms={"$and":[{"object_type": {
+                    "$eq": 'dataset'
+                }},{"$or":[]}]}
+                for dataset_id in dataset_ids:
+                    filter_terms['$and'][1]['$or'].append(
+                    {
+                    "object_id": {
+                        "$eq": dataset_id
+                    }
+                    })
+            top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(feature_embed, filter=filter_terms,k=5)
         
-    #filter by feature
-    # to do: add filter by object_type to ensure no conflicts
-    #find matches in vector store using dataset_ids filter
-    if dataset_ids==None:
-        top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(model_embed, k=5)
-    else:
-        filter_terms={"$or":[]}
-        for dataset_id in dataset_ids:
-            filter_terms["$or"].append(
-            {
-            "object_id": {
-                "$eq": dataset_id
-            }
-            })
-        top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(model_embed, k=5)
-    
-    #post process pretty result
-    pretty_result = prettify(top_k_dataset_features)
-    return pretty_result
+        #post process pretty result
+        pretty_result = prettify(top_k_dataset_features)
+        results[feature['name']]=pretty_result
+    return results
 
-#could expose as an endpoint
-def fetch_groundings(grounding_ids):
+def fetch_groundings(groundings_ids):
     import requests
     base = "http://34.230.33.149:8771/api"
     #res = requests.get(base + f"/lexical/{query}")
-    grounding_ids=','.join(grounding_ids)
-    res=requests.get(base+ f"/entities/{grounding_ids}")
+    if type(groundings_ids)!=list:groundings_ids=[groundings_ids]
+    groundings_ids=','.join(groundings_ids)
+    res=requests.get(base+ f"/entities/{groundings_ids}")
     #sort groundings info
-    groundings_info=[{}]
+    if res.status_code == 200:
+        groundings_info=res.json()
+    else:
+        groundings_info="error" #to do: add error passing or warning...
     return groundings_info
     
 #second endpoint?
@@ -1094,10 +1169,12 @@ def embed(objects:List[Dict]): #dataset)
     """
     Takes a list of objects (models or datasets) and their object type in a dict format and embeds their features in the vector store
     Inputs:
-        objects: List[Dict] = List of objects to be embedded in format -  [{'object':object_dict,'object_type':'model' or 'dataset'}]
+        objects: List[Dict] = List of objects to be embedded in format -  [{'info':object_dict,'type':'model' or 'dataset'}]
     Outputs:
         retriever - langchain retriever object
-        
+    
+    Example usage:
+        vs=embed([{"info":example_model_get},'type':'model'])
     
     """
     from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
@@ -1114,43 +1191,94 @@ def embed(objects:List[Dict]): #dataset)
     
     #format templates
     # to do: add in bulk/parallel
-    # to do: reformat for model...
     # to do: add ifs, probably at least one if for groundings semantic similiarity etc..
+    # to do: add try excepts. etc..
     text_chunks=[] #build text chunks
     metadatas=[] #build metadatas
     for obj in objects:
         if obj['type']=='dataset':
-            text_chunk = DATASET_TEMPLATE.format()
+            object_info=obj['info']
             #create chunks in parallel
-            for feature in obj['columns']:
-                groundings_info=fetch_groundings(list(feature['metadata']['groundings']['identifiers'].keys()))
-                grounding_info = fetch_groundings(feature['grounding'])
-                groundings_info+=grounding_info
-                obj[feature]['groundings_info']=groundings_info
-                metadata={'name':feature,'object_id':obj['id'],'object_type':obj['type']}
-                metadatas.append(metadata)
-                ground_chunks=[]
-                for grounding_info in obj[feature]['groundings_info']:
-                    ground_chunk=GROUND_CHUNK_TEMPLATE.format(**grounding_info)
-                    ground_chunks.append(ground_chunk)
-            
-        elif obj['type'] == 'model':  
-            text_chunk=MODEL_TEMPLATE.format(**obj)
-            #create chunks in parallel
-            ground_chunks=[]
-            for feature in obj['model']['states']:
-                
-                groundings_info = fetch_groundings([f"{key}={value}" for key, value in obj['model']['states'][feature]['grounding']['identifiers'].items()])
-                obj[feature]['groundings_info']=groundings_info
-                ground_chunks=[]
-                for grounding_info in obj['model']['states'][feature]['grounding']:
-                    ground_chunk=GROUND_CHUNK_TEMPLATE.format(**grounding_info)
-                    ground_chunks.append(ground_chunk)
+            for feature in object_info['columns']:
+                #to do: add try, excepts, etc..
+                text_chunk = DATASET_TEMPLATE.format(obj_name=object_info['name'],
+                                                    obj_description=object_info['description'],
+                                                    column_name=feature['name'],
+                                                    column_description=feature['description'],
+                                                    column_data_type=feature['data_type'],
+                                                    column_units=feature['metadata']['unit'],
+                                                    column_concept=feature['metadata']['concept'],
+                                                    column_column_stats= ', '.join(f'{k}={v}' for k, v in feature['metadata']['column_stats'].items()))
+                metadata={'name':feature['name'],'object_id':object_info['id'],'object_type':obj['type']}
+                groundings_info=fetch_groundings(list(feature['metadata']['groundings']['identifiers'].keys())) #fetch one at a time??
+                if 'error' != groundings_info:
+                    if 'grounding' in feature.keys() and feature['grounding'] is not None:
+                        grounding_info = fetch_groundings(feature['grounding'])
+                        groundings_info+=grounding_info
                     
-        #add groupings chunks
-        text_chunk+="\n\n Here are a list of related topics to the feature being described:"
-        text_chunk+=ground_chunks
-        text_chunks.append(text_chunk)
+                    ground_chunks=[]
+                    for grounding_info in groundings_info:
+                        ground_chunk=GROUND_CHUNK_TEMPLATE.format(ground_name=grounding_info['name'],
+                                                                  ground_description=grounding_info['description'] if 'description' in grounding_info else grounding_info['name'],
+                                                                  ground_synonyms='\n'.join([syn['value'] for syn in grounding_info['synonyms']]))
+                        ground_chunks.append(ground_chunk)
+                    #add groupings chunks
+                    if len(ground_chunks)>0:
+                        text_chunk+="\n\n Here are a list of related topics to the feature being described:"
+                        text_chunk+='\n'.join(ground_chunks)
+                print(f"Feature {feature['name']} on model {object_info['name']} was embedded")
+                text_chunks.append(text_chunk)
+                metadatas.append(metadata)
+            
+        elif obj['type'] == 'model': 
+            object_info=obj['info']
+            for feature in object_info['model']['states']:
+                text_chunk=MODEL_TEMPLATE.format(obj_name=object_info['header']['name'],obj_description=object_info['header']['description'])
+                metadata={'name':feature['name'],'object_id':object_info['id'],'object_type':obj['type']}
+                
+                #add extra model info if it is there
+                if 'references' in object_info['metadata']['annotations']:
+                    for ref in object_info['metadata']['annotations']['references']:
+                        references=get_model_refs(ref.lstrip('pubmed:'))
+                        if type(references)==str:continue
+                        text_chunk+="Here are the contents of a reference article on the model:"
+                        text_chunk+=f"\nTitle:{references['article_title']}"
+                        text_chunk+=f"\nAbstract:{references['abstract']}"
+                for term in ['pathogens','diseases','hosts']: #generalize later (add something about it being an epidemiology model to prompt?)
+                    if term in object_info['metadata']['annotations']:
+                        print(object_info['metadata']['annotations'][term])
+                        groundings_info=fetch_groundings(object_info['metadata']['annotations'][term])
+                        if 'error' != groundings_info:
+                            text_chunk+=f"\n\n Here is some information on the {term} being modeled:"
+                            for grounding_info in groundings_info:
+                                ground_chunk=GROUND_CHUNK_TEMPLATE.format(ground_name=grounding_info['name'],
+                                                                      ground_description=grounding_info['description'] if 'description' in grounding_info else grounding_info['name'],
+                                                                      ground_synonyms='\n'.join([syn['value'] for syn in grounding_info['synonyms']]))
+                                text_chunk+=ground_chunk
+                # to do: use model type later?
+                #create chunks in parallel
+                # to do: throw error if no grounding for model feature or grounding can't be found?
+                ground_chunks=[]
+                groundings_info = fetch_groundings([f"{key}:{value}" for key, value in feature['grounding']['identifiers'].items()])
+                if type(groundings_info)==str:groundings_info=[groundings_info]
+                for grounding_info in groundings_info:
+                    try:
+                        ground_chunk=GROUND_CHUNK_TEMPLATE.format(ground_name=grounding_info['name'],
+                                                                  ground_description=grounding_info['description'] if 'description' in grounding_info else grounding_info['name'],
+                                                                  ground_synonyms='\n'.join([syn['value'] for syn in grounding_info['synonyms']]))
+                        ground_chunks.append(ground_chunk)
+                    except:
+                        continue #to do: add warning
+                    
+                #add groupings chunks
+                if len(ground_chunks)>0:
+                    text_chunk+="\nHere are a list of related topics to the feature being described:\n"
+                    text_chunk+='\n'.join(ground_chunks)
+                    text_chunks.append(text_chunk)
+                    metadatas.append(metadata)
+                    print(f"Feature {feature['name']} on model {object_info['header']['name']} was embedded")
+                else:
+                    print(f"Feature {feature['name']} on model {object_info['header']['name']} could not be embedded because there are no groundings that could be found")
     
     #documents to store and embed
     vectorstore=ChromaPlus(persist_directory="./chroma_db", embedding_function=cached_embedder) #load
@@ -1165,4 +1293,3 @@ def evaluate_query(model_id,feature_name=None,dataset_ids=None):
     Looks through the ranking of the document features and compares with query results (top k)
     """
     pass
-    
