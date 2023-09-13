@@ -419,8 +419,9 @@ def test_link_amr(
         file_names=["paper.pdf"],
         metadata=extractions
     )
-
-    file_storage.upload("paper.pdf", "TEST PDF")
+    
+    pdf = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf)
 
     # overwrite model_id with the response in case TDS is NOT mocked and we get
     # back a real model ID
