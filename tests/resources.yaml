@@ -18,5 +18,6 @@ profile_model:
   - code.py
   - amr.json
 link_amr:
+  - paper.pdf
   - extractions.json
   - amr.json
