@@ -63,7 +63,85 @@ DEFAULT_K = 4
 # to do: use data cards or other MIT apis or at least use for eval generation?
 
 
-
+minimal_model_example={
+    'id':"biomd0000000249-model-id",
+    "model": {
+      "states": [
+        {
+          "id": "N",
+          "name": "N",
+          "grounding": {
+            "identifiers": {
+              "ncbitaxon": "9606"
+            },
+            "modifiers": {}
+          }
+        }]},
+    "metadata": {
+      "annotations": {
+        "license": "CC0",
+        "authors": [],
+        "references": [
+          "pubmed:16615206"
+        ],
+        "time_scale": "",
+        "time_start": "",
+        "time_end": "",
+        "locations": [],
+        "pathogens": [
+          "ncbitaxon:520"
+        ],
+        "diseases": [
+          "doid:1116"
+        ],
+        "hosts": [
+          "ncbitaxon:9606"
+        ],
+        "model_types": [
+          "mamo:0000046"
+        ]
+      }
+    },
+    "header": {
+      "name": "BIOMD0000000249",
+      "description": "BioModels model BIOMD0000000249 processed using MIRA.",
+      "schema": "https://raw.githubusercontent.com/DARPA-ASKEM/Model-Representations/petrinet_v0.5/petrinet/petrinet_schema.json",
+      "schema_name": "petrinet",
+      "model_version": "1.0"
+    }
+}
+minimal_dataset_example={'id':'0fe1cf32-305d-41fa-8810-3647c9031d45',
+                         'name': 'Test data with document',
+                         'description': 'Test data',
+                         'columns': [{'name': 'timestamp',
+                           'data_type': 'float',
+                           'description': 'The time at which the data was recorded',
+                           'format_str': None,
+                           'annotations': [],
+                           'metadata': {'col_name': 'timestamp',
+                            'concept': 'Time',
+                            'unit': 'Seconds',
+                            'description': 'The time at which the data was recorded',
+                            'column_stats': {'mean': 44.5,
+                             'std': '26.124700955226263',
+                             'min': 0,
+                             '25%': 22.25,
+                             '50%': 44.5,
+                             '75%': 66.75,
+                             'max': 89,
+                             'type': 'numeric'},
+                            'groundings': {'identifiers': {'pato:0000165': 'time',
+                              'gfo:Time': 'time',
+                              'geonames:2365173': 'Maritime',
+                              'wikidata:Q174728': 'centimeter',
+                              'probonto:k0000056': 'nondecisionTime',
+                              'wikidata:Q186885': 'timestamp',
+                              'wikidata:Q186868': 'timestamp-based concurrency control',
+                              'wikidata:Q7804853': 'TimeSTAMP protein labelling',
+                              'wikidata:Q7806609': 'Timestamping',
+                              'wikidata:Q119830484': 'Timestamp unit and communication control unit for a user station of a communication network'}}},
+                           'grounding': None}],
+                         }
 example_model_description= {"id": "biomd0000000249-model-id",
     "timestamp": "2023-06-12T23:25:26",
     "header": {
@@ -996,9 +1074,6 @@ def get_model_info(model_id):
     import requests
     base="https://data-service.staging.terarium.ai/models/"
     end=f'{model_id}'
-    headers = {
-    "accept": "application/json",
-    }
     res=requests.get(base+end)
     out=res.json()
     #not using these for now
@@ -1059,7 +1134,7 @@ def prettify(ranked_list):
              'score':feature[1]} for feature in ranked_list]
 
 #main endpoint
-def find_dataset_features(model_id,feature_name=None,dataset_ids=None):
+def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_ids=None):
     """
     Match model to features in given datasets
     
@@ -1077,11 +1152,11 @@ def find_dataset_features(model_id,feature_name=None,dataset_ids=None):
     
     Example Usage: 
         #all dataset case - 
-        dataset_features=find_dataset_features('biomd0000000249-model-id')
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id')
         #few datasets case - 
-        dataset_features=find_dataset_features('biomd0000000249-model-id',dataset_ids=['0fe1cf32-305d-41fa-8810-3647c9031d45','de6be6cb-b9a0-4959-b5c6-3745576adfc3','6d8cab47-e206-4b50-a745-2bda112d0892'])
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id',dataset_ids=['0fe1cf32-305d-41fa-8810-3647c9031d45','de6be6cb-b9a0-4959-b5c6-3745576adfc3','6d8cab47-e206-4b50-a745-2bda112d0892'])
         # for a specific feature
-        dataset_features=find_dataset_features('biomd0000000249-model-id',feature_name='S')
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id',feature_name='S')
         
     """
     from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
@@ -1285,6 +1360,280 @@ def embed(objects:List[Dict]): #dataset)
     vectorstore.add_texts(texts=text_chunks,metadatas=metadatas)
     
     return vectorstore
+
+def get_dataset_card(gpt_key,csv_file,doc_file):
+    import requests
+
+    url = "http://54.227.237.7/cards/get_data_card"
+    params = {
+        "gpt_key": gpt_key,
+        "smart": "true"
+    }
+    headers = {
+        "accept": "application/json",
+    }
+    files = {
+        "csv_file": (csv_file, open(csv_file, "rb"), "text/csv"),
+        "doc_file": (doc_file, open(doc_file, "rb"), "application/pdf")
+    }
+    
+    response = requests.post(url, headers=headers, params=params, files=files)
+    
+    if response.status_code==200:
+        return response.json()
+    else:
+        return f"Error occurred. Status code: {response.status_code}"
+    
+def create_tds_dataset(data_dict):
+    import requests
+    url="https://data-service.staging.terarium.ai/datasets/"
+    headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json'
+    }
+    
+    response = requests.post(url, headers=headers, json=data_dict)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Error occurred. Status code: {response.status_code}"
+    
+def create_tds_model(model_dict):
+    import requests
+    url="https://data-service.staging.terarium.ai/models/"
+    headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json'
+    }
+    response = requests.post(url, headers=headers, json=model_dict)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Error occurred. Status code: {response.status_code}"
+def generate_grounding_from_list(list_of_text):
+    """
+    Generate groundings for a list of texts
+    
+    example usage:
+    data = [
+    {
+        "text": "Infected Population"
+    },
+    {
+        "text": "Breast Cancer"
+    },
+    {
+        "text": "Myocardial Infarction"
+    }
+    ]
+    generate_grounding_from_list(data)
+    
+    """
+    import requests
+    url = 'http://34.230.33.149:8771/api/ground_list'
+    headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json'
+    }
+    response = requests.post(url, headers=headers, json=list_of_text)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Error occurred. Status code: {response.status_code}"
+def get_dataset_info_from_source(source):
+    """
+    Use cdc website to get dataset info
+    source is a string containing a webpage url
+    """
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph
+    from sodapy import Socrata
+    import pandas as pd
+    #get sodapy identifier
+    sodapy_identifier=source.split('/')[-1]
+    #sodapy_identifier="9bhg-hcku"
+    
+    client = Socrata("data.cdc.gov",None)
+    csv = client.get(sodapy_identifier)
+    #save csv to tmp/local
+    csv=pd.DataFrame(csv)
+    csv.to_csv(f'./eval_dataset/{sodapy_identifier}.csv')
+    metadata = client.get_metadata(sodapy_identifier)
+    dataset_info={'name':metadata['name'],'description':metadata['description'],
+                  'file_names':['dataset.csv'],'columns':[]}
+    for col in metadata['columns']:
+        dataset_info['columns'].append({'name':col['name'],
+                                        'data_type':col['dataTypeName'],
+                                        'description':col['description'],
+                                        'concept':'',
+                                        'metadata':{'col_name':col['fieldName'],
+                                                    'unit':'',
+                                                    'column_stats':{}}
+                                        })
+    #build pdf
+    pdf_path = f"./eval_dataset/{sodapy_identifier}.pdf"
+    document = SimpleDocTemplate(pdf_path, pagesize=letter)
+    content=[]
+    content.append(Paragraph(metadata['name']))
+    content.append(Paragraph(metadata['description']))
+    document.build(content)
+    
+    return dataset_info,f'./eval_dataset/{sodapy_identifier}.csv',f'./eval_dataset/{sodapy_identifier}.pdf'
+
+def create_model_via_mira():
+    from copy import deepcopy as _d
+    import sympy
+    import requests
+    from mira.metamodel import (ControlledConversion, NaturalConversion, 
+        GroupedControlledConversion, TemplateModel, Initial, Parameter, 
+        safe_parse_expr, Unit)
+    from mira.examples.concepts import (susceptible, infected, recovered, infected_symptomatic,
+        infected_asymptomatic)
+    from mira.metamodel import Concept
+    rest_url = "http://34.230.33.149:8771"
+    #concepts-
+    susceptible = Concept(name="susceptible_population", identifiers={"ido": "0000514"})
+    infected = Concept(name="infected_population", identifiers={"ido": "0000511"})
+    infected_symptomatic = infected.with_context(status="symptomatic")
+    infected_asymptomatic = infected.with_context(status="asymptomatic")
+    recovered = Concept(name="immune_population", identifiers={"ido": "0000592"})
+    exposed = susceptible.with_context(property="ido:0000597")
+    dead = Concept(name="dead", identifiers={"ncit": "C28554"})
+    hospitalized = Concept(name="hospitalized", identifiers={"ncit": "C25179"})
+    vaccinated = Concept(name="vaccinated", identifiers={"vo": "0001376"})
+    
+    concepts=[susceptible,infected,infected_symptomatic,infected_asymptomatic,
+              recovered,exposed,dead,hospitalized,vaccinated]
+    # Model
+    import random
+
+    num_nodes = random.randint(3, 7)
+    nodes=[]
+    for node in range(num_nodes):
+        node_type=random.randint(0, len(concepts))
+        
+        #Drisana Iverson
+        
+    infection = ControlledConversion(
+        subject=susceptible,
+        outcome=infected,
+        controller=infected,
+    )
+    recovery = NaturalConversion(
+        subject=infected,
+        outcome=recovered,
+    )
+    model = TemplateModel(
+        templates=[
+            infection,
+            recovery,
+        ],
+    )
+    res = requests.post(rest_url + "/api/to_petrinet", json=model.dict())
+    if res.status_code == 200:
+        model=res.json()
+    else:
+        model=f"Error occurred. Status code: {res.status_code}"
+    
+    return model
+
+def get_model_card(gpt_key,text_file,code_file):
+    import requests
+
+    url = "http://54.227.237.7/cards/get_data_card"
+    params = {
+        "gpt_key": gpt_key,
+        "smart": "true"
+    }
+    headers = {
+        "accept": "application/json",
+    }
+    files = {
+        "text_file": (text_file, open(text_file, "rb"), "text/csv"),
+        "code_file": (code_file, open(code_file, "rb"), "application/pdf")
+    }
+    
+    response = requests.post(url, headers=headers, params=params, files=files)
+    
+    if response.status_code==200:
+        return response.json()
+    else:
+        return f"Error occurred. Status code: {response.status_code}"
+    
+eval_datasets=[{'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'},
+               {'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'}]
+
+def generate_eval_dataset(datasets,num_models=5):
+    """
+    Generates a new evaluation dataset using a list of dataset_file dictionaries
+    
+    datasets format:
+        [{'name':'Relevant Name','description':'description','csv_file':'csv_data.csv','doc_file':'dataset_paper.pdf','source':'http://source.com/source1'}]
+    Alternatively you can provide a cdc source and we will get the rest of the information for you - 
+    [{'source':'http://source.com/source1'},{'source':'http://source.com/source2'}]
+        
+    Using those new data cards, we create a smaller number of models that uses some subset of the features of that dataset
+    (and maybe some examples where the datasets don't contain the feature)
+     
+    Then we get model cards for those new models
+    
+    We will then create all of these models and datasets in tds
+    
+    The function returns the models and datasets
+    Once this is created you need to go through and manually rank the top 5 dataset features for each model
+    The methodology for doing so is find any relevant features. Then find from those features, rank them based on dataset relevance.
+    
+
+    Parameters
+    ----------
+    dataset_files : List[str]
+        list of csv file names
+
+    Returns
+    -------
+    
+    eval_dataset : dict. Dict describing the new eval dataset
+    The format is {'datasets':[dataset_dict],'models':[model_dict],ground_truth:[]}
+    dataset_dict is of format - {'info':dataset_description_tds,'type':'dataset'}
+    model_dict is of format  - {'info':model_get_response_tds,'type':'model'}
+    ground_truth will be an empty list to be filled out in the format:
+    {'model_id':model_id,ranked_list:{"feature_name_in_model":[{"dataset_id":dataset_id,"feature_name":feature_name}]}}
+
+    """
+    from keys import gpt_key
+    #process datasets and get info if needed
+    for dataset in datasets:
+        if len(dataset.keys())==1 and 'source' in dataset.keys():
+            #get dataset info from source
+            dataset_info,csv_file,doc_file=get_dataset_info_from_source(dataset['source'])
+            dataset['csv_file']=csv_file
+            dataset['doc_file']=doc_file
+            dataset.update(dataset_info)
+        else:  
+            pass
+            #to do: only from source works right now
+            #get dataset card
+            #dataset_card=get_dataset_card(gpt_key,dataset['csv_file'],dataset['doc_file'])
+            
+            #add dataset card info to dataset
+            #create column info?
+            #create columns groundings
+    models=[]
+    for i in range(num_models):
+        model=create_model_via_mira()
+
+        #get_model_card(gpt_key,text_file,code_file)
+        
+        pass
+    
+    eval_dataset = {'datasets':datasets,'models':models,'ground_truth':[]}   
+    for model in models:
+        create_tds_model(model)
+    for dataset in datasets:
+        create_tds_dataset(dataset)
+    
+    return eval_dataset
     
 def evaluate_query(model_id,feature_name=None,dataset_ids=None):
     """
