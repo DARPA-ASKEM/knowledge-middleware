@@ -236,11 +236,34 @@ ground_truth_dummy=[
         }
     }
 ]
-eval_one_to_one={'datasets':datasets_dummy,'models':models_dummy,'ground_truth':ground_truth_dummy}
-ground_truth=[{'model_id':'sir_model',
-              'ranked_lists':{'susceptible_population':[{'dataset_id':'United States COVID-19 Community Levels by County','feature_name':'county_population'}],
-                             
-                             'infected_population':[{'dataset_id':'United States COVID-19 Community Levels by County','feature_name':'covid_cases_per_100k'}],
-                            }
-              },
-              ]
+
+ground_truth_one_to_few=[{'model_id': 'b1c45455-8555-4c8d-88d2-358463366b6b',
+  'ranking_lists': {'susceptible_population': [{'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+     'feature_name': 'county_population'}],
+   'infected_population': [{'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+     'feature_name': 'covid_cases_per_100k'},
+                           {'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+                             'feature_name': 'covid_hospital_admissions_per_100k'},
+                           {'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+                             'feature_name': 'covid-19_community_level'},
+                           {'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+                             'feature_name': 'covid_inpatient_bed_utilization'}
+                           ],
+   'immune_population': [{'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+     'feature_name': 'Admin_Per_100K'},
+                         {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+                           'feature_name': 'Dist_Per_100K'},
+                         {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+                           'feature_name': 'Distributed'},
+                         {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+                           'feature_name': 'Administered'},
+                         {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+                           'feature_name': 'Admin_Per_100k_5Plus'}]}}]
+
+ground_truth_one_to_few_documents=[{'model_id': 'b1c45455-8555-4c8d-88d2-358463366b6b',
+  'ranking_lists': ['2e25fd89-5034-4a34-8ad2-343f5b49b820',
+                    'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+                    '08133270-8a3b-4d65-9126-63cb07b05ec5',
+                    '5fdba022-2a08-48c8-86c4-0a975818bb90']}]
+json.dumps(eval_one_to_few,open('eval_one_to_few_document
+eval_feature_one_to_one={'datasets':datasets_dummy,'models':models_dummy,'ground_truth':ground_truth_dummy}

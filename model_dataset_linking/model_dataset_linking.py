@@ -54,12 +54,10 @@ DEFAULT_K = 4
 
 
 # to do: add api format to functions for live demo by end of week
-# to do: add evaluation data/script
 # to do: add other retrieval options (like dkg hops)
-# use model type in description?
-# to do: try different embedders or similarity search params (is another embedder better at passage level embedding)
+# to do: try different embedders or similarity search params (is another embedder better at passage level embedding?)
 # to do: parallelize
-# to do: fix on dummy data, expand eval set past dummy
+# to do: llm and semantic short working decently in one to one, 
 
 class ChromaPlus(Chroma):
     def similarity_search_by_vector_with_score(
@@ -179,8 +177,13 @@ def prettify(ranked_list):
     information and puts it into a format for response"""
     
     return [{'dataset_id':feature[0].metadata['object_id'],
-             'feature_name':feature[0].metadata['name'],
+             'name':feature[0].metadata['name'],
              'score':feature[1]} for feature in ranked_list]
+def prettify_documents(ranked_list):
+    """takes a list of tuples of (document:Document, score:float), gets some 
+    information and puts it into a format for response"""
+    
+    return [rank[0].metadata['object_id'] for rank in ranked_list]
 
 def fetch_groundings(groundings_ids):
     import requests
@@ -272,7 +275,7 @@ def find_dataset_semantic_matching(model_id,dataset_ids=None,db_dir="./chroma_db
                 })
                 
     top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(model_embed, filter=filter_terms,k=5)
-    pretty_result = prettify(top_k_dataset_features)
+    pretty_result = prettify_documents(top_k_dataset_features)
     return pretty_result
     
 #main endpoint candidate    
@@ -353,7 +356,8 @@ def find_dataset_features_basic_llm_query_1(model_id,feature_name=None,dataset_i
     #even the short prompt takes a bit of time, but could probably do them all
     #in parallel or if it is too slow we could use to generate our ground truth and curate manually from there...       
     prompt=PromptTemplate.from_template(prompt_3)
-    llm=OpenAI(model_name='gpt-3.5-turbo', temperature=0,openai_api_key=gpt_key)
+    #llm=OpenAI(model_name='gpt-3.5-turbo', temperature=0,openai_api_key=gpt_key)
+    llm=OpenAI(model_name='gpt-4', temperature=0,openai_api_key=gpt_key)
     chain = LLMChain(llm=llm, prompt=prompt)
     
     fs = LocalFileStore("./cache/")
@@ -404,7 +408,6 @@ def find_dataset_features_basic_llm_query_1(model_id,feature_name=None,dataset_i
                     })
         #need to prefilter, make chain?
         top_k_dataset_features=chain.run(model_feature_name=feature['name'],dataset_features_list='\n'.join(vectorstore.get(where=filter_terms)['documents']))
-        print(top_k_dataset_features)
         #post process pretty result
         pretty_result = prettify_openai(top_k_dataset_features,k=5,dataset_id='41a32771-7a35-4da5-98a6-d420172108e8') #replace with output parser? #output parser is probably fragile
         results[feature['name']]=pretty_result
@@ -506,9 +509,7 @@ def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_i
         pretty_result = prettify(top_k_dataset_features)
         results[feature['name']]=pretty_result
     return results
-
-
-    
+  
 #second endpoint?
 def long_feature_embed(objects:List[Dict],db_dir="./chroma_db"): #dataset)
     """
@@ -859,13 +860,16 @@ def get_dataset_info_from_source(source):
     datatype_converter={
         'text':'string',
         'calendar_date':'date',
-        'number':'float'}
+        'number':'float',
+        'url':'string',
+        'checkbox':'boolean',
+        'location':'string'}
     for dtype in enum_values:datatype_converter[dtype]=dtype
     # to do :convert types
     for col in metadata['columns']:
         dataset_info['columns'].append({'name':col['name'],
                                         'data_type':datatype_converter[col['dataTypeName']],
-                                        'description':col['description'],
+                                        'description':col['description'] if 'description' in col.keys() else col['name'],
                                         'concept':'',
                                         'metadata':{'col_name':col['fieldName'],
                                                     'unit':'',
@@ -943,12 +947,20 @@ def create_model_via_mira(option):
 def create_eval_models():
     from mira.examples import sir
     import requests
-    models=[sir.sir,sir.parameterized,sir.sir2_city,sir.svir]
+    models=[sir.sir]
+    # models=[sir.sir,sir.parameterized,sir.sir2_city,sir.svir]
     rest_url = "http://34.230.33.149:8771"
     eval_models=[]
     for model in models:
         res = requests.post(rest_url + "/api/to_petrinet", json=model.dict())
-        eval_models.append(res)
+        res_model=res.json()
+        res_model['header']={
+            "name": res_model['name'],
+            "schema": res_model['schema'],
+            "description": res_model['description'],
+            "model_version": res_model['model_version']
+          }
+        eval_models.append(res_model)
     return eval_models
 
 def get_model_card(gpt_key,text_file,code_file):
@@ -974,12 +986,12 @@ def get_model_card(gpt_key,text_file,code_file):
     else:
         return f"Error occurred. Status code: {response.status_code}"
     
-eval_datasets=[{'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'},
+feature_eval_datasets=[{'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'},
                {'source':'https://data.cdc.gov/Flu-Vaccinations/Vaccines-gov-Flu-vaccinating-provider-locations/bugr-bbfr'},
                {'source':'https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-Jurisdi/unsk-b7fc'},
                {'source':'https://data.cdc.gov/Public-Health-Surveillance/United-States-COVID-19-Community-Levels-by-County/3nnm-4jni'}]
 
-def generate_eval_dataset(datasets):
+def generate_feature_eval_dataset(datasets=feature_eval_datasets):
     """
     Generates a new evaluation dataset using a list of dataset_file dictionaries
     
@@ -1060,35 +1072,212 @@ def generate_eval_dataset(datasets):
         dataset_id=create_tds_dataset(dataset)
         dataset['id']=dataset_id['id']
         dataset_dicts.append({'info':dataset,'type':'dataset'})
-    eval_dataset = {'datasets':datasets,'models':models,'ground_truth':ground_truth}  
+    eval_dataset = {'datasets':dataset_dicts,'models':model_dicts,'ground_truth':ground_truth}  
     
     return eval_dataset
 
-def compare_ranking_lists(pred,gt):
-    scores=[]
-    for feature in gt:
-        gt_feature=gt[feature]
-        pred_feature=pred[feature]
-        #score is number of correct listing #to change to better metric (something for search, maybe kilt retrieval??)
-        score=0
-        for i in range(len(gt_feature)):
-            if gt_feature[i]['dataset_id']==pred_feature[i]['dataset_id'] and gt_feature[i]['feature_name']==pred_feature[i]['feature_name']:
-                score+=1
-        score=score/len(gt_feature)
-        scores.append(score)
-    return scores
+def get_feature_ranking_metrics(preds, gts,ks=[1,3,5]):
+    """
+    preds/gt is in format - 
+    {'susceptible_population': [{'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+       'feature_name': 'county_population'},
+      {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+       'feature_name': 'Admin_Per_100k_65Plus'},
+      {'dataset_id': 'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+       'feature_name': 'Distributed_Per_100k_65Plus'},
+      {'dataset_id': '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+       'feature_name': 'covid_cases_per_100k'},
+      {'dataset_id': '08133270-8a3b-4d65-9126-63cb07b05ec5',
+       'feature_name': 'Age Group'}]
+     
+
+    """
+    metrics={}
+    for key in gts.keys():
+        metrics[key]={}
+        for k in ks:
+            if k>len(gts[key]):k=len(gts[key])
+            metrics[key][f'precision@{k}']=0
+            metrics[key][f'recall@{k}']=0
+            metrics[key][f'exact_match@{k}']=0
+            
+            for i in range(k):
+                if gts[key][i]['dataset_id']==preds[key][i]['dataset_id'] and gts[key][i]['feature_name']==preds[key][i]['feature_name']:
+                    metrics[key][f'exact_match@{k}']+=1
+                for j in range(k):
+                    if gts[key][j]['dataset_id']==preds[key][i]['dataset_id'] and gts[key][j]['feature_name']==preds[key][i]['feature_name']:
+                        metrics[key][f'precision@{k}']+=1
+            for i in range(k):
+                for j in range(k):
+                    if gts[key][i]['dataset_id']==preds[key][j]['dataset_id'] and gts[key][i]['feature_name']==preds[key][j]['feature_name']:
+                        metrics[key][f'recall@{k}']+=1
+            
+            metrics[key][f'precision@{k}']=metrics[key][f'precision@{k}']/k if metrics[key][f'precision@{k}']!=0 else 0
+            metrics[key][f'recall@{k}']=metrics[key][f'recall@{k}']/k if metrics[key][f'recall@{k}']!=0 else 0
+            metrics[key][f'exact_match@{k}']=metrics[key][f'exact_match@{k}']/k if metrics[key][f'exact_match@{k}']!=0 else 0
+
+    return metrics
     
-def evaluate_on_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
+def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
     import os
     os.makedirs(db_dir,exist_ok=True)
     #vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
-    vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    #vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
     evaluation_scores=[]
     for model in eval_dataset['models']:
-        pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
+        #pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
+        pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
         gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
-        scores=compare_ranking_lists(pred_ranking,gt_ranking)
+        scores=get_feature_ranking_metrics(pred_ranking,gt_ranking)
         evaluation_scores.append({'model_id':model['info']['id'],'scores':scores,'pred':pred_ranking,'gt':gt_ranking})
         
     return evaluation_scores
+
+dataset_eval_datasets=[{'source':'https://data.cdc.gov/Public-Health-Surveillance/United-States-COVID-19-Community-Levels-by-County/3nnm-4jni'},
+                       {'source':'https://data.cdc.gov/Policy/The-Tax-Burden-on-Tobacco-1970-2019/7nwe-3aj9'},
+                       {'source':'https://data.cdc.gov/Nutrition-Physical-Activity-and-Obesity/CDC-Nutrition-Physical-Activity-and-Obesity-Legisl/nxst-x9p4'},
+                       {'source':'https://data.cdc.gov/Traumatic-Brain-Injury-/Rates-of-TBI-related-Deaths-by-Age-Group-United-St/nq6q-szvs'},
+                       {'source':'https://data.cdc.gov/Motor-Vehicle/Motor-Vehicle-Occupant-Death-Rate-by-Age-and-Gende/rqg5-mkef'},
+                       {'source':'https://data.cdc.gov/Foodborne-Waterborne-and-Related-Diseases/Botulism/66i6-hisz'},
+                       {'source':'https://data.cdc.gov/Foodborne-Waterborne-and-Related-Diseases/Development-of-an-Empirically-Derived-Measure-of-F/37nu-tuw8'},
+                       {'source':'https://data.cdc.gov/Environmental-Health-Toxicology/Air-Quality-Measures-on-the-National-Environmental/cjae-szjv'},
+                       {'source':'https://data.cdc.gov/Environmental-Health-Toxicology/Daily-Census-Tract-Level-PM2-5-Concentrations-2016/7vu4-ngxx'},
+                       {'source':'https://data.cdc.gov/Policy-Surveillance/U-S-State-and-Territorial-Public-Mask-Mandates-Fro/62d6-pm5i'},
+                       ]
+
+def generate_dataset_eval_dataset(datasets=dataset_eval_datasets):
+    """
+    Generates a new evaluation dataset using a list of dataset_file dictionaries for evaluating model to dataset matching
+    
+    datasets format:
+        [{'name':'Relevant Name','description':'description','csv_file':'csv_data.csv','doc_file':'dataset_paper.pdf','source':'http://source.com/source1'}]
+    Alternatively you can provide a cdc source and we will get the rest of the information for you - 
+    [{'source':'http://source.com/source1'},{'source':'http://source.com/source2'}]
+        
+    Using those new data cards, we create a smaller number of models that uses some subset of the features of that dataset
+    (and maybe some examples where the datasets don't contain the feature)
+     
+    Then we get model cards for those new models
+    
+    We will then create all of these models and datasets in tds
+    
+    The function returns the models and datasets
+    Once this is created you need to go through and manually rank the top 5 dataset features for each model
+    The methodology for doing so is find any relevant features. Then find from those features, rank them based on dataset relevance.
+    
+
+    Parameters
+    ----------
+    dataset_files : List[str]
+        list of csv file names
+
+    Returns
+    -------
+    
+    eval_dataset : dict. Dict describing the new eval dataset
+    The format is {'datasets':[dataset_dict],'models':[model_dict],ground_truth:[]}
+    dataset_dict is of format - {'info':dataset_description_tds,'type':'dataset'}
+    model_dict is of format  - {'info':model_get_response_tds,'type':'model'}
+    ground_truth will be an empty list to be filled out in the format:
+    {'model_id':model_id,ranked_lists:[dataset_id,dataset_id_2,etc..]}
+
+    """
+    from keys import gpt_key
+    #process datasets and get info if needed
+    for dataset in datasets:
+        if len(dataset.keys())==1 and 'source' in dataset.keys():
+            #get dataset info from source
+            dataset_info,csv_file,doc_file=get_dataset_info_from_source(dataset['source'])
+            dataset['csv_file']=csv_file
+            dataset['doc_file']=doc_file
+            dataset.update(dataset_info)
+        else:  
+            pass
+            #to do: only from source works right now
+            #get dataset card
+            #dataset_card=get_dataset_card(gpt_key,dataset['csv_file'],dataset['doc_file'])
+            
+            #add dataset card info to dataset
+            #create column info?
+            
+        #create columns groundings
+        for i,col in enumerate(dataset['columns']):
+            groundings=generate_grounding_from_list([col['name'],col['description']])
+            dataset['columns'][i]['metadata']['groundings']=groundings
+            dataset['columns'][i]['grounding']={'identifiers':{}}
+            
+    models=create_eval_models()
+    for model in models:
+        #get_model_card(gpt_key,text_file,code_file)
+        pass
+    #create ground truth template from model states...
+    ground_truth=[]
+    model_dicts=[]
+    dataset_dicts=[]
+    for model in models:
+        model_id=create_tds_model(model)
+        model['id']=model_id['id']
+        model_gt={'model_id':model['id'],'ranking_lists':{}}
+        model_gt['ranking_lists']=[]
+        ground_truth.append(model_gt)
+        model_dicts.append({'info':model,'type':'model'})
+    for dataset in datasets:
+        dataset_id=create_tds_dataset(dataset)
+        dataset['id']=dataset_id['id']
+        dataset_dicts.append({'info':dataset,'type':'dataset'})
+    eval_dataset = {'datasets':dataset_dicts,'models':model_dicts,'ground_truth':ground_truth}  
+    
+    return eval_dataset
+
+def get_dataset_ranking_metrics(preds, gts,ks=[1,3,5]):
+    """
+    preds/gt is in format - 
+    ['2e25fd89-5034-4a34-8ad2-343f5b49b820',
+       'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+       ''b0f19908-0766-4b90-b5ad-a740e69ebe6a',
+       '2e25fd89-5034-4a34-8ad2-343f5b49b820',
+       '08133270-8a3b-4d65-9126-63cb07b05ec5']
+     
+
+    """
+    metrics={}
+    for k in ks:
+        if k>len(gts):k=len(gts)
+        metrics[f'precision@{k}']=0
+        metrics[f'recall@{k}']=0
+        metrics[f'exact_match@{k}']=0
+        
+        for i in range(k):
+            if gts[i]==preds[i]:
+                metrics[f'exact_match@{k}']+=1
+            for j in range(k):
+                if gts[j]==preds[i]:
+                    metrics[f'precision@{k}']+=1
+        for i in range(k):
+            for j in range(k):
+                if gts[i]==preds[j]:
+                    metrics[f'recall@{k}']+=1
+        
+        metrics[f'precision@{k}']=metrics[f'precision@{k}']/k if metrics[f'precision@{k}']!=0 else 0
+        metrics[f'recall@{k}']=metrics[f'recall@{k}']/k if metrics[f'recall@{k}']!=0 else 0
+        metrics[f'exact_match@{k}']=metrics[f'exact_match@{k}']/k if metrics[f'exact_match@{k}']!=0 else 0
+
+    return metrics
+    
+def evaluate_on_dataset_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
+    import os
+    os.makedirs(db_dir,exist_ok=True)
+    #vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    #vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    evaluation_scores=[]
+    for model in eval_dataset['models']:
+        #pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
+        pred_ranking=find_dataset_semantic_matching(model['info']['id'],db_dir=db_dir)
+        gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
+        scores=get_dataset_ranking_metrics(pred_ranking,gt_ranking)
+        evaluation_scores.append({'model_id':model['info']['id'],'scores':scores,'pred':pred_ranking,'gt':gt_ranking})
+        
+    return evaluation_scores
+    
     
