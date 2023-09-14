@@ -29,7 +29,8 @@ def test_pdf_extraction(
         file_names=["paper.pdf"],
         text=text,
     )
-    file_storage.upload("paper.pdf", "TEST TEXT")
+    pdf = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf)
     document_id = tds_artifact["id"]
 
     if settings.MOCK_TA1:
@@ -288,8 +289,9 @@ def test_profile_dataset(
     query_params = {
         "artifact_id": tds_artifact["id"],
     }
+    pdf = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf)
     csvfile = open(f"{context_dir}/data.csv").read()
-    file_storage.upload("paper.pdf", "TEST TEXT")
     file_storage.upload("data.csv", csvfile)
 
     dataset = {
@@ -340,7 +342,8 @@ def test_profile_model(
         metadata={},
         text=text,
     )
-    file_storage.upload("paper.pdf", "TEST TEXT")
+    pdf = open(f"{context_dir}/paper.pdf", "rb")
+    file_storage.upload("paper.pdf", pdf)
 
     code = open(f"{context_dir}/code.py").read()
     code_artifact = gen_tds_artifact(
