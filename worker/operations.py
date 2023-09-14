@@ -204,8 +204,6 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         assets_iterator = {"equation": equations, "figure": figures, "table": tables}
 
-        # logger.info(f"Assets iterator: {assets_iterator}")
-
         assets = []
         for key, value in assets_iterator.items():
             for record in value:
@@ -228,9 +226,12 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                                 f"(status: {asset_response.status_code}): {file_name}"
                             )
                         )
-                record["type"] = key  # Add asset type to record
 
-                asset_object = {"file_name": file_name, "metadata": record}
+                asset_object = {
+                    "file_name": file_name,
+                    "asset_type": key,
+                    "metadata": record,
+                }
 
                 assets.append(asset_object)
 
