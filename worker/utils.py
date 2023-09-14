@@ -85,7 +85,14 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
 
 
 def put_document_extraction_to_tds(
-    document_id, name, description, filename, extractions=None, text=None, model_id=None
+    document_id,
+    name,
+    description,
+    filename,
+    extractions=None,
+    text=None,
+    model_id=None,
+    assets=None,
 ):
     """
     Update an document or code object in TDS.
@@ -108,7 +115,10 @@ def put_document_extraction_to_tds(
         "file_names": [filename],
         "text": text,
         "metadata": metadata,
+        "assets": assets,
     }
+
+    logger.debug(f"Payload going to TDS: {document_payload}")
     logger.info(f"Storing document to TDS: {document_id}")
     # Update document in TDS
     document_url = f"{TDS_API}/documents/{document_id}"
