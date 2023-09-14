@@ -59,958 +59,7 @@ DEFAULT_K = 4
 # use model type in description?
 # to do: try different embedders or similarity search params (is another embedder better at passage level embedding)
 # to do: parallelize
-# to do: test on dummy data - need better data.. or need to understand models better, time to start getting eval dataset..
-# to do: use data cards or other MIT apis or at least use for eval generation?
-
-
-minimal_model_example={
-    'id':"biomd0000000249-model-id",
-    "model": {
-      "states": [
-        {
-          "id": "N",
-          "name": "N",
-          "grounding": {
-            "identifiers": {
-              "ncbitaxon": "9606"
-            },
-            "modifiers": {}
-          }
-        }]},
-    "metadata": {
-      "annotations": {
-        "license": "CC0",
-        "authors": [],
-        "references": [
-          "pubmed:16615206"
-        ],
-        "time_scale": "",
-        "time_start": "",
-        "time_end": "",
-        "locations": [],
-        "pathogens": [
-          "ncbitaxon:520"
-        ],
-        "diseases": [
-          "doid:1116"
-        ],
-        "hosts": [
-          "ncbitaxon:9606"
-        ],
-        "model_types": [
-          "mamo:0000046"
-        ]
-      }
-    },
-    "header": {
-      "name": "BIOMD0000000249",
-      "description": "BioModels model BIOMD0000000249 processed using MIRA.",
-      "schema": "https://raw.githubusercontent.com/DARPA-ASKEM/Model-Representations/petrinet_v0.5/petrinet/petrinet_schema.json",
-      "schema_name": "petrinet",
-      "model_version": "1.0"
-    }
-}
-minimal_dataset_example={'id':'0fe1cf32-305d-41fa-8810-3647c9031d45',
-                         'name': 'Test data with document',
-                         'description': 'Test data',
-                         'columns': [{'name': 'timestamp',
-                           'data_type': 'float',
-                           'description': 'The time at which the data was recorded',
-                           'format_str': None,
-                           'annotations': [],
-                           'metadata': {'col_name': 'timestamp',
-                            'concept': 'Time',
-                            'unit': 'Seconds',
-                            'description': 'The time at which the data was recorded',
-                            'column_stats': {'mean': 44.5,
-                             'std': '26.124700955226263',
-                             'min': 0,
-                             '25%': 22.25,
-                             '50%': 44.5,
-                             '75%': 66.75,
-                             'max': 89,
-                             'type': 'numeric'},
-                            'groundings': {'identifiers': {'pato:0000165': 'time',
-                              'gfo:Time': 'time',
-                              'geonames:2365173': 'Maritime',
-                              'wikidata:Q174728': 'centimeter',
-                              'probonto:k0000056': 'nondecisionTime',
-                              'wikidata:Q186885': 'timestamp',
-                              'wikidata:Q186868': 'timestamp-based concurrency control',
-                              'wikidata:Q7804853': 'TimeSTAMP protein labelling',
-                              'wikidata:Q7806609': 'Timestamping',
-                              'wikidata:Q119830484': 'Timestamp unit and communication control unit for a user station of a communication network'}}},
-                           'grounding': None}],
-                         }
-example_model_description= {"id": "biomd0000000249-model-id",
-    "timestamp": "2023-06-12T23:25:26",
-    "header": {
-      "name": "BIOMD0000000249",
-      "description": "BioModels model BIOMD0000000249 processed using MIRA.",
-      "schema": "https://raw.githubusercontent.com/DARPA-ASKEM/Model-Representations/petrinet_v0.5/petrinet/petrinet_schema.json",
-      "schema_name": "petrinet",
-      "model_version": "1.0"
-    },
-    "username": "Adam Smith"
-  }
-
-example_model_get={
-  "id": "biomd0000000249-model-id",
-  "username": "Adam Smith",
-  "timestamp": "2023-06-12 23:25:26",
-  "properties": {},
-  "model": {
-    "states": [
-      {
-        "id": "N",
-        "name": "N",
-        "grounding": {
-          "identifiers": {
-            "ncbitaxon": "9606"
-          },
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "S",
-        "name": "S",
-        "grounding": {
-          "identifiers": {
-            "ncbitaxon": "9606"
-          },
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "I_1",
-        "name": "I_1",
-        "grounding": {
-          "identifiers": {},
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "I_2",
-        "name": "I_2",
-        "grounding": {
-          "identifiers": {},
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "R_1",
-        "name": "R_1",
-        "grounding": {
-          "identifiers": {
-            "ncbitaxon": "9606"
-          },
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "R_2",
-        "name": "R_2",
-        "grounding": {
-          "identifiers": {
-            "ncbitaxon": "9606"
-          },
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "I_1p",
-        "name": "I_1p",
-        "grounding": {
-          "identifiers": {},
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "I_2p",
-        "name": "I_2p",
-        "grounding": {
-          "identifiers": {},
-          "modifiers": {}
-        }
-      },
-      {
-        "id": "R_p",
-        "name": "R_p",
-        "grounding": {
-          "identifiers": {
-            "ncbitaxon": "9606"
-          },
-          "modifiers": {}
-        }
-      }
-    ],
-    "transitions": [
-      {
-        "id": "t1",
-        "input": [
-          "N"
-        ],
-        "output": [
-          "N",
-          "S"
-        ],
-        "properties": {
-          "name": "t1"
-        }
-      },
-      {
-        "id": "t2",
-        "input": [
-          "S"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t2"
-        }
-      },
-      {
-        "id": "t3",
-        "input": [
-          "I_1"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t3"
-        }
-      },
-      {
-        "id": "t4",
-        "input": [
-          "I_2"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t4"
-        }
-      },
-      {
-        "id": "t5",
-        "input": [
-          "R_1"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t5"
-        }
-      },
-      {
-        "id": "t6",
-        "input": [
-          "R_2"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t6"
-        }
-      },
-      {
-        "id": "t7",
-        "input": [
-          "I_1p"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t7"
-        }
-      },
-      {
-        "id": "t8",
-        "input": [
-          "I_2p"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t8"
-        }
-      },
-      {
-        "id": "t9",
-        "input": [
-          "R_p"
-        ],
-        "output": [],
-        "properties": {
-          "name": "t9"
-        }
-      },
-      {
-        "id": "t10",
-        "input": [
-          "I_1",
-          "S"
-        ],
-        "output": [
-          "I_1",
-          "I_1"
-        ],
-        "properties": {
-          "name": "t10"
-        }
-      },
-      {
-        "id": "t11",
-        "input": [
-          "I_1p",
-          "S"
-        ],
-        "output": [
-          "I_1p",
-          "I_1"
-        ],
-        "properties": {
-          "name": "t11"
-        }
-      },
-      {
-        "id": "t12",
-        "input": [
-          "I_2",
-          "S"
-        ],
-        "output": [
-          "I_2",
-          "I_2"
-        ],
-        "properties": {
-          "name": "t12"
-        }
-      },
-      {
-        "id": "t13",
-        "input": [
-          "I_2p",
-          "S"
-        ],
-        "output": [
-          "I_2p",
-          "I_2"
-        ],
-        "properties": {
-          "name": "t13"
-        }
-      },
-      {
-        "id": "t14",
-        "input": [
-          "I_1",
-          "R_2"
-        ],
-        "output": [
-          "I_1",
-          "I_1p"
-        ],
-        "properties": {
-          "name": "t14"
-        }
-      },
-      {
-        "id": "t15",
-        "input": [
-          "I_1p",
-          "R_2"
-        ],
-        "output": [
-          "I_1p",
-          "I_1p"
-        ],
-        "properties": {
-          "name": "t15"
-        }
-      },
-      {
-        "id": "t16",
-        "input": [
-          "I_2",
-          "R_1"
-        ],
-        "output": [
-          "I_2",
-          "I_2p"
-        ],
-        "properties": {
-          "name": "t16"
-        }
-      },
-      {
-        "id": "t17",
-        "input": [
-          "I_2p",
-          "R_1"
-        ],
-        "output": [
-          "I_2p",
-          "I_2p"
-        ],
-        "properties": {
-          "name": "t17"
-        }
-      },
-      {
-        "id": "t18",
-        "input": [
-          "I_1"
-        ],
-        "output": [
-          "R_1"
-        ],
-        "properties": {
-          "name": "t18"
-        }
-      },
-      {
-        "id": "t19",
-        "input": [
-          "I_2"
-        ],
-        "output": [
-          "R_2"
-        ],
-        "properties": {
-          "name": "t19"
-        }
-      },
-      {
-        "id": "t20",
-        "input": [
-          "I_1p"
-        ],
-        "output": [
-          "R_p"
-        ],
-        "properties": {
-          "name": "t20"
-        }
-      },
-      {
-        "id": "t21",
-        "input": [
-          "I_2p"
-        ],
-        "output": [
-          "R_p"
-        ],
-        "properties": {
-          "name": "t21"
-        }
-      },
-      {
-        "id": "t22",
-        "input": [
-          "R_1"
-        ],
-        "output": [
-          "S"
-        ],
-        "properties": {
-          "name": "t22"
-        }
-      },
-      {
-        "id": "t23",
-        "input": [
-          "R_2"
-        ],
-        "output": [
-          "S"
-        ],
-        "properties": {
-          "name": "t23"
-        }
-      },
-      {
-        "id": "t24",
-        "input": [
-          "R_p"
-        ],
-        "output": [
-          "S"
-        ],
-        "properties": {
-          "name": "t24"
-        }
-      }
-    ]
-  },
-  "semantics": {
-    "ode": {
-      "rates": [
-        {
-          "target": "t1",
-          "expression": "N/l_e",
-          "expression_mathml": "<apply><divide/><ci>N</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t2",
-          "expression": "S/l_e",
-          "expression_mathml": "<apply><divide/><ci>S</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t3",
-          "expression": "I_1/l_e",
-          "expression_mathml": "<apply><divide/><ci>I_1</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t4",
-          "expression": "I_2/l_e",
-          "expression_mathml": "<apply><divide/><ci>I_2</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t5",
-          "expression": "R_1/l_e",
-          "expression_mathml": "<apply><divide/><ci>R_1</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t6",
-          "expression": "R_2/l_e",
-          "expression_mathml": "<apply><divide/><ci>R_2</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t7",
-          "expression": "I_1p/l_e",
-          "expression_mathml": "<apply><divide/><ci>I_1p</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t8",
-          "expression": "I_2p/l_e",
-          "expression_mathml": "<apply><divide/><ci>I_2p</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t9",
-          "expression": "R_p/l_e",
-          "expression_mathml": "<apply><divide/><ci>R_p</ci><ci>l_e</ci></apply>"
-        },
-        {
-          "target": "t10",
-          "expression": "365.0*I_1*R0_1*S/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_1</ci><ci>R0_1</ci><ci>S</ci></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t11",
-          "expression": "365.0*I_1p*R0_1*S/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_1p</ci><ci>R0_1</ci><ci>S</ci></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t12",
-          "expression": "365.0*I_2*R0_2*S/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_2</ci><ci>R0_2</ci><ci>S</ci></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t13",
-          "expression": "365.0*I_2p*R0_2*S/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_2p</ci><ci>R0_2</ci><ci>S</ci></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t14",
-          "expression": "365.0*I_1*R0_1*R_2*(1 - psi)/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_1</ci><ci>R0_1</ci><ci>R_2</ci><apply><minus/><cn>1</cn><ci>psi</ci></apply></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t15",
-          "expression": "365.0*I_1p*R0_1*R_2*(1 - psi)/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_1p</ci><ci>R0_1</ci><ci>R_2</ci><apply><minus/><cn>1</cn><ci>psi</ci></apply></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t16",
-          "expression": "365.0*I_2*R0_2*R_1*(1 - psi)/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_2</ci><ci>R0_2</ci><ci>R_1</ci><apply><minus/><cn>1</cn><ci>psi</ci></apply></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t17",
-          "expression": "365.0*I_2p*R0_2*R_1*(1 - psi)/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365.0</cn><ci>I_2p</ci><ci>R0_2</ci><ci>R_1</ci><apply><minus/><cn>1</cn><ci>psi</ci></apply></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t18",
-          "expression": "365*I_1/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365</cn><ci>I_1</ci></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t19",
-          "expression": "365*I_2/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365</cn><ci>I_2</ci></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t20",
-          "expression": "365*I_1p/tInf_1",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365</cn><ci>I_1p</ci></apply><ci>tInf_1</ci></apply>"
-        },
-        {
-          "target": "t21",
-          "expression": "365*I_2p/tInf_2",
-          "expression_mathml": "<apply><divide/><apply><times/><cn>365</cn><ci>I_2p</ci></apply><ci>tInf_2</ci></apply>"
-        },
-        {
-          "target": "t22",
-          "expression": "R_1/tImm",
-          "expression_mathml": "<apply><divide/><ci>R_1</ci><ci>tImm</ci></apply>"
-        },
-        {
-          "target": "t23",
-          "expression": "R_2/tImm",
-          "expression_mathml": "<apply><divide/><ci>R_2</ci><ci>tImm</ci></apply>"
-        },
-        {
-          "target": "t24",
-          "expression": "R_p/tImm",
-          "expression_mathml": "<apply><divide/><ci>R_p</ci><ci>tImm</ci></apply>"
-        }
-      ],
-      "initials": [],
-      "parameters": [
-        {
-          "id": "N",
-          "value": 1
-        },
-        {
-          "id": "l_e",
-          "value": 50,
-          "units": {
-            "expression": "year",
-            "expression_mathml": "<ci>year</ci>"
-          }
-        },
-        {
-          "id": "R0_1",
-          "value": 17,
-          "units": {
-            "expression": "1",
-            "expression_mathml": "<cn>1</cn>"
-          }
-        },
-        {
-          "id": "tInf_1",
-          "value": 21,
-          "units": {
-            "expression": "day",
-            "expression_mathml": "<ci>day</ci>"
-          }
-        },
-        {
-          "id": "R0_2",
-          "value": 17,
-          "units": {
-            "expression": "1",
-            "expression_mathml": "<cn>1</cn>"
-          }
-        },
-        {
-          "id": "tInf_2",
-          "value": 21,
-          "units": {
-            "expression": "day",
-            "expression_mathml": "<ci>day</ci>"
-          }
-        },
-        {
-          "id": "psi",
-          "value": 0.2,
-          "units": {
-            "expression": "1",
-            "expression_mathml": "<cn>1</cn>"
-          }
-        },
-        {
-          "id": "tImm",
-          "value": 20,
-          "units": {
-            "expression": "year",
-            "expression_mathml": "<ci>year</ci>"
-          }
-        }
-      ],
-      "observables": [],
-      "time": {
-        "id": "t"
-      }
-    }
-  },
-  "metadata": {
-    "annotations": {
-      "license": "CC0",
-      "authors": [],
-      "references": [
-        "pubmed:16615206"
-      ],
-      "time_scale": "",
-      "time_start": "",
-      "time_end": "",
-      "locations": [],
-      "pathogens": [
-        "ncbitaxon:520"
-      ],
-      "diseases": [
-        "doid:1116"
-      ],
-      "hosts": [
-        "ncbitaxon:9606"
-      ],
-      "model_types": [
-        "mamo:0000046"
-      ]
-    }
-  },
-  "header": {
-    "name": "BIOMD0000000249",
-    "description": "BioModels model BIOMD0000000249 processed using MIRA.",
-    "schema": "https://raw.githubusercontent.com/DARPA-ASKEM/Model-Representations/petrinet_v0.5/petrinet/petrinet_schema.json",
-    "schema_name": "petrinet",
-    "model_version": "1.0"
-  }
-}
-example_model_description_2={
-    "id": "caa8e487-3db2-4d3a-bc28-7df0d28ac9f7",
-    "timestamp": "2023-07-08T01:22:08",
-    "header": {
-      "name": "Giordano2020 - SIDARTHE model of COVID-19 spread in Italy",
-      "description": "BioModels model BIOMD0000000955 processed using MIRA.",
-      "schema": "https://raw.githubusercontent.com/DARPA-ASKEM/Model-Representations/petrinet_v0.5/petrinet/petrinet_schema.json",
-      "schema_name": "petrinet",
-      "model_version": "1.0"
-    },
-    "username": ""
-  }
-example_dataset_description={'_index': 'tds_dataset',
- '_id': '0fe1cf32-305d-41fa-8810-3647c9031d45',
- '_score': None,
- 'sort': [None],
- 'id': '0fe1cf32-305d-41fa-8810-3647c9031d45',
- 'timestamp': '2023-07-17 17:22:43',
- 'username': 'Brandon Rose',
- 'name': 'Test data with document',
- 'description': 'Test data',
- 'data_source_date': '2022-10-01T12:00:00',
- 'file_names': ['dataset.csv'],
- 'dataset_url': None,
- 'columns': [{'name': 'timestamp',
-   'data_type': 'float',
-   'description': 'The time at which the data was recorded',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'timestamp',
-    'concept': 'Time',
-    'unit': 'Seconds',
-    'description': 'The time at which the data was recorded',
-    'column_stats': {'mean': 44.5,
-     'std': '26.124700955226263',
-     'min': 0,
-     '25%': 22.25,
-     '50%': 44.5,
-     '75%': 66.75,
-     'max': 89,
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'pato:0000165': 'time',
-      'gfo:Time': 'time',
-      'geonames:2365173': 'Maritime',
-      'wikidata:Q174728': 'centimeter',
-      'probonto:k0000056': 'nondecisionTime',
-      'wikidata:Q186885': 'timestamp',
-      'wikidata:Q186868': 'timestamp-based concurrency control',
-      'wikidata:Q7804853': 'TimeSTAMP protein labelling',
-      'wikidata:Q7806609': 'Timestamping',
-      'wikidata:Q119830484': 'Timestamp unit and communication control unit for a user station of a communication network'}}},
-   'grounding': None},
-  {'name': 'Ailing',
-   'data_type': 'float',
-   'description': 'The proportion of the population that is ailing',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Ailing',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that is ailing',
-    'column_stats': {'mean': '0.009008152668129913',
-     'std': '0.014786161655437823',
-     'min': '3.983930696449534e-7',
-     '25%': '0.00025955101591532495',
-     '50%': '0.0009730515594128',
-     '75%': '0.0100854465272277',
-     'max': '0.0499324910342693',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'wikidata:Q96191575': 'Àilíng',
-      'wikidata:Q81903296': 'Ailing',
-      'wikidata:Q96274105': 'Ǎilíng',
-      'wikidata:Q106390641': 'Ailing',
-      'wikidata:Q110273265': 'Ailing'}}},
-   'grounding': None},
-  {'name': 'Diagnosed',
-   'data_type': 'float',
-   'description': 'The proportion of the population that has been diagnosed with a disease',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Diagnosed',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that has been diagnosed with a disease',
-    'column_stats': {'mean': '0.0394178779872441',
-     'std': '0.05404052772243545',
-     'min': '0.0000010311159712728113',
-     '25%': '0.0018283768440596',
-     '50%': '0.00929199671372765',
-     '75%': '0.0601336536929011',
-     'max': '0.1707891523838043',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'ncit:C113725': 'Undiagnosed',
-      'ncit:C15220': 'Diagnosis',
-      'ncit:C25587': 'Newly Diagnosed',
-      'symp:0000527': 'undiagnosed cardiac murmur',
-      'ndfrt:N0000003966': 'Mental Disorders Diagnosed in Childhood [Disease/Finding]'}}},
-   'grounding': None},
-  {'name': 'Extinct',
-   'data_type': 'float',
-   'description': 'The proportion of the population that has gone extinct',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Extinct',
-    'concept': 'Population Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that has gone extinct',
-    'column_stats': {'mean': '0.01946838617206812',
-     'std': '0.02435992336039277',
-     'min': '1.727546057594953e-11',
-     '25%': '0.00000975724651652854',
-     '50%': '0.0054324809461831994',
-     '75%': '0.03683998435735695',
-     'max': '0.075444646179676',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'wikidata:Q112937556': 'Population status and genetic diversity of the endemic black-billed gull Larus bulleri of New Zealand',
-      'wikidata:Q51520227': 'Population status and ecology of trembling aspen and black cottonwood communities on the Blackfeet Indian Reservation',
-      'wikidata:Q51520231': 'Population status of California sea otters',
-      'wikidata:Q57268998': 'Population status, trends and a re-examination of the hypotheses explaining the recent declines of the southern elephant seal Mirounga leonina',
-      'wikidata:Q57942512': 'Population status of the Bornean orang-utan (Pongo pygmaeus) in the Sebangau peat swamp forest, Central Kalimantan, Indonesia',
-      'hp:0000550': 'Undetectable electroretinogram'}}},
-   'grounding': None},
-  {'name': 'Healed',
-   'data_type': 'float',
-   'description': 'The proportion of the population that has healed from a disease',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Healed',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that has healed from a disease',
-    'column_stats': {'mean': '0.22938889057774314',
-     'std': '0.20447154399907744',
-     'min': '1.582136377464849e-7',
-     '25%': '0.002488563477527275',
-     '50%': '0.22360456734895706',
-     '75%': '0.42947647720575327',
-     'max': '0.5455223917961121',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'wikidata:Q27818491': 'Healed by Metal',
-      'wikidata:Q18290529': 'Healedet, Kleva 1:1',
-      'wikidata:Q27045018': 'Healed by Horses',
-      'wikidata:Q65401451': 'HeaLED: Pilot Study of Skin Healing Under LED Exposure',
-      'wikidata:Q93785266': 'Healed microfracture orientations in granites from the Basin and Range Province, western Utah and eastern Nevada and their relationship to paleostresses'}}},
-   'grounding': None},
-  {'name': 'Infected',
-   'data_type': 'float',
-   'description': 'The proportion of the population that is infected with a disease',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Infected',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that is infected with a disease',
-    'column_stats': {'mean': '0.02790488618460985',
-     'std': '0.048876102449425356',
-     'min': '0.0000046258805923571344',
-     '25%': '0.0007576048810733',
-     '50%': '0.0025655663339420503',
-     '75%': '0.027287089265882924',
-     'max': '0.1739306598901748',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'ido:0000511': 'infected population',
-      'efo:0001460': 'uninfected',
-      'vsmo:0000268': 'infected',
-      'doid:13117': 'paronychia',
-      'idomal:0001129': 'RESA-155'}}},
-   'grounding': None},
-  {'name': 'Recognized',
-   'data_type': 'float',
-   'description': 'The proportion of the population that has been recognized as having a disease',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Recognized',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that has been recognized as having a disease',
-    'column_stats': {'mean': '0.13339161104932754',
-     'std': '0.11763891104284653',
-     'min': '1.730537206867666e-7',
-     '25%': '0.00406794954324135',
-     '50%': '0.1140047647058963',
-     '75%': '0.2387948259711265',
-     'max': '0.332558125257492',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'pr:O43290': 'U4/U6.U5 tri-snRNP-associated protein 1 (human)',
-      'pr:Q13084': '39S ribosomal protein L28, mitochondrial (human)',
-      'pr:Q15020': 'squamous cell carcinoma antigen recognized by T-cells 3 (human)'}}},
-   'grounding': None},
-  {'name': 'Susceptible',
-   'data_type': 'float',
-   'description': 'The proportion of the population that is susceptible to a disease',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Susceptible',
-    'concept': 'Health Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that is susceptible to a disease',
-    'column_stats': {'mean': '0.43978654684291946',
-     'std': '0.3875698850845855',
-     'min': '0.1164822503924369',
-     '25%': '0.12271593324840067',
-     '50%': '0.16231215745210645',
-     '75%': '0.9662239998579025',
-     'max': '0.9999932050704956',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'hp:0032319': 'Health status',
-      'ido:0000514': 'susceptible population',
-      'apollosv:00000205': 'susceptible organism',
-      'ido:0000659': 'susceptible organism',
-      'apollosv:00000234': 'susceptible population',
-      'cemo:susceptible_individuals': 'susceptible individuals'}}},
-   'grounding': None},
-  {'name': 'Threatened',
-   'data_type': 'float',
-   'description': 'The proportion of the population that is threatened',
-   'format_str': None,
-   'annotations': [],
-   'metadata': {'col_name': 'Threatened',
-    'concept': 'Population Status',
-    'unit': 'Proportion',
-    'description': 'The proportion of the population that is threatened',
-    'column_stats': {'mean': '0.10163357534429503',
-     'std': '0.09215792633301328',
-     'min': '5.817323067702773e-9',
-     '25%': '0.00043687596189552496',
-     '50%': '0.09806311875581736',
-     '75%': '0.20163438096642491',
-     'max': '0.2144329398870468',
-     'type': 'numeric'},
-    'groundings': {'identifiers': {'wikidata:Q112937556': 'Population status and genetic diversity of the endemic black-billed gull Larus bulleri of New Zealand',
-      'wikidata:Q51520227': 'Population status and ecology of trembling aspen and black cottonwood communities on the Blackfeet Indian Reservation',
-      'wikidata:Q51520231': 'Population status of California sea otters',
-      'wikidata:Q57268998': 'Population status, trends and a re-examination of the hypotheses explaining the recent declines of the southern elephant seal Mirounga leonina',
-      'wikidata:Q57942512': 'Population status of the Bornean orang-utan (Pongo pygmaeus) in the Sebangau peat swamp forest, Central Kalimantan, Indonesia',
-      'wikidata:Q6146206': 'Threatened',
-      'wikidata:Q335214': 'endangered language',
-      'wikidata:Q10889918': 'threatened abortion',
-      'wikidata:Q16197023': 'threatened species',
-      'wikidata:Q590861': 'World Conservation Monitoring Centre'}}},
-   'grounding': None}],
- 'metadata': None,
- 'source': None,
- 'grounding': None}
+# to do: fix on dummy data, expand eval set past dummy
 
 class ChromaPlus(Chroma):
     def similarity_search_by_vector_with_score(
@@ -1133,12 +182,243 @@ def prettify(ranked_list):
              'feature_name':feature[0].metadata['name'],
              'score':feature[1]} for feature in ranked_list]
 
-#main endpoint
-def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_ids=None):
+def fetch_groundings(groundings_ids):
+    import requests
+    base = "http://34.230.33.149:8771/api"
+    #res = requests.get(base + f"/lexical/{query}")
+    if type(groundings_ids)!=list:groundings_ids=[groundings_ids]
+    groundings_ids=','.join(groundings_ids)
+    res=requests.get(base+ f"/entities/{groundings_ids}")
+    #sort groundings info
+    if res.status_code == 200:
+        groundings_info=res.json()
+    else:
+        groundings_info="error" #to do: add error passing or warning...
+    return groundings_info
+
+def prettify_openai(output,k,dataset_id):
+    # for this to work the openai output needs to be well defined... may need to change prompt
+    import re
+    pattern = r'\d+\.\s+'
+    sections = re.split(pattern, output)
+    sections = [section for section in sections[1:] if section.strip()]
+    feature_names = [feature.split('Description')[0].rstrip() for feature in sections]
+    ranked_list = [{'dataset_id':dataset_id,'feature_name':feature_name} for feature_name in feature_names]
+    return ranked_list
+
+def find_dataset_semantic_matching(model_id,dataset_ids=None,db_dir="./chroma_db"):
     """
-    Match model to features in given datasets
+    Match model to dataset by looking at the cosine similarity 
+    between embeddings of model text chunks and dataset text chunks
     
-    Model ID is a string that will be used to find the model embedding. The model id should be the same as in the tds database and metadata in the vectorstore 
+    Model ID is a string that will be used to find the model embedding. 
+    The model id should be the same as in the tds database and metadata in the vectorstore 
+    If the model embedding doesn't exist we will embed it
+    
+    If a feature name is listed only get the dataset features for that feature 
+    in the model, we will return ranked lists for each feature in the model
+    
+    Datasets is a list of dataset ids. These ids are used to filter the dataset of embeddings.
+    If dataset ids is None then try all datasets.
+    
+    Returns a dictonary of ranked lists with each key being a feature name requested. 
+    Note that for the scores listed in the ranked lists higher is worse.
+    
+    Example Usage: 
+        #all dataset case - 
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id')
+        #few datasets case - 
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id',dataset_ids=['0fe1cf32-305d-41fa-8810-3647c9031d45','de6be6cb-b9a0-4959-b5c6-3745576adfc3','6d8cab47-e206-4b50-a745-2bda112d0892'])
+        
+    """
+    from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
+    from langchain.storage import LocalFileStore
+    from keys import gpt_key
+    
+    fs = LocalFileStore("./cache/")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
+    cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+        embedder, fs, namespace='openai'
+    )
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder)
+    filter_terms={"$and":[{"object_type": {
+        "$eq": 'model'
+    }},{"object_id": {
+        "$eq": model_id
+    }}]}
+    model_embed=vectorstore.get(where=filter_terms,include=['embeddings', 'documents', 'metadatas'])['embeddings']  
+    if dataset_ids==None:
+        filter_terms={"object_type": {
+            "$eq": 'dataset'
+        }}
+        
+    else:
+        if len(dataset_ids)==1:
+            filter_terms={"$and":[{"object_type": {
+                "$eq": 'dataset'
+            }},{"object_id": {
+                "$eq": dataset_ids[0]
+            }}]}
+        else:
+            filter_terms={"$and":[{"object_type": {
+                "$eq": 'dataset'
+            }},{"$or":[]}]}
+            for dataset_id in dataset_ids:
+                filter_terms['$and'][1]['$or'].append(
+                {
+                "object_id": {
+                    "$eq": dataset_id
+                }
+                })
+                
+    top_k_dataset_features=vectorstore.similarity_search_by_vector_with_score(model_embed, filter=filter_terms,k=5)
+    pretty_result = prettify(top_k_dataset_features)
+    return pretty_result
+    
+#main endpoint candidate    
+def find_dataset_features_basic_llm_query_1(model_id,feature_name=None,dataset_ids=None,db_dir="./chroma_db"):
+    """
+    Match model to features in given datasets by asking an llm to rank the features.
+    Note this only does feature to feature matching for the moment.
+    
+    Model ID is a string that will be used to find the model embedding. 
+    The model id should be the same as in the tds database and metadata in the vectorstore 
+    If the model embedding doesn't exist we will embed it
+    
+    If a feature name is listed only get the dataset features for that feature 
+    in the model, we will return ranked lists for each feature in the model
+    
+    Datasets is a list of dataset ids. These ids are used to filter the dataset of embeddings.
+    If dataset ids is None then try all datasets.
+    
+    Returns a dictonary of ranked lists with each key being a feature name requested. 
+    
+    Example Usage: 
+        #all dataset case - 
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id')
+        #few datasets case - 
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id',dataset_ids=['0fe1cf32-305d-41fa-8810-3647c9031d45','de6be6cb-b9a0-4959-b5c6-3745576adfc3','6d8cab47-e206-4b50-a745-2bda112d0892'])
+        # for a specific feature
+        dataset_features=find_dataset_features_semantic_matching('biomd0000000249-model-id',feature_name='S')
+        
+    """
+    from langchain import PromptTemplate
+    #save $$ in dev
+    from langchain.cache import SQLiteCache
+    from langchain import OpenAI
+    import langchain
+    from langchain.chains import LLMChain
+    from keys import gpt_key
+    
+    from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
+    from langchain.vectorstores import Chroma
+    from langchain.document_loaders import TextLoader
+    from langchain.storage import LocalFileStore
+    from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+    langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
+    prompt="""""Here are a list of epidemiology dataset features with their names and descriptions.
+        Please rank in order from most similar to least similar, the dataset features to an epidemiology 
+        feature with the name {model_feature_name} and give a rationale for each dataset feature as to why you ranked it where you did.
+        
+        Dataset features list :
+            {dataset_features_list}"""
+    prompt_2="""Here are a list of epidemiology dataset features with their names and descriptions.
+        Please rank in order from most similar to least similar, the dataset features to an epidemiology 
+        feature with the name {model_feature_name} and give a rationale for each dataset feature as to why you ranked it where you did.
+        
+        Please give your answer in the following format - 
+        1. [Dataset Feature Name of highest ranked feature]
+        Rationale:[rationale for ranking of highest ranked feature]
+        2.[Dataset Feature Name of second highest ranked feature]
+        Rationale:[rationale for ranking of second highest ranked feature]
+        etc... for all of the dataset features
+        
+        Dataset features list :
+            {dataset_features_list}
+        """
+    #to do: modify prompt based on k in top k
+    prompt_3="""Here are a list of epidemiology dataset features with their names and descriptions.
+        Please rank in order from most similar to least similar, the dataset features to an epidemiology 
+        feature with the name {model_feature_name}.
+        
+        Output your ranking list in the following format:
+            1. [dataset_feature_name]
+            2. [dataset_feature_name]
+            3. [dataset_feature_name]
+            4. [dataset_feature_name]
+            5. [dataset_feature_name]
+
+        Dataset features list :
+            {dataset_features_list}"""
+    #even the short prompt takes a bit of time, but could probably do them all
+    #in parallel or if it is too slow we could use to generate our ground truth and curate manually from there...       
+    prompt=PromptTemplate.from_template(prompt_3)
+    llm=OpenAI(model_name='gpt-3.5-turbo', temperature=0,openai_api_key=gpt_key)
+    chain = LLMChain(llm=llm, prompt=prompt)
+    
+    fs = LocalFileStore("./cache/")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
+    cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+        embedder, fs, namespace='openai'
+    )
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder)
+    model_info=get_model_info(model_id)
+    model_embeds=vectorstore.get(where={'object_id':model_id})
+    if len(model_embeds['ids'])==0:short_feature_embed([{'info':model_info,'type':'model'}]) #if model is not embedded, embed it now.
+    results={}
+    for feature in model_info['model']['states']:
+        if feature_name is not None:
+            if feature['name'] not in feature_name:continue
+        filter_terms={"$and":[{"object_type": {
+            "$eq": 'model'
+        }},{"object_id": {
+            "$eq": model_id
+        }},
+           {"name": {
+               "$eq": feature['name']
+           }} ]} 
+        #feature_doc = vectorstore.get(where=filter_terms,include=['documents', 'metadatas'])['documents']
+        #find matches in vector store using object_ids filter
+        if dataset_ids==None:
+            filter_terms={"object_type": {
+                "$eq": 'dataset'
+            }}
+            
+        else:
+            if len(dataset_ids)==1:
+                filter_terms={"$and":[{"object_type": {
+                    "$eq": 'dataset'
+                }},{"object_id": {
+                    "$eq": dataset_ids[0]
+                }}]}
+            else:
+                filter_terms={"$and":[{"object_type": {
+                    "$eq": 'dataset'
+                }},{"$or":[]}]}
+                for dataset_id in dataset_ids:
+                    filter_terms['$and'][1]['$or'].append(
+                    {
+                    "object_id": {
+                        "$eq": dataset_id
+                    }
+                    })
+        #need to prefilter, make chain?
+        top_k_dataset_features=chain.run(model_feature_name=feature['name'],dataset_features_list='\n'.join(vectorstore.get(where=filter_terms)['documents']))
+        print(top_k_dataset_features)
+        #post process pretty result
+        pretty_result = prettify_openai(top_k_dataset_features,k=5,dataset_id='41a32771-7a35-4da5-98a6-d420172108e8') #replace with output parser? #output parser is probably fragile
+        results[feature['name']]=pretty_result
+        
+    return results
+    
+#main endpoint candidate
+def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_ids=None,db_dir="./chroma_db"):
+    """
+    Match model to features in given datasets by looking at the cosine similarity 
+    between embeddings of model feature text chunks and dataset feature text chunks
+    
+    Model ID is a string that will be used to find the model embedding. 
+    The model id should be the same as in the tds database and metadata in the vectorstore 
     If the model embedding doesn't exist we will embed it
     
     If a feature name is listed only get the dataset features for that feature 
@@ -1160,23 +440,25 @@ def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_i
         
     """
     from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
-    from langchain.vectorstores import Chroma
-    from langchain.document_loaders import TextLoader
     from langchain.storage import LocalFileStore
     from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+    from keys import gpt_key
     
     #load vector store - 
     fs = LocalFileStore("./cache/")
-    #embedder=OpenAIEmbeddings(openai_api_key=openai_api_key)
-    embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
     cached_embedder = CacheBackedEmbeddings.from_bytes_store(
-        embedder, fs, namespace='all-MiniLM-L6-v2'
+        embedder, fs, namespace='openai'
     )
+    #embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    # cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+    #     embedder, fs, namespace='all-MiniLM-L6-v2'
+    # )
     
-    vectorstore=ChromaPlus(persist_directory="./chroma_db", embedding_function=cached_embedder)
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder)
     model_info=get_model_info(model_id)
     model_embeds=vectorstore.get(where={'object_id':model_id})
-    if len(model_embeds['ids'])==0:embed([model_info]) #if model is not embedded, embed it now.
+    if len(model_embeds['ids'])==0:long_feature_embed([{'info':model_info,'type':'model'}]) #if model is not embedded, embed it now.
     results={}
     #to parallelize
     #fix multiple calls to vector store
@@ -1225,22 +507,10 @@ def find_dataset_features_semantic_matching(model_id,feature_name=None,dataset_i
         results[feature['name']]=pretty_result
     return results
 
-def fetch_groundings(groundings_ids):
-    import requests
-    base = "http://34.230.33.149:8771/api"
-    #res = requests.get(base + f"/lexical/{query}")
-    if type(groundings_ids)!=list:groundings_ids=[groundings_ids]
-    groundings_ids=','.join(groundings_ids)
-    res=requests.get(base+ f"/entities/{groundings_ids}")
-    #sort groundings info
-    if res.status_code == 200:
-        groundings_info=res.json()
-    else:
-        groundings_info="error" #to do: add error passing or warning...
-    return groundings_info
+
     
 #second endpoint?
-def embed(objects:List[Dict]): #dataset)
+def long_feature_embed(objects:List[Dict],db_dir="./chroma_db"): #dataset)
     """
     Takes a list of objects (models or datasets) and their object type in a dict format and embeds their features in the vector store
     Inputs:
@@ -1255,14 +525,19 @@ def embed(objects:List[Dict]): #dataset)
     from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
     from langchain.storage import LocalFileStore
     from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-    
+    import os
+    from keys import gpt_key
     #load huggingface embedder or openai embedder
     fs = LocalFileStore("./cache/")
-    #embedder=OpenAIEmbeddings(openai_api_key=openai_api_key)
-    embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
     cached_embedder = CacheBackedEmbeddings.from_bytes_store(
-        embedder, fs, namespace='all-MiniLM-L6-v2'
+        embedder, fs, namespace='openai'
     )
+    #embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    # cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+    #     embedder, fs, namespace='all-MiniLM-L6-v2'
+    # )
+
     
     #format templates
     # to do: add in bulk/parallel
@@ -1281,14 +556,14 @@ def embed(objects:List[Dict]): #dataset)
                                                     column_name=feature['name'],
                                                     column_description=feature['description'],
                                                     column_data_type=feature['data_type'],
-                                                    column_units=feature['metadata']['unit'],
-                                                    column_concept=feature['metadata']['concept'],
+                                                    column_units=feature['metadata']['unit'] if 'unit' in feature['metadata'] else '',
+                                                    column_concept=feature['metadata']['concept'] if 'concept' in feature['metadata'] else '',
                                                     column_column_stats= ', '.join(f'{k}={v}' for k, v in feature['metadata']['column_stats'].items()))
                 metadata={'name':feature['name'],'object_id':object_info['id'],'object_type':obj['type']}
                 groundings_info=fetch_groundings(list(feature['metadata']['groundings']['identifiers'].keys())) #fetch one at a time??
                 if 'error' != groundings_info:
-                    if 'grounding' in feature.keys() and feature['grounding'] is not None:
-                        grounding_info = fetch_groundings(feature['grounding'])
+                    if 'grounding' in feature.keys() and len(list(feature['grounding']['identifiers'].keys()))>0 :
+                        grounding_info = fetch_groundings(list(feature['grounding']['identifiers'].keys()))
                         groundings_info+=grounding_info
                     
                     ground_chunks=[]
@@ -1356,11 +631,129 @@ def embed(objects:List[Dict]): #dataset)
                     print(f"Feature {feature['name']} on model {object_info['header']['name']} could not be embedded because there are no groundings that could be found")
     
     #documents to store and embed
-    vectorstore=ChromaPlus(persist_directory="./chroma_db", embedding_function=cached_embedder) #load
+    os.makedirs(db_dir,exist_ok=True)
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder) #load
     vectorstore.add_texts(texts=text_chunks,metadatas=metadatas)
     
     return vectorstore
 
+def short_feature_embed(objects:List[Dict],db_dir="./chroma_db"): #dataset)
+    """
+    Takes a list of objects (models or datasets) and their object type in a dict format and embeds their features in the vector store
+    Inputs:
+        objects: List[Dict] = List of objects to be embedded in format -  [{'info':object_dict,'type':'model' or 'dataset'}]
+    Outputs:
+        retriever - langchain retriever object
+    
+    Example usage:
+        vs=embed([{"info":example_model_get},'type':'model'])
+    This embedder only embeds features based on their information (name only)
+    """
+    from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
+    from langchain.storage import LocalFileStore
+    from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+    import os
+    from keys import gpt_key
+    #load huggingface embedder or openai embedder
+    fs = LocalFileStore("./cache/")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
+    cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+        embedder, fs, namespace='openai'
+    )
+    #embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    # cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+    #     embedder, fs, namespace='all-MiniLM-L6-v2'
+    # )
+    
+    text_chunks=[] #build text chunks
+    metadatas=[] #build metadatas
+    for obj in objects:
+        object_info=obj['info']
+        if obj['type']=='dataset':
+            #create chunks in parallel
+            for feature in object_info['columns']:
+                text_chunk=""
+                text_chunk+='Name:'
+                text_chunk+=feature['name']
+                text_chunk+='\nDescription:'
+                text_chunk+=feature['description']
+                print(f"Feature {feature['name']} on model {object_info['name']} was embedded")
+                metadata={'name':feature['name'],'object_id':object_info['id'],'object_type':obj['type']}
+                text_chunks.append(text_chunk)
+                metadatas.append(metadata)
+        elif obj['type'] == 'model': 
+            for feature in object_info['model']['states']:
+                text_chunk=""
+                text_chunk+='Name:'
+                text_chunk+=feature['name']
+                print(f"Feature {feature['name']} on model {object_info['name']} was embedded")
+                metadata={'name':feature['name'],'object_id':object_info['id'],'object_type':obj['type']}
+                text_chunks.append(text_chunk)
+                metadatas.append(metadata)
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder) #load
+    vectorstore.add_texts(texts=text_chunks,metadatas=metadatas)
+    
+    return vectorstore
+
+def document_embed(objects:List[Dict],db_dir="./chroma_db"):       
+    """
+    Create a text chunk represening each document (model, dataset)
+    for use later in matching datasets and models
+
+    """
+    from langchain.embeddings import OpenAIEmbeddings,CacheBackedEmbeddings
+    from langchain.storage import LocalFileStore
+    from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+    import os
+    from keys import gpt_key
+    #load huggingface embedder or openai embedder
+    fs = LocalFileStore("./cache/")
+    embedder=OpenAIEmbeddings(openai_api_key=gpt_key)
+    cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+        embedder, fs, namespace='openai'
+    )
+    #embedder = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    # cached_embedder = CacheBackedEmbeddings.from_bytes_store(
+    #     embedder, fs, namespace='all-MiniLM-L6-v2'
+    # )
+    
+    text_chunks=[] #build text chunks
+    metadatas=[] #build metadatas
+    for obj in objects:
+        object_info=obj['info']
+        if obj['type']=='dataset':
+            template="""\
+            dataset name: {obj_name}
+            dataset description: {obj_description}
+            """
+            text_chunk=template.format(obj_name=object_info['name'],
+                                       obj_description=object_info['description'])
+            # feature_template="""
+            # feature name: {column_name}
+            # feature description: {column_description}
+            # data_type: {column_data_type}
+            # feature unit type: {column_units}
+            # feature numerical stats:  {column_column_stats}
+            # feature concept : {column_concept}
+            # """
+            # for feature in 
+        elif obj['type'] == 'model':
+            template="""\
+            model name: {obj_name}
+            model description: {obj_description}
+            """
+            text_chunk=template.format(obj_name=object_info['name'],
+                                       obj_description=object_info['description'])
+            
+        metadata={'name':object_info['name'],'object_id':object_info['id'],'object_type':obj['type']}
+        text_chunks.append(text_chunk)
+        metadatas.append(metadata)
+        
+    vectorstore=ChromaPlus(persist_directory=db_dir, embedding_function=cached_embedder) #load
+    vectorstore.add_texts(texts=text_chunks,metadatas=metadatas)
+    
+    return vectorstore
+                
 def get_dataset_card(gpt_key,csv_file,doc_file):
     import requests
 
@@ -1394,7 +787,7 @@ def create_tds_dataset(data_dict):
     
     response = requests.post(url, headers=headers, json=data_dict)
 
-    if response.status_code == 200:
+    if response.status_code == 200 or response.status_code == 201:
         return response.json()
     else:
         return f"Error occurred. Status code: {response.status_code}"
@@ -1407,40 +800,40 @@ def create_tds_model(model_dict):
     'Content-Type': 'application/json'
     }
     response = requests.post(url, headers=headers, json=model_dict)
-    if response.status_code == 200:
+    if response.status_code == 200 or response.status_code == 201:
         return response.json()
     else:
         return f"Error occurred. Status code: {response.status_code}"
+    
 def generate_grounding_from_list(list_of_text):
     """
     Generate groundings for a list of texts
     
     example usage:
-    data = [
-    {
-        "text": "Infected Population"
-    },
-    {
-        "text": "Breast Cancer"
-    },
-    {
-        "text": "Myocardial Infarction"
-    }
-    ]
+    data = ["Infected Population", "Breast Cancer"]
     generate_grounding_from_list(data)
     
     """
     import requests
+    for i,text in enumerate(list_of_text):
+        list_of_text[i]={"text":text}
     url = 'http://34.230.33.149:8771/api/ground_list'
     headers = {
     'accept': 'application/json',
     'Content-Type': 'application/json'
     }
     response = requests.post(url, headers=headers, json=list_of_text)
-    if response.status_code == 200:
-        return response.json()
+    if response.status_code == 200 or response.status_code == 201:
+        res=response.json()
+        print(response.json())
+        groundings={'identifiers':{}}
+        for re in res:
+            for r in re['results']:
+                groundings['identifiers'][r['curie']]=r['name']
+        return groundings
     else:
         return f"Error occurred. Status code: {response.status_code}"
+    
 def get_dataset_info_from_source(source):
     """
     Use cdc website to get dataset info
@@ -1462,14 +855,22 @@ def get_dataset_info_from_source(source):
     metadata = client.get_metadata(sodapy_identifier)
     dataset_info={'name':metadata['name'],'description':metadata['description'],
                   'file_names':['dataset.csv'],'columns':[]}
+    enum_values=["unknown","boolean","string","integer","float","double","timestamp","datetime","date","time"]
+    datatype_converter={
+        'text':'string',
+        'calendar_date':'date',
+        'number':'float'}
+    for dtype in enum_values:datatype_converter[dtype]=dtype
+    # to do :convert types
     for col in metadata['columns']:
         dataset_info['columns'].append({'name':col['name'],
-                                        'data_type':col['dataTypeName'],
+                                        'data_type':datatype_converter[col['dataTypeName']],
                                         'description':col['description'],
                                         'concept':'',
                                         'metadata':{'col_name':col['fieldName'],
                                                     'unit':'',
-                                                    'column_stats':{}}
+                                                    'column_stats':{}},
+                                        'annotations':[]
                                         })
     #build pdf
     pdf_path = f"./eval_dataset/{sodapy_identifier}.pdf"
@@ -1481,7 +882,7 @@ def get_dataset_info_from_source(source):
     
     return dataset_info,f'./eval_dataset/{sodapy_identifier}.csv',f'./eval_dataset/{sodapy_identifier}.pdf'
 
-def create_model_via_mira():
+def create_model_via_mira(option):
     from copy import deepcopy as _d
     import sympy
     import requests
@@ -1538,6 +939,18 @@ def create_model_via_mira():
     
     return model
 
+
+def create_eval_models():
+    from mira.examples import sir
+    import requests
+    models=[sir.sir,sir.parameterized,sir.sir2_city,sir.svir]
+    rest_url = "http://34.230.33.149:8771"
+    eval_models=[]
+    for model in models:
+        res = requests.post(rest_url + "/api/to_petrinet", json=model.dict())
+        eval_models.append(res)
+    return eval_models
+
 def get_model_card(gpt_key,text_file,code_file):
     import requests
 
@@ -1562,9 +975,11 @@ def get_model_card(gpt_key,text_file,code_file):
         return f"Error occurred. Status code: {response.status_code}"
     
 eval_datasets=[{'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'},
-               {'source':'https://data.cdc.gov/NCHS/Provisional-COVID-19-Deaths-by-Sex-and-Age/9bhg-hcku'}]
+               {'source':'https://data.cdc.gov/Flu-Vaccinations/Vaccines-gov-Flu-vaccinating-provider-locations/bugr-bbfr'},
+               {'source':'https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-Jurisdi/unsk-b7fc'},
+               {'source':'https://data.cdc.gov/Public-Health-Surveillance/United-States-COVID-19-Community-Levels-by-County/3nnm-4jni'}]
 
-def generate_eval_dataset(datasets,num_models=5):
+def generate_eval_dataset(datasets):
     """
     Generates a new evaluation dataset using a list of dataset_file dictionaries
     
@@ -1598,7 +1013,7 @@ def generate_eval_dataset(datasets,num_models=5):
     dataset_dict is of format - {'info':dataset_description_tds,'type':'dataset'}
     model_dict is of format  - {'info':model_get_response_tds,'type':'model'}
     ground_truth will be an empty list to be filled out in the format:
-    {'model_id':model_id,ranked_list:{"feature_name_in_model":[{"dataset_id":dataset_id,"feature_name":feature_name}]}}
+    {'model_id':model_id,ranked_lists:{"feature_name_in_model":[{"dataset_id":dataset_id,"feature_name":feature_name}]}}
 
     """
     from keys import gpt_key
@@ -1618,27 +1033,62 @@ def generate_eval_dataset(datasets,num_models=5):
             
             #add dataset card info to dataset
             #create column info?
-            #create columns groundings
-    models=[]
-    for i in range(num_models):
-        model=create_model_via_mira()
-
-        #get_model_card(gpt_key,text_file,code_file)
-        
-        pass
-    
-    eval_dataset = {'datasets':datasets,'models':models,'ground_truth':[]}   
+            
+        #create columns groundings
+        for i,col in enumerate(dataset['columns']):
+            groundings=generate_grounding_from_list([col['name'],col['description']])
+            dataset['columns'][i]['metadata']['groundings']=groundings
+            dataset['columns'][i]['grounding']={'identifiers':{}}
+            
+    models=create_eval_models()
     for model in models:
-        create_tds_model(model)
+        #get_model_card(gpt_key,text_file,code_file)
+        pass
+    #create ground truth template from model states...
+    ground_truth=[]
+    model_dicts=[]
+    dataset_dicts=[]
+    for model in models:
+        model_id=create_tds_model(model)
+        model['id']=model_id['id']
+        model_gt={'model_id':model['id'],'ranking_lists':{}}
+        for feature in model['model']['states']:
+            model_gt['ranking_lists'][feature['name']]=[{'dataset_id':'','feature_name':''}]
+        ground_truth.append(model_gt)
+        model_dicts.append({'info':model,'type':'model'})
     for dataset in datasets:
-        create_tds_dataset(dataset)
+        dataset_id=create_tds_dataset(dataset)
+        dataset['id']=dataset_id['id']
+        dataset_dicts.append({'info':dataset,'type':'dataset'})
+    eval_dataset = {'datasets':datasets,'models':models,'ground_truth':ground_truth}  
     
     return eval_dataset
+
+def compare_ranking_lists(pred,gt):
+    scores=[]
+    for feature in gt:
+        gt_feature=gt[feature]
+        pred_feature=pred[feature]
+        #score is number of correct listing #to change to better metric (something for search, maybe kilt retrieval??)
+        score=0
+        for i in range(len(gt_feature)):
+            if gt_feature[i]['dataset_id']==pred_feature[i]['dataset_id'] and gt_feature[i]['feature_name']==pred_feature[i]['feature_name']:
+                score+=1
+        score=score/len(gt_feature)
+        scores.append(score)
+    return scores
     
-def evaluate_query(model_id,feature_name=None,dataset_ids=None):
-    """
-    Evalutes a query's results given a model id in the evaluation dataset
-    and optionally a number of dataset_ids.
-    Looks through the ranking of the document features and compares with query results (top k)
-    """
-    pass
+def evaluate_on_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
+    import os
+    os.makedirs(db_dir,exist_ok=True)
+    #vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    evaluation_scores=[]
+    for model in eval_dataset['models']:
+        pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
+        gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
+        scores=compare_ranking_lists(pred_ranking,gt_ranking)
+        evaluation_scores.append({'model_id':model['info']['id'],'scores':scores,'pred':pred_ranking,'gt':gt_ranking})
+        
+    return evaluation_scores
+    
