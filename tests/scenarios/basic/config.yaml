@@ -8,3 +8,4 @@ enabled:
   - equations_to_amr
   - profile_dataset
   - profile_model
+  - link_amr

@@ -468,33 +468,36 @@ def model_card(*args, **kwargs):
         raise Exception(f"Bad response from TA1 service for {model_id}: {resp.status_code}")
 
 
-# dccde3a0-0132-430c-afd8-c67953298f48
-# 77a2dffb-08b3-4f6e-bfe5-83d27ed259c4
 def link_amr(*args, **kwargs):
-    artifact_id = kwargs.get("artifact_id")
+    document_id = kwargs.get("document_id")
     model_id = kwargs.get("model_id")
 
-    artifact_json, downloaded_artifact = get_artifact_from_tds(artifact_id=artifact_id)
+    document_json, downloaded_document = get_document_from_tds(
+        document_id=document_id
+    )
 
-    tds_models_url = f"{TDS_API}/models/{model_id}"
+    extractions = document_json.get('metadata',{})
 
-    model = requests.get(tds_models_url)
+    tds_model_url = f"{TDS_API}/models/{model_id}"
+
+    model = requests.get(tds_model_url)
     model_json = model.json()
-    model_amr = model_json.get("model")
+    model_amr = model_json
 
-    logging.info(model_amr)
+    logging.debug(model_amr)
 
-    jsonified_amr = json.dumps(model_amr).encode("utf-8")
+    stringified_amr = json.dumps(model_amr).encode("utf-8")
+    stringified_extractions = json.dumps(extractions).encode("utf-8")
 
     files = {
         "amr_file": (
             "amr.json",
-            io.BytesIO(jsonified_amr),
+            io.BytesIO(stringified_amr),
             "application/json",
         ),
         "text_extractions_file": (
             "extractions.json",
-            io.BytesIO(downloaded_artifact),
+            io.BytesIO(stringified_extractions),
             "application/json",
         ),
     }
@@ -502,28 +505,29 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-
+    logger.info(f"Sending model {model_id} and document {document_id} for linking")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
-    logger.debug(f"TA 1 response object: {response.json()}")
+    logger.debug(f"TA 1 response object: {response.text}")
 
     if response.status_code == 200:
         enriched_amr = response.json()
 
-        model_json["model"] = enriched_amr
-        model_id = model_json.get("id")
+        model_response = requests.put(tds_model_url, json=enriched_amr)
+        if model_response.status_code != 200:
+            raise Exception(
+                f"Cannot update model {model_id} in TDS with payload:\n\n {enriched_amr}"
+            )
+        logger.info(f"Updated enriched model in TDS with id {model_id}")
 
-        new_model_payload = model_json
-
-        update_response = requests.put(
-            f"{tds_models_url}/{model_id}", data=new_model_payload
-        )
+        model_amr.update(enriched_amr)
 
         return {
-            "status": update_response.status_code,
+            "status": model_response.status_code,
+            "amr": model_amr,            
             "message": "Model enriched and updated in TDS",
         }
     else:
-        raise Exception("Response from backend knowledge service was not 200: {response.text}")
+        raise Exception(f"Response from backend knowledge service was not 200: {response.text}")
 
 
 # 60e539e4-6969-4369-a358-c601a3a583da

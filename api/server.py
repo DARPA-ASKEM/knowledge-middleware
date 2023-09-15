@@ -218,7 +218,6 @@ def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> 
 
 @app.post("/link_amr")
 def link_amr(document_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-    raise HTTPException(status_code=501, detail="Endpoint is under development")
 
     operation_name = "operations.link_amr"
 
