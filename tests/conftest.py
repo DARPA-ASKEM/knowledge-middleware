@@ -143,10 +143,29 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
             http_mock.put(artifact_url)
         else:
             result = requests.post(f"{settings.TDS_URL}/{_type}", json=artifact)
+            artifact['id'] = result.json()['id']
             if result.status_code >= 400:
                 raise requests.HTTPError("Error adding generated artifact to TDS")
 
         return artifact
+    return generate
+
+@pytest.fixture
+def gen_tds_model(context_dir, http_mock):
+    # Mock the TDS artifact
+    counter = count()
+    def generate(model_id=None, amr=None):
+        if settings.MOCK_TDS:
+            models_url = f"{settings.TDS_URL}/models"
+            http_mock.post(models_url, json={"id": model_id})
+        else:
+            result = requests.post(f"{settings.TDS_URL}/models", json=amr)
+            if result.status_code >= 400:
+                raise requests.HTTPError("Error adding generated artifact to TDS")
+            else:
+                model_id = result.json()['id']
+
+        return model_id
     return generate
 
 @pytest.mark.tryfirst
