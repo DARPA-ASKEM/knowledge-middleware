@@ -265,5 +265,4 @@ ground_truth_one_to_few_documents=[{'model_id': 'b1c45455-8555-4c8d-88d2-3584633
                     'b0f19908-0766-4b90-b5ad-a740e69ebe6a',
                     '08133270-8a3b-4d65-9126-63cb07b05ec5',
                     '5fdba022-2a08-48c8-86c4-0a975818bb90']}]
-json.dumps(eval_one_to_few,open('eval_one_to_few_document
 eval_feature_one_to_one={'datasets':datasets_dummy,'models':models_dummy,'ground_truth':ground_truth_dummy}
