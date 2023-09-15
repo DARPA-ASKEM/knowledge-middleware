@@ -186,23 +186,38 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                 f"An error occurred when processing in Cosmos: {status_data['error']}"
             )
 
+        logger.info(result_endpoint_text)
         result = requests.get(result_endpoint_text)
 
-        # Download the zipfile to a temporary directory
+        # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
         zip_file = os.path.join(temp_dir, document_id + ".zip")
         with open(zip_file, "wb") as writer:
             writer.write(requests.get(result_endpoint).content)
 
+        # Extract zipfile to enable asset uploading
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
             zip_ref.extractall(temp_dir)
 
         # Assets requests
-        equations = requests.get(equations_endpoint).json()
-        figures = requests.get(figures_endpoint).json()
-        tables = requests.get(tables_endpoint).json()
+        equations_resp = requests.get(equations_endpoint)
+        figures_resp = requests.get(figures_endpoint)
+        tables_resp = requests.get(tables_endpoint)
+        responses = {
+            "equation": equations_resp,
+            "figure": figures_resp,
+            "table": tables_resp,
+        }
 
-        assets_iterator = {"equation": equations, "figure": figures, "table": tables}
+        # Checks status of responses, then adds their JSON content to
+        # an iterator object if they were successful.
+        assets_iterator = {}
+        for key, response in responses.items():
+            logger.info(response.status_code)
+            if response.status_code >= 300:
+                continue
+            else:
+                assets_iterator[key] = response.json()
 
         assets = []
         for key, value in assets_iterator.items():
@@ -237,7 +252,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         logger.debug(f"result response: %s", result.text[80:])
 
-        logger.debug(f"Assets final: {assets}")
+        logger.debug(f"Assets payload: {assets}")
 
         extraction_json = result.json()
         text = "\n".join([record["content"] for record in extraction_json])
@@ -249,7 +264,15 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             f"with status code {response.status_code}"
         ) from None
 
-    temp_dir.cleanup()
+    try:
+        temp_dir.cleanup()
+    except AttributeError:
+        logger.info(
+            "Temporary directory not directly cleaned, should be remove when code finishes execution."
+        )
+        logger.debug(
+            "If worker is getting large, check if temporary files are being removed."
+        )
 
     return text, response.status_code, extraction_json, assets
 

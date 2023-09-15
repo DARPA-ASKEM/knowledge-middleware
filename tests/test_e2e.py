@@ -83,7 +83,9 @@ def test_pdf_to_text(
 
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/text.json"))
-        http_mock.post(f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions)
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
+        )
 
     #### ACT ####
     response = client.post(
@@ -270,7 +272,6 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     #     record_quality_check(context_dir, "equations_to_amr", "F1 Score", amr_instance.f1(amr))
 
 
-
 @pytest.mark.parametrize("resource", params["profile_dataset"])
 def test_profile_dataset(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
@@ -324,7 +325,9 @@ def test_profile_dataset(
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
-    assert status_response.json().get("status") == "finished", f"The RQ job failed.\n{job.latest_result().exc_string}"
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
 @pytest.mark.parametrize("resource", params["profile_model"])
