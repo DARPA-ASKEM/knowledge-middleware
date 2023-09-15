@@ -507,7 +507,7 @@ def link_amr(*args, **kwargs):
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
     logger.info(f"Sending model {model_id} and document {document_id} for linking")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
-    logger.debug(f"TA 1 response object: {response.json()}")
+    logger.debug(f"TA 1 response object: {response.text}")
 
     if response.status_code == 200:
         enriched_amr = response.json()
@@ -524,7 +524,7 @@ def link_amr(*args, **kwargs):
             "message": "Model enriched and updated in TDS",
         }
     else:
-        raise Exception("Response from backend knowledge service was not 200: {response.text}")
+        raise Exception(f"Response from backend knowledge service was not 200: {response.text}")
 
 
 # 60e539e4-6969-4369-a358-c601a3a583da
