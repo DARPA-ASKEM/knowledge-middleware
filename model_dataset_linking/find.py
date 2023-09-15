@@ -7,40 +7,6 @@ dataset features for a model feature.
 from utils import ChromaPlus,get_model_info
 from embed import short_feature_embed,long_feature_embed,document_embed
 
-DATASET_TEMPLATE="""\
-The information below describes a feature in a dataset with epidemiology data.
-
-Here is some information on the entire dataset:  
-dataset name: {obj_name}
-dataset description: {obj_description}
-                                     
-Here is some information on the feature itself:
-feature name: {column_name}
-feature description: {column_description}
-data_type: {column_data_type}
-feature unit type: {column_units}
-feature numerical stats:  {column_column_stats}
-feature concept : {column_concept}
-"""
-# add to model template
-MODEL_TEMPLATE="""\
-The information below describes a feature in a epidemiological model.
-
-Here is some information on the entire model:  
-model name: {obj_name}
-model description: {obj_description}                                  
-"""
-
-GROUND_CHUNK_TEMPLATE="""\
-name: {ground_name}
-description: {ground_description}
-synonyms: {ground_synonyms}
-"""
-# context: {ground_context}
-# units: {ground_unit_title}, {ground_units_description}
-# type: {ground_type}
-# """
-
 
 def find_dataset_features_hierarchical(model_id,dataset_ids=None,dataset_db_dir="./chroma_db",features_db_dir="./chroma_db"):
     """

@@ -5,7 +5,10 @@ model feature to dataset feature matching and generating evaluation datasets.
 """
 
 from embed import document_embed,short_feature_embed,long_feature_embed
-from find import find_dataset_semantic_matching,find_dataset_features_hierarchical
+from find import (find_dataset_semantic_matching,
+                  find_dataset_features_hierarchical,
+                  find_dataset_features_basic_llm_query_1,
+                  find_dataset_features_semantic_matching)
 
 def get_dataset_card(gpt_key,csv_file,doc_file):
     import requests
@@ -370,14 +373,38 @@ def get_feature_ranking_metrics(preds, gts,ks=[1,3,5]):
 
     return metrics
     
-def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
+def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db",
+                                             embed_method="short",embed=True,
+                                             find_method="basic_llm_query"):
+    """
+    Evaluation code for finding dataset features given model features (non-hierarchical)
+    eval_dataset: Dataset of Models/Dataset to evaluate on. Currently each model
+    will be evaluated against all datasets.
+    embed_method - Method on how to embed features, options are short and long
+    embed: boolean: Whether or not to embed
+    find_method - Method on how to find features, options are basic_llm_query and semantic
+    
+    Example Usage:
+        First load the evaluation dataset saved in json - 
+        one_to_one_features=json.load(open("./eval_datasets/one_to_one_features.json","r"))
+        Then choose your methods (embed and find), choose a directory to save the db_results and run - 
+        evaluate_on_feature_finding_eval_dataset(one_to_one_features,"./my_experiment",
+                                                 embed_method="short",find_method="basic_llm_query")
+
+    """
     import os
     os.makedirs(db_dir,exist_ok=True)
-    #vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
-    #vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    if embed:
+        if embed_method=="short":
+            vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+        elif embed_method=="long":
+            vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
     evaluation_scores=[]
     for model in eval_dataset['models']:
-        #pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
+        if find_method=="llm_basic_query":
+            pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
+        elif find_method=="semantic":
+            pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
         pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
         gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
         scores=get_feature_ranking_metrics(pred_ranking,gt_ranking)
@@ -385,6 +412,7 @@ def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
         
     return evaluation_scores
 
+#one to many documents, sources are saved in json as well.
 dataset_eval_datasets=[{'source':'https://data.cdc.gov/Public-Health-Surveillance/United-States-COVID-19-Community-Levels-by-County/3nnm-4jni'},
                        {'source':'https://data.cdc.gov/Policy/The-Tax-Burden-on-Tobacco-1970-2019/7nwe-3aj9'},
                        {'source':'https://data.cdc.gov/Nutrition-Physical-Activity-and-Obesity/CDC-Nutrition-Physical-Activity-and-Obesity-Legisl/nxst-x9p4'},
@@ -516,11 +544,28 @@ def get_dataset_ranking_metrics(preds, gts,ks=[1,3,5]):
 
     return metrics
     
-#evaluating on kilt with same metrics is probably also a good metric...
-#evaluation on qa datasets would also be a good metric, maybe extract shorter answers?
-#essentially our questions is given this model feature name and description, what are the most relevant dataset features,
-#very much a needle in the haystack problem when the dataset amounts get large..
-def evaluate_on_dataset_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db"):
+
+def evaluate_on_dataset_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset_chroma_db",
+                                             embed_method="short",embed=True,
+                                             find_method="semantic"):
+    """
+    Evaluation code for finding relevant datasets given a model
+    eval_dataset: Dataset of Models/Dataset to evaluate on. Currently each model
+    will be evaluated against all datasets.
+    db_dir:strWhere to store embeddings, 
+    embed_method - Method on how to embed features, options are short
+    embed: boolean: Whether or not to embed
+    find_method - Method on how to find features, options are semantic 
+    
+    Example Usage:
+        First load the evaluation dataset saved in json - 
+        one_to_many_features=json.load(open("./eval_datasets/one_to_many_features.json","r"))
+        Then choose your methods (embed and find), choose a directory to save the db_results and run - 
+        evaluate_on_feature_finding_eval_dataset(one_to_many_features,features_db_dir="./my_experiment/features",
+                                                 feature_embed_method="short",find_method="semantic",
+                                                 document_embed_method="short")
+
+    """
     import os
     os.makedirs(db_dir,exist_ok=True)
     vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
@@ -533,18 +578,43 @@ def evaluate_on_dataset_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
         
     return evaluation_scores
 
-def evaluate_on_feature_finding_eval_dataset_hier(eval_dataset,dataset_db_dir="./eval_dataset_chroma_db",features_db_dir="./eval_dataset_chroma_db",embed=True):
+def evaluate_on_feature_finding_eval_dataset_hier(eval_dataset,dataset_db_dir="./eval_dataset_chroma_db",
+                                                  features_db_dir="./eval_dataset_chroma_db",
+                                                  embed=True,feature_embed_method="short",
+                                                  document_embed_method="short",
+                                                  find_method="semantic"):
+    """
+    Evaluation code for finding dataset features given model features (hierarchical)
+    eval_dataset: Dataset of Models/Dataset to evaluate on. Currently each model
+    will be evaluated against all datasets.
+    feature_embed_method - Method on how to embed features, options are short and long
+    document_embed_method - Method on how to embed features, options are short
+    embed: boolean: Whether or not to embed
+    find_method - Method on how to find features, options are semantic 
+    
+    Example Usage:
+        First load the evaluation dataset saved in json - 
+        one_to_many_features=json.load(open("./eval_datasets/one_to_many_features.json","r"))
+        Then choose your methods (embed and find), choose a directory to save the db_results and run - 
+        evaluate_on_feature_finding_eval_dataset(one_to_many_features,features_db_dir="./my_experiment/features",
+                                                 feature_embed_method="short",find_method="semantic",
+                                                 document_embed_method="short")
+
+    """
     import os
     os.makedirs(dataset_db_dir,exist_ok=True)
     os.makedirs(features_db_dir,exist_ok=True)
     if embed:
-        #vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
-        vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=features_db_dir)
-        vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=dataset_db_dir)
+        if feature_embed_method=="short":
+            vs=short_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=features_db_dir)
+        elif feature_embed_method=="long":
+            vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=features_db_dir)
+        if document_embed_method=="short":
+            vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=dataset_db_dir)
     evaluation_scores=[]
     for model in eval_dataset['models']:
-        #pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
-        pred_ranking=find_dataset_features_hierarchical(model['info']['id'],dataset_db_dir=dataset_db_dir,features_db_dir=features_db_dir)
+        if find_method=="semantic":
+            pred_ranking=find_dataset_features_hierarchical(model['info']['id'],dataset_db_dir=dataset_db_dir,features_db_dir=features_db_dir)
         gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
         scores=get_feature_ranking_metrics(pred_ranking,gt_ranking)
         evaluation_scores.append({'model_id':model['info']['id'],'scores':scores,'pred':pred_ranking,'gt':gt_ranking})
