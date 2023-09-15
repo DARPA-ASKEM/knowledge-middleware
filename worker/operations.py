@@ -482,7 +482,7 @@ def link_amr(*args, **kwargs):
 
     model = requests.get(tds_model_url)
     model_json = model.json()
-    model_amr = model_json.get("model")
+    model_amr = model_json
 
     logging.debug(model_amr)
 
@@ -519,8 +519,11 @@ def link_amr(*args, **kwargs):
             )
         logger.info(f"Updated enriched model in TDS with id {model_id}")
 
+        model_amr.update(enriched_amr)
+
         return {
             "status": model_response.status_code,
+            "amr": model_amr,            
             "message": "Model enriched and updated in TDS",
         }
     else:

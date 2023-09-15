@@ -412,6 +412,7 @@ def test_link_amr(
     #### ARRANGE ####
     extractions = json.load(open(f"{context_dir}/extractions.json"))
     amr = json.load(open(f"{context_dir}/amr.json"))
+    logger.info(amr.keys())
     model_id = "test_model"
     document_id = f"test_link_amr_document_{resource}"
 
@@ -461,9 +462,18 @@ def test_link_amr(
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job = Job.fetch(job_id, connection=worker.connection)
+
+    if job.result is not None:
+        amr_instance = AMR(job.result["amr"])
+
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+
+    assert (
+        amr_instance.is_valid()
+    )
