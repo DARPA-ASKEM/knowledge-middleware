@@ -1,4 +1,6 @@
-langchain
-chromadb
-bs4
-requests
+langchain==0.0.291
+chromadb==0.4.10
+beautifulsoup4==4.11.1
+requests==2.31.0
+pandas==2.1.0
+-e git+https://github.com/gyorilab/mira.git@987d6a14946c08093dc124238ee304fe56475f2b#egg=mira

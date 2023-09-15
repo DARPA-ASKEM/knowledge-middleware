@@ -34,17 +34,20 @@ This works about as well as the one to few datasets method in the case where we 
 we care about are only in a few datasets.
 
 ## To do
-- [ ] add api format to functions
-- [ ] add docker container
-- [ ] add other retrieval options (like dkg hops)
+- [ ] format as apis
+- [X] add docker container
+- [ ] add other retrieval options (like dkg hops and other dkg information options)
 - [ ] add more info from MIT apis
-- [ ] try different embedders or similarity search params (is another embedder better at passage level embedding?)
-- [ ] parallelize certain sections
+- [ ] add tests
+- [ ] add documentation video (use friday presentation?, use youtube unlisted - [![Video Thumbnail](video_thumbnail.png)](https://www.youtube.com/watch?v=your_video_id))
+- [ ] try different embedders or similarity search params (is another embedder better at passage level embedding?) (non-openai embeddings?)
+- [ ] parallelize certain sections to improve speed
 - [ ] Add pre-filtering to llm prompt feature matching when number of features is large (performance erodes with large amount of features)
 - [ ] Add top k arg to llm prompt method
 - [X] write recursive get top k docs, then assess their features in a one to few manner.
 - [ ] Generate a large and entirely synthetic dataset(s)
 - [ ] Add evaluation options for generic datasets (kilt or make a subset..)
+- [ ] Add 12 month evaluation dataset
 - [X] Add feature gt to one to many features
 - [ ] implement method to treat model and features as one document and do qa over documents (llm-in-a-box approach) to find model features in the one model to many datasets case
 
@@ -55,20 +58,34 @@ Is this a search problem or a recommendations problem? We want to find recommend
 dataset that will help the user complete their process faster -
 we are doing this by looking for features and documents that are 
 semantically similar but we could use user(s) info as well and user other factors
-to rank relevance with the goal of reducing user search time
+to rank relevance with the goal of reducing user search time.
+Could we ask the user for information on signup that would help up tailor this feature and the application to their needs?
 
 ### Other Evaluation Methods/Datasets
 Evaluating document retrieval on kilt with same metrics (prec@k,rec@k,em@k) is probably a good proxy.
 Evaluation on question answering datasets would also be a good metric, 
 maybe extract a subset with shorter answers or a make a similar wikipedia feature finding dataset?
 
-### Current Challenges 
+### Pseudo Names and Descriptions
+Maybe we could create essentially pseudo names given model code/other model info to use in our documents which we semantically embed.
+The user could change the name and description to whatever they like but if we have accompanying information
+we could create more descriptive names/descriptions though that functionality would belong
+more naturally in TA1.
+
+### Knowledge Graphs and LLMs
+Could we potentially use the LLM to create a knowledge graph? - https://www.youtube.com/watch?v=Hg4ahTQlBm0
+Can we use an LLM to query the knowledge graph? - https://arxiv.org/pdf/2305.13168.pdf
+This functionality would belong in TA2 most likely.
+
+## Current Challenges 
+### Similar Datasets/Dataset Features
 When model feature information is very short and non-descriptive and there are many similar datasets and dataset features
 this problem becomes very much a needle in the haystack problem when the dataset amounts get large..
 
+### Poor Model Information
 We don't get very descriptive model feature descriptions. If we or data 
 annotation could use model source documents to create better model 
-name/descriptions this would be alot easier. Maybe we could create essentially pseudo names given model code/other model info?
+name/descriptions this would be alot easier. 
 
 ## Implementation 
 For semantic matching we use langchain's implementation of openai embeddings, which we 
@@ -81,7 +98,7 @@ To prompt the llm per as described in methodology we use gpt-3.5-turbo or gpt-4 
 Setup a virtual env.
 Then install requirements.
 ```
-conda create -n model-dataset-matching python=3.9
+conda create -n model-dataset-matching -y python=3.9
 conda activate model-dataset-matching
 pip install -r requirements.txt
 ```
