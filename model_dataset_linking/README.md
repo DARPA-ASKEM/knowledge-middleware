@@ -50,6 +50,7 @@ we care about are only in a few datasets.
 - [ ] Add 12 month evaluation dataset
 - [X] Add feature gt to one to many features
 - [ ] implement method to treat model and features as one document and do qa over documents (llm-in-a-box approach) to find model features in the one model to many datasets case
+- [ ] New Use Case - Build a workflow for using a user query to find datasets or dataset features along with model context or not..
 
 ## Ideas 
 

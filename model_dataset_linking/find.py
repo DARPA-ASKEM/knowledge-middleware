@@ -129,6 +129,7 @@ def find_dataset_features_basic_llm_query_1(model_id,feature_name=None,dataset_i
     from langchain.storage import LocalFileStore
     from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
     langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
+    
     prompt="""""Here are a list of epidemiology dataset features with their names and descriptions.
         Please rank in order from most similar to least similar, the dataset features to an epidemiology 
         feature with the name {model_feature_name} and give a rationale for each dataset feature as to why you ranked it where you did.
@@ -325,7 +326,7 @@ def prettify(ranked_list):
     information and puts it into a format for response"""
     
     return [{'dataset_id':feature[0].metadata['object_id'],
-             'name':feature[0].metadata['name'],
+             'feature_name':feature[0].metadata['name'],
              'score':feature[1]} for feature in ranked_list]
 def prettify_documents(ranked_list):
     """takes a list of tuples of (document:Document, score:float), gets some 

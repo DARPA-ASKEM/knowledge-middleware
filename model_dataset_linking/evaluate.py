@@ -388,8 +388,10 @@ def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
         First load the evaluation dataset saved in json - 
         one_to_one_features=json.load(open("./eval_datasets/one_to_one_features.json","r"))
         Then choose your methods (embed and find), choose a directory to save the db_results and run - 
-        evaluate_on_feature_finding_eval_dataset(one_to_one_features,"./my_experiment",
+        evaluate_on_feature_finding_eval_dataset(one_to_one_features,"./demo_eval/llm",
                                                  embed_method="short",find_method="basic_llm_query")
+        evaluate_on_feature_finding_eval_dataset(one_to_one_features,"./demo_eval/semantic",
+                                                 embed_method="short",find_method="semantic")
 
     """
     import os
@@ -405,7 +407,6 @@ def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
             pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
         elif find_method=="semantic":
             pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
-        pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
         gt_ranking=[d for d in eval_dataset['ground_truth'] if d["model_id"] == model['info']['id']][0]['ranking_lists']
         scores=get_feature_ranking_metrics(pred_ranking,gt_ranking)
         evaluation_scores.append({'model_id':model['info']['id'],'scores':scores,'pred':pred_ranking,'gt':gt_ranking})
@@ -559,16 +560,17 @@ def evaluate_on_dataset_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
     
     Example Usage:
         First load the evaluation dataset saved in json - 
-        one_to_many_features=json.load(open("./eval_datasets/one_to_many_features.json","r"))
+        one_to_many_datasets=json.load(open("./eval_datasets/one_to_many_datasets.json","r"))
         Then choose your methods (embed and find), choose a directory to save the db_results and run - 
-        evaluate_on_feature_finding_eval_dataset(one_to_many_features,features_db_dir="./my_experiment/features",
-                                                 feature_embed_method="short",find_method="semantic",
-                                                 document_embed_method="short")
+        evaluate_on_dataset_finding_eval_dataset(one_to_many_datasets,db_dir="./demo_eval/datasets",
+                                                 embed_method="short",find_method="semantic")
 
     """
     import os
     os.makedirs(db_dir,exist_ok=True)
-    vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
+    if embed:
+        if embed_method=="short":
+            vs=document_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
     evaluation_scores=[]
     for model in eval_dataset['models']:
         pred_ranking=find_dataset_semantic_matching(model['info']['id'],db_dir=db_dir)
@@ -596,7 +598,7 @@ def evaluate_on_feature_finding_eval_dataset_hier(eval_dataset,dataset_db_dir=".
         First load the evaluation dataset saved in json - 
         one_to_many_features=json.load(open("./eval_datasets/one_to_many_features.json","r"))
         Then choose your methods (embed and find), choose a directory to save the db_results and run - 
-        evaluate_on_feature_finding_eval_dataset(one_to_many_features,features_db_dir="./my_experiment/features",
+        evaluate_on_feature_finding_eval_dataset_hier(one_to_many_features,features_db_dir="./demo_eval/many_features",
                                                  feature_embed_method="short",find_method="semantic",
                                                  document_embed_method="short")
 
