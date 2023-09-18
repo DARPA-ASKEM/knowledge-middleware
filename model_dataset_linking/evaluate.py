@@ -403,7 +403,7 @@ def evaluate_on_feature_finding_eval_dataset(eval_dataset,db_dir="./eval_dataset
             vs=long_feature_embed(eval_dataset['datasets']+eval_dataset['models'],db_dir=db_dir)
     evaluation_scores=[]
     for model in eval_dataset['models']:
-        if find_method=="llm_basic_query":
+        if find_method=="basic_llm_query":
             pred_ranking=find_dataset_features_basic_llm_query_1(model['info']['id'],db_dir=db_dir)
         elif find_method=="semantic":
             pred_ranking=find_dataset_features_semantic_matching(model['info']['id'],db_dir=db_dir)
