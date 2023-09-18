@@ -124,6 +124,7 @@ def skema_extraction(document_id, filename, downloaded_document):
 
     return text, response.status_code, extraction_json
 
+
 def cosmos_extraction(document_id, filename, downloaded_document, force_run=False):
     MAX_EXECTION_TIME = 600
     POLLING_INTERVAL = 5
@@ -523,7 +524,7 @@ def link_amr(*args, **kwargs):
 
         return {
             "status": model_response.status_code,
-            "amr": model_amr,            
+            "amr": model_amr,
             "message": "Model enriched and updated in TDS",
         }
     else:
