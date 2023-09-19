@@ -28,11 +28,11 @@ function "check_suffix" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 group "prod" {
-  targets = ["knowledge-middleware-api", "knowledge-middleware-worker"]
+  targets = ["knowledge-middleware-api", "knowledge-middleware-worker", "knowledge-middleware-report"]
 }
 
 group "default" {
-  targets = ["knowledge-middleware-api-base", "knowledge-middleware-worker-base"]
+  targets = ["knowledge-middleware-api-base", "knowledge-middleware-worker-base", "knowledge-middleware-report-base"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -53,10 +53,20 @@ target "knowledge-middleware-worker-base" {
   dockerfile = "worker/Dockerfile"
 }
 
+target "knowledge-middleware-report-base" {
+	context = "."
+	tags = tag("knowledge-middleware-report", "", "")
+	dockerfile = "report/Dockerfile"
+}
+
 target "knowledge-middleware-api" {
   inherits = ["_platforms", "knowledge-middleware-api-base"]
 }
 
 target "knowledge-middleware-worker" {
   inherits = ["_platforms", "knowledge-middleware-worker-base"]
+}
+
+target "knowledge-middleware-report" {
+	inherits = ["_platforms", "knowledge-middleware-report-base"]
 }
