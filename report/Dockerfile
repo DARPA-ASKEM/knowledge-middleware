@@ -21,6 +21,7 @@ COPY lib knowledge-middleware/lib
 COPY worker knowledge-middleware/worker
 COPY tests knowledge-middleware/tests
 WORKDIR /knowledge-middleware
+RUN poetry install
 
 EXPOSE 8000
 ENV PYTHONPATH=/knowledge-middleware
