@@ -16,13 +16,12 @@ RUN poetry config virtualenvs.create true && \
     poetry config virtualenvs.in-project true && \
     poetry install --no-root --no-cache
 
-COPY api knowledge-middleware/api
-COPY lib knowledge-middleware/lib
-COPY worker knowledge-middleware/worker
-COPY tests knowledge-middleware/tests
-WORKDIR /knowledge-middleware
+COPY api api
+COPY lib lib
+COPY worker worker
+COPY tests tests
 RUN poetry install
 
 EXPOSE 8000
-ENV PYTHONPATH=/knowledge-middleware
+ENV PYTHONPATH=/
 CMD [ "poetry", "run", "poe", "report" ]
