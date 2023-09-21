@@ -15,14 +15,14 @@ def test(output_file="tests/output/tests.json"):
     pytest.main(["--json-report", f"--json-report-file={output_file}"])
 
 
-def report():
+def gen_report():
     # TODO: Make this into a predefined struct
-    report = defaultdict(lambda: {"operations": defaultdict(dict)}) 
+    scenarios = defaultdict(lambda: {"operations": defaultdict(dict)}) 
     if os.path.exists("tests/output/qual.csv"):
         with open("tests/output/qual.csv", "r", newline="") as file:
             qual = csv.reader(file)
             for scenario, operation, test, result in qual:
-                report[scenario]["operations"][operation][test] = result
+                scenarios[scenario]["operations"][operation][test] = result
 
     with open("tests/output/tests.json", "r") as file:
         raw_tests = json.load(file)["tests"]
@@ -34,24 +34,48 @@ def report():
             operation, scenario = match_result[1], match_result[2]
             passed = testobj["outcome"] == "passed"
             duration = round(testobj["call"]["duration"],2)
-            report[scenario]["operations"][operation]["Integration Status"] = passed
-            report[scenario]["operations"][operation]["Execution Time"] = duration
+            scenarios[scenario]["operations"][operation]["Integration Status"] = passed
+            scenarios[scenario]["operations"][operation]["Execution Time"] = duration
             try:
                 logs = testobj["call"]["stderr"]
-                report[scenario]["operations"][operation]["Logs"] = logs
+                scenarios[scenario]["operations"][operation]["Logs"] = logs
             except Exception as e:
                 print(f"Unable to obtain logs for {full_name}: {e}")
         for testobj in raw_tests: add_case(testobj)
 
-    for scenario in report:
+    for scenario in scenarios:
         with open(f"tests/scenarios/{scenario}/config.yaml") as file:
             spec = yaml.load(file, yaml.CLoader)
-            report[scenario]["name"] = spec["name"]
-            report[scenario]["description"] = spec["description"]
+            scenarios[scenario]["name"] = spec["name"]
+            scenarios[scenario]["description"] = spec["description"]
+
+    report = {
+        "scenarios": scenarios,
+        # TODO: Grab version
+        # NOTE: This is broken up currently because we expect different version calls
+        "services": {
+            "TA1_UNIFIED_URL":{
+              "source": settings.TA1_UNIFIED_URL,  
+              "version": "UNAVAILABLE"
+            },
+            "SKEMA_RS_URL":{
+              "source": settings.SKEMA_RS_URL,  
+              "version": "UNAVAILABLE"
+            },
+            "MIT_TR_URL":{
+              "source": settings.MIT_TR_URL,  
+              "version": "UNAVAILABLE"
+            },
+            "COSMOS_URL":{
+              "source": settings.COSMOS_URL,  
+              "version": "UNAVAILABLE"
+            },
+        }
+    }
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"report_{timestamp}.json"
-    fullpath = os.path.join("tests/output", "filename")
+    fullpath = os.path.join("tests/output", filename)
     with open(fullpath, "w") as file:
         json.dump(report, file, indent=2)
 
@@ -60,4 +84,4 @@ def report():
     s3.upload_file(fullpath, settings.BUCKET, full_handle)
 
 if __name__ == "__main__":
-    report()
+    gen_report()
