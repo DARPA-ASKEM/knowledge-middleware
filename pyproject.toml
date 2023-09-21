@@ -29,13 +29,9 @@ pyyaml = "^6.0.1"
 pre-commit = "^3.3.3"
 
 
-[tool.poetry.scripts]
-status-test = "tests.report:test"
-gen-report = "tests.report:report"
-
 [tool.poe.tasks]
-_test = "status-test"
-_report = "gen-report"
+_test.script = "tests.report:test"
+_report.script = "tests.report:gen_report"
 report.sequence = ["_test", "_report"]
 report.ignore_fail = true
 

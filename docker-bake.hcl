@@ -56,7 +56,7 @@ target "knowledge-middleware-worker-base" {
 target "knowledge-middleware-report-base" {
 	context = "."
 	tags = tag("knowledge-middleware-report", "", "")
-	dockerfile = "report/Dockerfile"
+	dockerfile = "Dockerfile.report"
 }
 
 target "knowledge-middleware-api" {
