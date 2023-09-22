@@ -12,11 +12,13 @@ profile_dataset:
   - text.json
   - paper.pdf
   - data.csv
+  - data_card.json
 profile_model:
   - text.json
   - paper.pdf
   - code.py
   - amr.json
+  - model_card.json
 link_amr:
   - paper.pdf
   - extractions.json
