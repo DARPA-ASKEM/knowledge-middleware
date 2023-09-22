@@ -4,6 +4,7 @@ import datetime
 import os
 import re
 from collections import defaultdict
+import requests
 
 import yaml
 import pytest
@@ -49,25 +50,26 @@ def gen_report():
             scenarios[scenario]["name"] = spec["name"]
             scenarios[scenario]["description"] = spec["description"]
 
+    unified_version = requests.get(f"{settings.TA1_UNIFIED_URL}/version").content
+    mit_version = requests.get(f"{settings.MIT_TR_URL}/Debugging/get_sha_debugging_get_sha_get").json()["mitaskem_commit_sha"]
+    cosmos_url = requests.get(f"{settings.COSMOS_API}/version_info").json()["git_hash"]
     report = {
         "scenarios": scenarios,
-        # TODO: Grab version
-        # NOTE: This is broken up currently because we expect different version calls
         "services": {
             "TA1_UNIFIED_URL":{
               "source": settings.TA1_UNIFIED_URL,  
-              "version": "UNAVAILABLE"
-            },
-            "SKEMA_RS_URL":{
-              "source": settings.SKEMA_RS_URL,  
-              "version": "UNAVAILABLE"
+              "version": unified_version
             },
             "MIT_TR_URL":{
               "source": settings.MIT_TR_URL,  
-              "version": "UNAVAILABLE"
+              "version": mit_version
             },
             "COSMOS_URL":{
               "source": settings.COSMOS_URL,  
+              "version": cosmos_url
+            },
+            "SKEMA_RS_URL":{
+              "source": settings.SKEMA_RS_URL,  
               "version": "UNAVAILABLE"
             },
         }
