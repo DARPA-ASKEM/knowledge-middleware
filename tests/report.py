@@ -51,8 +51,8 @@ def gen_report():
             scenarios[scenario]["description"] = spec["description"]
 
     unified_version = requests.get(f"{settings.TA1_UNIFIED_URL}/version").content
-    mit_version = requests.get(f"{settings.MIT_TR_URL}/Debugging/get_sha_debugging_get_sha_get").json()["mitaskem_commit_sha"]
-    cosmos_url = requests.get(f"{settings.COSMOS_API}/version_info").json()["git_hash"]
+    mit_version = requests.get(f"{settings.MIT_TR_URL}/debugging/get_sha").json()["mitaskem_commit_sha"]
+    cosmos_url = requests.get(f"{settings.COSMOS_URL}/version_info").json()["git_hash"]
     report = {
         "scenarios": scenarios,
         "services": {
