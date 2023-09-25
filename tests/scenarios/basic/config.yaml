@@ -3,7 +3,7 @@ name: "Basic Integration"
 description: "A basic scenario for testing core integration."
 enabled:
   - pdf_extraction
-  - pdf_to_text
+  - pdf_to_cosmos
   - code_to_amr
   - equations_to_amr
   - profile_dataset

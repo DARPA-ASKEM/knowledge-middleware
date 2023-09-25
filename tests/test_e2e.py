@@ -7,7 +7,7 @@ import pytest
 import requests
 from rq.job import Job
 
-from lib.settings import settings
+from lib.settings import settings, ExtractionServices
 from tests.utils import get_parameterizations, record_quality_check, AMR
 
 logger = logging.getLogger(__name__)
@@ -67,13 +67,13 @@ def test_pdf_extraction(
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
 
-@pytest.mark.parametrize("resource", params["pdf_to_text"])
-def test_pdf_to_text(
+@pytest.mark.parametrize("resource", params["pdf_to_cosmos"])
+def test_pdf_to_cosmos(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
     tds_artifact = gen_tds_artifact(
-        id=f"test_pdf_to_text_{resource}", file_names=["paper.pdf"]
+        id=f"test_pdf_to_cosmos_{resource}", file_names=["paper.pdf"]
     )
     pdf_file = open(f"{context_dir}/paper.pdf", "rb")
     file_storage.upload("paper.pdf", pdf_file)
@@ -82,14 +82,52 @@ def test_pdf_to_text(
     }
 
     if settings.MOCK_TA1:
-        extractions = json.load(open(f"{context_dir}/text.json"))
-        http_mock.post(
-            f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
-        )
+        print(settings.PDF_EXTRACTOR)
+        if settings.PDF_EXTRACTOR == ExtractionServices.SKEMA:
+            extractions = json.load(open(f"{context_dir}/text.json"))
+            http_mock.post(
+                f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
+            )
+        elif settings.PDF_EXTRACTOR == ExtractionServices.COSMOS:        
+            job_id = 'test-job'
+            text_extractions_result = json.load(open(f"{context_dir}/cosmos_result.json"))
+            equations = json.load(open(f"{context_dir}/cosmos_equations.json"))
+            figures = json.load(open(f"{context_dir}/cosmos_figures.json"))
+            tables = json.load(open(f"{context_dir}/cosmos_tables.json"))
+            with open(f"{context_dir}/paper_cosmos_output.zip", 'rb') as f:
+                zip_content = f.read()
+
+            cosmos_job_response = {'job_id': job_id, 
+                                    'status_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/status",
+                                    'result_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/result"}
+            
+            cosmos_job_status = {'job_started': True, 'job_completed': True, 'error': None}
+            
+            http_mock.post(
+                f"{settings.COSMOS_URL}/process/", json=cosmos_job_response
+            )
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/status", json=cosmos_job_status
+            )            
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/result", content=zip_content
+            )
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/result/text", json=text_extractions_result
+            )
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/equations", json=equations
+            )
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/figures", json=figures
+            )      
+            http_mock.get(
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/tables", json=tables
+            )                                    
 
     #### ACT ####
     response = client.post(
-        "/pdf_to_text",
+        "/pdf_to_cosmos",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )

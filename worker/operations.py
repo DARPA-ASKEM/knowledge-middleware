@@ -154,9 +154,9 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )
+        )        
         extraction_json = response.json()
-        logger.debug("COSMOS response object: %s", extraction_json)
+        logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
         result_endpoint = f"{extraction_json['result_endpoint']}"
         result_endpoint_text = f"{result_endpoint}/text"
@@ -184,13 +184,14 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                 f"An error occurred when processing in Cosmos: {status_data['error']}"
             )
 
-        logger.info(f"Sending Cosmos extraction request to {result_endpoint_text}")
+        logger.info(f"Getting Cosmos extraction request from {result_endpoint_text}")
         text_extractions_result = requests.get(result_endpoint_text)
         logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
         zip_file = os.path.join(temp_dir, document_id + ".zip")
+        logger.info(f"Fetching Cosmos zipfile from: {result_endpoint}")
         with open(zip_file, "wb") as writer:
             writer.write(requests.get(result_endpoint).content)
 
@@ -199,6 +200,10 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             zip_ref.extractall(temp_dir)
 
         # Assets requests
+        logger.info(f"Fetching Cosmos assets from:\n" \
+                    f"\t - {equations_endpoint}\n" \
+                    f"\t - {figures_endpoint}\n" \
+                    f"\t - {tables_endpoint}\n")
         equations_resp = requests.get(equations_endpoint)
         figures_resp = requests.get(figures_endpoint)
         tables_resp = requests.get(tables_endpoint)
@@ -279,7 +284,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
     return text, response.status_code, extraction_json, assets
 
 
-def pdf_to_text(*args, **kwargs):
+def pdf_to_cosmos(*args, **kwargs):
     # Get options
     document_id = kwargs.get("document_id")
 
@@ -340,7 +345,7 @@ def pdf_extractions(*args, **kwargs):
     text = document_json.get("text", None)
     if not text:
         raise Exception(
-            "No text found in paper document, please ensure to submit to /pdf_to_text endpoint."
+            "No text found in paper document, please ensure to submit to /pdf_to_cosmos endpoint."
         )
 
     # Try to feed text to the unified service
