@@ -50,23 +50,28 @@ def gen_report():
             scenarios[scenario]["name"] = spec["name"]
             scenarios[scenario]["description"] = spec["description"]
 
-    unified_version = requests.get(f"{settings.TA1_UNIFIED_URL}/version").content
-    mit_version = requests.get(f"{settings.MIT_TR_URL}/debugging/get_sha").json()["mitaskem_commit_sha"]
-    cosmos_url = requests.get(f"{settings.COSMOS_URL}/version_info").json()["git_hash"]
+    def handle_bad_versioning(func):
+        try:
+            return func()
+        except requests.exceptions.ConnectionError:
+            return "UNAVAILABLE (CANNOT CONNECT)"
+        except KeyError:
+            return "UNAVAILABLE (NO ENDPOINT)"
+    
     report = {
         "scenarios": scenarios,
         "services": {
             "TA1_UNIFIED_URL":{
               "source": settings.TA1_UNIFIED_URL,  
-              "version": unified_version
+              "version": handle_bad_versioning(lambda: requests.get(f"{settings.TA1_UNIFIED_URL}/version").content.decode())
             },
             "MIT_TR_URL":{
               "source": settings.MIT_TR_URL,  
-              "version": mit_version
+              "version": handle_bad_versioning(lambda: requests.get(f"{settings.MIT_TR_URL}/debugging/get_sha").json()["mitaskem_commit_sha"])
             },
             "COSMOS_URL":{
               "source": settings.COSMOS_URL,  
-              "version": cosmos_url
+              "version": handle_bad_versioning(lambda: requests.get(f"{settings.COSMOS_URL}/version_info").json()["git_hash"])
             },
             "SKEMA_RS_URL":{
               "source": settings.SKEMA_RS_URL,  
