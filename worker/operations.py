@@ -159,12 +159,10 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         logger.debug("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
         result_endpoint = f"{extraction_json['result_endpoint']}"
-        result_endpoint_text = f"{extraction_json['result_endpoint']}/text"
-        equations_endpoint = (
-            f"{extraction_json['result_endpoint']}/extractions/equations"
-        )
-        figures_endpoint = f"{extraction_json['result_endpoint']}/extractions/figures"
-        tables_endpoint = f"{extraction_json['result_endpoint']}/extractions/tables"
+        result_endpoint_text = f"{result_endpoint}/text"
+        equations_endpoint = f"{result_endpoint}/extractions/equations"
+        figures_endpoint = f"{result_endpoint}/extractions/figures"
+        tables_endpoint = f"{result_endpoint}/extractions/tables"
 
         job_done = False
 
@@ -186,8 +184,9 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                 f"An error occurred when processing in Cosmos: {status_data['error']}"
             )
 
-        logger.info(result_endpoint_text)
-        result = requests.get(result_endpoint_text)
+        logger.info(f"Sending Cosmos extraction request to {result_endpoint_text}")
+        text_extractions_result = requests.get(result_endpoint_text)
+        logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
@@ -213,7 +212,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         # an iterator object if they were successful.
         assets_iterator = {}
         for key, response in responses.items():
-            logger.info(response.status_code)
+            logger.info(f"{key} response status: {response.status_code}")
             if response.status_code >= 300:
                 continue
             else:
@@ -222,25 +221,28 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         assets = []
         for key, value in assets_iterator.items():
             for record in value:
-                path = record.get("img_pth")
-                file_name = path.split("/")[-1]  # Gets file name from json.
+                path = record.get("img_pth", None)
+                if path:
+                    file_name = path.split("/")[-1]  # Gets file name from json.
 
-                file_name_path = os.path.join(temp_dir, file_name)
-                presigned_response = requests.get(
-                    f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
-                )
-                upload_url = presigned_response.json().get("url")
+                    file_name_path = os.path.join(temp_dir, file_name)
+                    presigned_response = requests.get(
+                        f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
+                    )
+                    upload_url = presigned_response.json().get("url")
 
-                with open(file_name_path, "rb") as file:
-                    asset_response = requests.put(upload_url, file)
+                    with open(file_name_path, "rb") as file:
+                        asset_response = requests.put(upload_url, file)
 
-                    if asset_response.status_code >= 300:
-                        raise Exception(
-                            (
-                                "Failed to upload file to TDS "
-                                f"(status: {asset_response.status_code}): {file_name}"
+                        if asset_response.status_code >= 300:
+                            raise Exception(
+                                (
+                                    "Failed to upload file to TDS "
+                                    f"(status: {asset_response.status_code}): {file_name}"
+                                )
                             )
-                        )
+                else:
+                    logger.error(f"No img_pth key for {record}")
 
                 asset_object = {
                     "file_name": file_name,
@@ -250,11 +252,11 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
                 assets.append(asset_object)
 
-        logger.debug(f"result response: %s", result.text[80:])
+        logger.debug(f"Cosmos result response: {text_extractions_result.text[80:]}")
 
         logger.debug(f"Assets payload: {assets}")
 
-        extraction_json = result.json()
+        extraction_json = text_extractions_result.json()
         text = "\n".join([record["content"] for record in extraction_json])
 
     except ValueError as ve:
@@ -293,6 +295,7 @@ def pdf_to_text(*args, **kwargs):
                 filename=filename,
                 downloaded_document=downloaded_document,
             )
+            assets = None
         case ExtractionServices.COSMOS:
             text, status_code, extraction_json, assets = cosmos_extraction(
                 document_id=document_id,
