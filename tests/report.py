@@ -51,7 +51,10 @@ def gen_report():
             scenarios[scenario]["description"] = spec["description"]
 
     unified_version = requests.get(f"{settings.TA1_UNIFIED_URL}/version").content.decode()
-    mit_version = requests.get(f"{settings.MIT_TR_URL}/debugging/get_sha").json().get("mitaskem_commit_sha", "UNAVAILABLE")
+    try:
+        mit_version = requests.get(f"{settings.MIT_TR_URL}/debugging/get_sha").json().get("mitaskem_commit_sha", "UNAVAILABLE")
+    except requests.exceptions.ConnectionError:
+        mit_version = "UNAVAILABLE (CANNOT CONNECT)"
     cosmos_url = requests.get(f"{settings.COSMOS_URL}/version_info").json().get("git_hash", "UNAVAILABLE")
     report = {
         "scenarios": scenarios,
