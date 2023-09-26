@@ -5,3 +5,4 @@ enabled:
   - pdf_extraction
   - pdf_to_cosmos
   - code_to_amr
+  - equations_to_amr  
