@@ -396,6 +396,7 @@ def test_profile_model(
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
+    generated_card = status_response.json()["job_result"]["card"]
 
     #### ASSERT ####
     assert results.get("status") == "queued"
@@ -403,6 +404,20 @@ def test_profile_model(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+
+    #### POSTAMBLE ####
+    if not settings.MOCK_TA1:
+        files = {
+            "test_json_file": json.dumps(generated_card),
+            "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
+        }    
+        eval = requests.post(
+            f"{settings.MIT_TR_URL}/evaluation/eval_model_card", 
+            params={"gpt_key": settings.OPENAI_API_KEY},
+            files=files
+        )
+        accuracy = eval.json()["accuracy"]
+        record_quality_check(context_dir, "Accuracy", "test_profile_model", accuracy)
 
 
 @pytest.mark.parametrize("resource", params["link_amr"])

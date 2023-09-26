@@ -456,6 +456,7 @@ def model_card(*args, **kwargs):
                 return {
                     "status": tds_resp.status_code,
                     "message": "Model card generated and updated in TDS",
+                    "card": card
                 }
             else:
                 raise Exception(

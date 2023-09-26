@@ -2,11 +2,14 @@ import requests
 from jsonschema import validate, ValidationError
 from collections import defaultdict
 from os import listdir, makedirs, path
+from shutil import rmtree
 import csv
 
 from lib.settings import settings
 
 import yaml
+
+rmtree("tests/output/qual.csv")
 
 def get_parameterizations():
     selections = defaultdict(list)
