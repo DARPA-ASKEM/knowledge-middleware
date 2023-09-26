@@ -1,0 +1,22 @@
+FROM python:3.10
+
+RUN mkdir knowledge-middleware
+WORKDIR knowledge-middleware
+
+COPY pyproject.toml /knowledge-middleware/pyproject.toml
+COPY poetry.lock /knowledge-middleware/poetry.lock
+COPY README.md /knowledge-middleware/README.md
+
+RUN pip install --no-cache-dir poetry==1.5.1
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true && \
+    poetry install --no-root --no-cache
+
+COPY api /knowledge-middleware/api
+COPY lib /knowledge-middleware/lib
+COPY worker /knowledge-middleware/worker
+COPY tests /knowledge-middleware/tests
+RUN poetry install --only-root --no-cache
+
+EXPOSE 8000
+CMD [ "poetry", "run", "poe", "report" ]
