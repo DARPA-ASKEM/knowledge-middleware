@@ -122,14 +122,14 @@ def code_to_amr(
     return resp
 
 
-@app.post("/pdf_to_text")
-def pdf_to_text(document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-    """Run text extractions over pdfs and stores the text on the document
+@app.post("/pdf_to_cosmos")
+def pdf_to_cosmos(document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+    """Run Cosmos extractions over pdfs and stores the text/assets on the document
 
     Args:
         `document_id`: the id of the document to process
     """
-    operation_name = "operations.pdf_to_text"
+    operation_name = "operations.pdf_to_cosmos"
 
     options = {"document_id": document_id}
 
@@ -198,7 +198,7 @@ def profile_dataset(
 def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
-    has been extracted with `/pdf_to_text` and the code has been converted to an AMR
+    has been extracted with `/pdf_to_cosmos` and the code has been converted to an AMR
     with `/code_to_amr`
 
     > NOTE: if nothing the paper is not extracted and the model not created from code this WILL fail.

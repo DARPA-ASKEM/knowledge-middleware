@@ -2,7 +2,7 @@
 pdf_extraction:
   - text.json
   - paper.pdf
-pdf_to_text:
+pdf_to_cosmos:
   - paper.pdf
 code_to_amr:
   - code.py
