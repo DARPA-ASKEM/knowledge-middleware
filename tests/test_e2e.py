@@ -195,11 +195,8 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     }
    
     mock_amr_header = {
-            "name": "Test SIR Model",
-            "schema": "petrinet_schema.json",
-            "description": "Test SIR model",
-            "schema_name": "petrinet",
-            "model_version": "0.1"
+            "name": "Test Existing SIR Model",
+            "description": "Test Existing SIR model"
         }
 
     if settings.MOCK_TDS:
@@ -253,6 +250,10 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job2 = Job.fetch(job_id, connection=worker.connection)
+    if job2.result is not None:
+        amr_instance_2 = AMR(job2.result["amr"])    
+
     #### ASSERT ####
     # Case 1
     assert results.get("status") == "queued"
@@ -274,6 +275,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert status_config_response.status_code == 200
 
     assert storage[1].get("model_id") == "test2"
+    assert amr_instance_2.header["name"] == mock_amr_header["name"]
 
     #### POSTAMBLE ####
     # if 'amr' in locals():
