@@ -81,7 +81,9 @@ def gen_report():
     }
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"report_{timestamp}.json"
+		# add a prefix to the filename if we're running local services
+		is_local = "" if settings.LIVE_SERVICES else "_local"
+    filename = f"report{is_local}_{timestamp}.json"
     fullpath = os.path.join("tests/output", filename)
     with open(fullpath, "w") as file:
         json.dump(report, file, indent=2)
