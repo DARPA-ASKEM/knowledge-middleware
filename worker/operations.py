@@ -2,9 +2,12 @@ import io
 import json
 import os
 import sys
+import tempfile
 import time
-
 import requests
+import zipfile
+
+import pandas
 from worker.utils import (
     find_source_code,
     get_code_from_tds,
@@ -61,7 +64,9 @@ def equations_to_amr(*args, **kwargs):
 
     headers = {"Content-Type": "application/json"}
 
-    logger.info(f"Sending equations of type {equation_type} to backend knowledge services at {url}")
+    logger.info(
+        f"Sending equations of type {equation_type} to backend knowledge services at {url}"
+    )
     if equation_type == "mathml":
         amr_response = requests.put(
             url, data=json.dumps(put_payload, default=str), headers=headers
@@ -74,7 +79,9 @@ def equations_to_amr(*args, **kwargs):
         amr_json = amr_response.json()
         logger.debug(f"TA 1 response object: {amr_response}")
     except:
-        logger.error(f"Failed to parse response from backend knowledge service: {amr_response.text}")
+        logger.error(
+            f"Failed to parse response from backend knowledge service: {amr_response.text}"
+        )
 
     if amr_response.status_code == 200 and amr_json:
         tds_responses = put_amr_to_tds(amr_json, name, description, model_id)
@@ -112,9 +119,7 @@ def skema_extraction(document_id, filename, downloaded_document):
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {extraction_json}")
-        text = "\n".join([
-           record["content"] for record in extraction_json
-        ])
+        text = "\n".join([record["content"] for record in extraction_json])
 
     except ValueError:
         raise Exception(
@@ -123,6 +128,7 @@ def skema_extraction(document_id, filename, downloaded_document):
         ) from None
 
     return text, response.status_code, extraction_json
+
 
 def cosmos_extraction(document_id, filename, downloaded_document, force_run=False):
     MAX_EXECTION_TIME = 600
@@ -143,22 +149,28 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         logger.info(
             f"Sending PDF to backend knowledge service with document id {document_id} at {cosmos_text_extraction_url}"
         )
-        response = requests.post(cosmos_text_extraction_url, files=put_payload, data=data_form)
+        response = requests.post(
+            cosmos_text_extraction_url, files=put_payload, data=data_form
+        )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )
+        )        
         extraction_json = response.json()
-        logger.debug("COSMOS response object: %s", extraction_json)
+        logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
-        result_endpoint = f"{extraction_json['result_endpoint']}/text"
+        result_endpoint = f"{extraction_json['result_endpoint']}"
+        result_endpoint_text = f"{result_endpoint}/text"
+        equations_endpoint = f"{result_endpoint}/extractions/equations"
+        figures_endpoint = f"{result_endpoint}/extractions/figures"
+        tables_endpoint = f"{result_endpoint}/extractions/tables"
 
         job_done = False
 
         for i in range(MAX_ITERATIONS):
             status = requests.get(status_endpoint)
             status_data = status.json()
-            logger.info("Polled status endpoint %s times:\n%s", i+1, status_data)
-            job_done = status_data['error'] or status_data['job_completed']
+            logger.info("Polled status endpoint %s times:\n%s", i + 1, status_data)
+            job_done = status_data["error"] or status_data["job_completed"]
             if job_done:
                 break
             time.sleep(POLLING_INTERVAL)
@@ -166,28 +178,113 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         if not job_done:
             logger.error("ERROR: Job not complete after %s seconds.", MAX_EXECTION_TIME)
             raise Exception(f"Job not complete after {MAX_EXECTION_TIME} seconds.")
-        elif status_data['error']:
+        elif status_data["error"]:
             logger.error("An unexpected error occurred: %s", {status_data["error"]})
-            raise Exception(f"An error occurred when processing in Cosmos: {status_data['error']}")
+            raise Exception(
+                f"An error occurred when processing in Cosmos: {status_data['error']}"
+            )
 
-        result = requests.get(result_endpoint)
-        logger.debug(f"result response: %s", result.text[80:])
+        logger.info(f"Getting Cosmos extraction request from {result_endpoint_text}")
+        text_extractions_result = requests.get(result_endpoint_text)
+        logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
 
-        extraction_json = result.json()
-        text = "\n".join([
-           record["content"] for record in extraction_json
-        ])
+        # Download the Cosmos extractions zipfile to a temporary directory
+        temp_dir = tempfile.mkdtemp()
+        zip_file = os.path.join(temp_dir, document_id + ".zip")
+        logger.info(f"Fetching Cosmos zipfile from: {result_endpoint}")
+        with open(zip_file, "wb") as writer:
+            writer.write(requests.get(result_endpoint).content)
 
-    except ValueError:
+        # Extract zipfile to enable asset uploading
+        with zipfile.ZipFile(zip_file, "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        # Assets requests
+        logger.info(f"Fetching Cosmos assets from:\n" \
+                    f"\t - {equations_endpoint}\n" \
+                    f"\t - {figures_endpoint}\n" \
+                    f"\t - {tables_endpoint}\n")
+        equations_resp = requests.get(equations_endpoint)
+        figures_resp = requests.get(figures_endpoint)
+        tables_resp = requests.get(tables_endpoint)
+        responses = {
+            "equation": equations_resp,
+            "figure": figures_resp,
+            "table": tables_resp,
+        }
+
+        # Checks status of responses, then adds their JSON content to
+        # an iterator object if they were successful.
+        assets_iterator = {}
+        for key, response in responses.items():
+            logger.info(f"{key} response status: {response.status_code}")
+            if response.status_code >= 300:
+                continue
+            else:
+                assets_iterator[key] = response.json()
+
+        assets = []
+        for key, value in assets_iterator.items():
+            for record in value:
+                path = record.get("img_pth", None)
+                if path:
+                    file_name = path.split("/")[-1]  # Gets file name from json.
+
+                    file_name_path = os.path.join(temp_dir, file_name)
+                    presigned_response = requests.get(
+                        f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
+                    )
+                    upload_url = presigned_response.json().get("url")
+
+                    with open(file_name_path, "rb") as file:
+                        asset_response = requests.put(upload_url, file)
+
+                        if asset_response.status_code >= 300:
+                            raise Exception(
+                                (
+                                    "Failed to upload file to TDS "
+                                    f"(status: {asset_response.status_code}): {file_name}"
+                                )
+                            )
+                else:
+                    logger.error(f"No img_pth key for {record}")
+
+                asset_object = {
+                    "file_name": file_name,
+                    "asset_type": key,
+                    "metadata": record,
+                }
+
+                assets.append(asset_object)
+
+        logger.debug(f"Cosmos result response: {text_extractions_result.text[80:]}")
+
+        logger.debug(f"Assets payload: {assets}")
+
+        extraction_json = text_extractions_result.json()
+        text = "\n".join([record["content"] for record in extraction_json])
+
+    except ValueError as ve:
+        logger.error(f"Value Error: {ve}")
         raise Exception(
             f"Extraction failure: {response.text}"
             f"with status code {response.status_code}"
         ) from None
 
-    return text, response.status_code, extraction_json
+    try:
+        temp_dir.cleanup()
+    except AttributeError:
+        logger.info(
+            "Temporary directory not directly cleaned, should be remove when code finishes execution."
+        )
+        logger.debug(
+            "If worker is getting large, check if temporary files are being removed."
+        )
+
+    return text, response.status_code, extraction_json, assets
 
 
-def pdf_to_text(*args, **kwargs):
+def pdf_to_cosmos(*args, **kwargs):
     # Get options
     document_id = kwargs.get("document_id")
 
@@ -201,13 +298,14 @@ def pdf_to_text(*args, **kwargs):
             text, status_code, extraction_json = skema_extraction(
                 document_id=document_id,
                 filename=filename,
-                downloaded_document=downloaded_document
+                downloaded_document=downloaded_document,
             )
+            assets = None
         case ExtractionServices.COSMOS:
-            text, status_code, extraction_json = cosmos_extraction(
+            text, status_code, extraction_json, assets = cosmos_extraction(
                 document_id=document_id,
                 filename=filename,
-                downloaded_document=downloaded_document
+                downloaded_document=downloaded_document,
             )
 
     document_response = put_document_extraction_to_tds(
@@ -216,6 +314,7 @@ def pdf_to_text(*args, **kwargs):
         description=document_json.get("description", None),
         filename=filename,
         text=text,
+        assets=assets,
     )
 
     if document_response.get("status") == 200:
@@ -246,7 +345,7 @@ def pdf_extractions(*args, **kwargs):
     text = document_json.get("text", None)
     if not text:
         raise Exception(
-            "No text found in paper document, please ensure to submit to /pdf_to_text endpoint."
+            "No text found in paper document, please ensure to submit to /pdf_to_cosmos endpoint."
         )
 
     # Try to feed text to the unified service
@@ -321,11 +420,9 @@ def data_card(*args, **kwargs):
         document_json, downloaded_artifact = get_document_from_tds(
             document_id=artifact_id
         )
-        doc_file = (
-            document_json
-            .get("text", "There is no documentation for this dataset")
-            .encode()
-        )
+        doc_file = document_json.get(
+            "text", "There is no documentation for this dataset"
+        ).encode()
     else:
         doc_file = b"There is no documentation for this dataset"
 
@@ -417,11 +514,9 @@ def model_card(*args, **kwargs):
     paper_document_json, paper_downloaded_document = get_document_from_tds(
         document_id=paper_document_id
     )
-    text_file = (
-        paper_document_json
-        .get("text", "There is no documentation for this model")
-        .encode()
-    )
+    text_file = paper_document_json.get(
+        "text", "There is no documentation for this model"
+    ).encode()
 
     amr = get_model_from_tds(model_id).json()
 
@@ -466,18 +561,18 @@ def model_card(*args, **kwargs):
             raise Exception(f"Failed to generate model card for {model_id}: {e}")
 
     else:
-        raise Exception(f"Bad response from TA1 service for {model_id}: {resp.status_code}")
+        raise Exception(
+            f"Bad response from TA1 service for {model_id}: {resp.status_code}"
+        )
 
 
 def link_amr(*args, **kwargs):
     document_id = kwargs.get("document_id")
     model_id = kwargs.get("model_id")
 
-    document_json, downloaded_document = get_document_from_tds(
-        document_id=document_id
-    )
+    document_json, downloaded_document = get_document_from_tds(document_id=document_id)
 
-    extractions = document_json.get('metadata',{})
+    extractions = document_json.get("metadata", {})
 
     tds_model_url = f"{TDS_API}/models/{model_id}"
 
@@ -524,11 +619,13 @@ def link_amr(*args, **kwargs):
 
         return {
             "status": model_response.status_code,
-            "amr": model_amr,            
+            "amr": model_amr,
             "message": "Model enriched and updated in TDS",
         }
     else:
-        raise Exception(f"Response from backend knowledge service was not 200: {response.text}")
+        raise Exception(
+            f"Response from backend knowledge service was not 200: {response.text}"
+        )
 
 
 # 60e539e4-6969-4369-a358-c601a3a583da
@@ -564,10 +661,12 @@ def code_to_amr(*args, **kwargs):
         amr_json = amr_response.json()
         logger.debug(f"TA 1 response object: {amr_json}")
     except:
-        logger.error(f"Failed to parse response from backend knowledge service:\n{amr_response.text}")
+        logger.error(
+            f"Failed to parse response from backend knowledge service:\n{amr_response.text}"
+        )
 
     if amr_response.status_code == 200 and amr_json:
-        metadata = amr_json.get("metadata",{})
+        metadata = amr_json.get("metadata", {})
         metadata["code_id"] = code_id
         amr_json["metadata"] = metadata
         tds_responses = put_amr_to_tds(amr_json, name, description)
@@ -579,7 +678,7 @@ def code_to_amr(*args, **kwargs):
             filename=code_json.get("filename"),
             description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
-            code_language=code_json.get("language")
+            code_language=code_json.get("language"),
         )
 
         try:
@@ -591,9 +690,7 @@ def code_to_amr(*args, **kwargs):
                 "EXTRACTED_FROM",
             )
         except Exception as e:
-            logger.error(
-                f"Failed to store provenance tying model to code: {e}"
-            )
+            logger.error(f"Failed to store provenance tying model to code: {e}")
 
         response = {
             "status_code": amr_response.status_code,
