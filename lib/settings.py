@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: str = "NA"
     AWS_SECRET_ACCESS_KEY: str = "NA"
     BUCKET: str = "NA"
+    LIVE_SERVICES: bool = True
 
 
 settings = Settings()
