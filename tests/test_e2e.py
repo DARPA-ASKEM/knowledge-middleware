@@ -151,10 +151,13 @@ def test_code_to_amr(
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
     tds_code = gen_tds_artifact(
-        code=True, id=f"test_code_to_amr_{resource}", file_names=["code.py"]
+        code=True,
+        dynamics_only=True,
+        id=f"test_code_to_amr_{resource}",
+        file_names=["code.py"],
     )
     tds_code["file_names"] = ["code.py"]
-    file_storage.upload("code.py", code)
+    file_storage.upload("sidarthe_code.py", code)
 
     query_params = {
         "code_id": tds_code["id"],
@@ -460,7 +463,14 @@ def test_profile_model(
 
 @pytest.mark.parametrize("resource", params["link_amr"])
 def test_link_amr(
-    context_dir, http_mock, client, worker, gen_tds_artifact, gen_tds_model, file_storage, resource
+    context_dir,
+    http_mock,
+    client,
+    worker,
+    gen_tds_artifact,
+    gen_tds_model,
+    file_storage,
+    resource,
 ):
     #### ARRANGE ####
     extractions = json.load(open(f"{context_dir}/extractions.json"))
@@ -471,25 +481,19 @@ def test_link_amr(
     # TODO: if TDS is NOT mocked, how do we know the ID of the document
     # that is generated?
     document = gen_tds_artifact(
-        id=document_id,
-        file_names=["paper.pdf"],
-        metadata=extractions
+        id=document_id, file_names=["paper.pdf"], metadata=extractions
     )
-    
+
     pdf = open(f"{context_dir}/paper.pdf", "rb")
     file_storage.upload("paper.pdf", pdf)
 
     # overwrite model_id with the response in case TDS is NOT mocked and we get
     # back a real model ID
-    model_id = gen_tds_model(model_id=model_id, amr=amr)    
+    model_id = gen_tds_model(model_id=model_id, amr=amr)
 
     if settings.MOCK_TDS:
-        http_mock.get(
-            f"{settings.TDS_URL}/models/{model_id}", json=amr
-        )
-        http_mock.get(
-            f"{settings.TDS_URL}/documents/{document_id}", json=document
-        )        
+        http_mock.get(f"{settings.TDS_URL}/models/{model_id}", json=amr)
+        http_mock.get(f"{settings.TDS_URL}/documents/{document_id}", json=document)
         http_mock.put(f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id})
 
     if settings.MOCK_TA1:
@@ -498,10 +502,7 @@ def test_link_amr(
             json=amr,
         )
 
-    query_params = {
-        "model_id": model_id,
-        "document_id": document_id
-    }
+    query_params = {"model_id": model_id, "document_id": document_id}
 
     #### ACT ####
     response = client.post(
@@ -526,6 +527,4 @@ def test_link_amr(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
-    assert (
-        amr_instance.is_valid()
-    )
+    assert amr_instance.is_valid()

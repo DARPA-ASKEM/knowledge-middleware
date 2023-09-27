@@ -69,7 +69,7 @@ def equations_to_amr(
     model_id: Optional[str] = None,
     name: Optional[str] = None,
     description: Optional[str] = None,
-    redis = Depends(get_redis)
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Post equations and store an AMR to TDS
 
@@ -101,7 +101,11 @@ def equations_to_amr(
 
 @app.post("/code_to_amr")
 def code_to_amr(
-    code_id: str, name: Optional[str] = None, description: Optional[str] = None, redis=Depends(get_redis)
+    code_id: str,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    dynamics_only: Optional[bool] = False,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """
     Converts a code object to an AMR. Assumes that the code file is the first
@@ -115,7 +119,12 @@ def code_to_amr(
     ```
     """
     operation_name = "operations.code_to_amr"
-    options = {"code_id": code_id, "name": name, "description": description}
+    options = {
+        "code_id": code_id,
+        "name": name,
+        "description": description,
+        "dynamics_only": dynamics_only,
+    }
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
@@ -145,7 +154,7 @@ async def pdf_extractions(
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
-    redis = Depends(get_redis)
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Run text extractions over pdfs
 
@@ -195,7 +204,9 @@ def profile_dataset(
 
 
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+def profile_model(
+    model_id: str, document_id: str, redis=Depends(get_redis)
+) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
     has been extracted with `/pdf_to_cosmos` and the code has been converted to an AMR
@@ -217,8 +228,9 @@ def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> 
 
 
 @app.post("/link_amr")
-def link_amr(document_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-
+def link_amr(
+    document_id: str, model_id: str, redis=Depends(get_redis)
+) -> ExtractionJob:
     operation_name = "operations.link_amr"
 
     options = {

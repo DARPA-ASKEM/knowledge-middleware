@@ -210,28 +210,41 @@ def get_document_from_tds(document_id, code=False):
     return document_json, downloaded_document.content
 
 
-def get_code_from_tds(code_id, code=False):
+def get_code_from_tds(code_id, code=False, dynamics_only=False):
     tds_codes_url = f"{TDS_API}/code/{code_id}"
     logger.info(tds_codes_url)
     code = requests.get(tds_codes_url)
     code_json = code.json()
     logger.info(code_json)
-    filename = code_json.get("filename")
 
-    download_url = (
-        f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
-    )
-    code_download_url = requests.get(download_url)
+    files = code_json.get("files")
+    file_names = []
+    if dynamics_only:
+        for file_path, file_details in files.items():
+            if file_details.get("dynamics").get("block") is not []:
+                file_names.append(file_path)
+    else:
+        file_names = list(files.keys())
 
-    presigned_download = code_download_url.json().get("url")
+    content_object = {}
 
-    logger.info(presigned_download)
+    for name in file_names:
+        download_url = (
+            f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={name}"
+        )
+        code_download_url = requests.get(download_url)
 
-    downloaded_code = requests.get(code_download_url.json().get("url"))
+        presigned_download = code_download_url.json().get("url")
 
-    logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
+        logger.info(presigned_download)
 
-    return code_json, downloaded_code.content
+        downloaded_code = requests.get(code_download_url.json().get("url"))
+
+        logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
+
+        content_object[name] = downloaded_code.content
+
+    return code_json, content_object
 
 
 def get_dataset_from_tds(dataset_id):

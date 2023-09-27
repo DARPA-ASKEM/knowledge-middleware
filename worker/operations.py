@@ -632,17 +632,35 @@ def code_to_amr(*args, **kwargs):
     code_id = kwargs.get("code_id")
     name = kwargs.get("name")
     description = kwargs.get("description")
+    dynamics_only = kwargs.get("dynamics_only", False)
 
-    code_json, downloaded_code = get_code_from_tds(code_id, code=True)
+    code_json, downloaded_code_object = get_code_from_tds(
+        code_id, code=True, dynamics_only=dynamics_only
+    )
 
-    code_blob = downloaded_code.decode("utf-8")
-    logger.info(code_blob[:250])
-    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
+    if dynamics_only:
+        code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
 
-    request_payload = {
-        "files": [code_json.get("filename")],
-        "blobs": [code_blob],
-    }
+    if dynamics_only:
+        blobs = []
+        names = []
+        for code_name, code_content in downloaded_code_object.items():
+            names.append(code_name)
+            blobs.append(code_content.decode("utf-8"))
+        request_payload = {
+            "files": names,
+            "blobs": blobs,
+        }
+
+    else:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            # Use io and zipfile to write the code_content to a zipfile in memory
+            for code_name, code_content in downloaded_code_object.items():
+                zipf.writestr(code_name, code_content.decode("utf-8"))
+
+        request_payload = zip_buffer.getvalue()
 
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
