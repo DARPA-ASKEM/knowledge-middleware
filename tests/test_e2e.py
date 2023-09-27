@@ -86,44 +86,55 @@ def test_pdf_to_cosmos(
         if settings.PDF_EXTRACTOR == ExtractionServices.SKEMA:
             extractions = json.load(open(f"{context_dir}/text.json"))
             http_mock.post(
-                f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
+                f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json",
+                json=extractions,
             )
-        elif settings.PDF_EXTRACTOR == ExtractionServices.COSMOS:        
-            job_id = 'test-job'
-            text_extractions_result = json.load(open(f"{context_dir}/cosmos_result.json"))
+        elif settings.PDF_EXTRACTOR == ExtractionServices.COSMOS:
+            job_id = "test-job"
+            text_extractions_result = json.load(
+                open(f"{context_dir}/cosmos_result.json")
+            )
             equations = json.load(open(f"{context_dir}/cosmos_equations.json"))
             figures = json.load(open(f"{context_dir}/cosmos_figures.json"))
             tables = json.load(open(f"{context_dir}/cosmos_tables.json"))
-            with open(f"{context_dir}/paper_cosmos_output.zip", 'rb') as f:
+            with open(f"{context_dir}/paper_cosmos_output.zip", "rb") as f:
                 zip_content = f.read()
 
-            cosmos_job_response = {'job_id': job_id, 
-                                    'status_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/status",
-                                    'result_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/result"}
-            
-            cosmos_job_status = {'job_started': True, 'job_completed': True, 'error': None}
-            
-            http_mock.post(
-                f"{settings.COSMOS_URL}/process/", json=cosmos_job_response
-            )
+            cosmos_job_response = {
+                "job_id": job_id,
+                "status_endpoint": f"{settings.COSMOS_URL}/process/{job_id}/status",
+                "result_endpoint": f"{settings.COSMOS_URL}/process/{job_id}/result",
+            }
+
+            cosmos_job_status = {
+                "job_started": True,
+                "job_completed": True,
+                "error": None,
+            }
+
+            http_mock.post(f"{settings.COSMOS_URL}/process/", json=cosmos_job_response)
             http_mock.get(
                 f"{settings.COSMOS_URL}/process/{job_id}/status", json=cosmos_job_status
-            )            
+            )
             http_mock.get(
                 f"{settings.COSMOS_URL}/process/{job_id}/result", content=zip_content
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/text", json=text_extractions_result
+                f"{settings.COSMOS_URL}/process/{job_id}/result/text",
+                json=text_extractions_result,
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/equations", json=equations
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/equations",
+                json=equations,
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/figures", json=figures
-            )      
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/figures",
+                json=figures,
+            )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/tables", json=tables
-            )                                    
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/tables",
+                json=tables,
+            )
 
     #### ACT ####
     response = client.post(
@@ -149,7 +160,7 @@ def test_code_to_amr(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
-    code = open(f"{context_dir}/code.py").read()
+    code = open(f"{context_dir}/code/code.py").read()
     tds_code = gen_tds_artifact(
         code=True,
         dynamics_only=True,
@@ -236,15 +247,17 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "name": "test model 2",
         "description": "test description 2",
     }
-   
+
     mock_amr_header = {
-            "name": "Test Existing SIR Model",
-            "description": "Test Existing SIR model"
-        }
+        "name": "Test Existing SIR Model",
+        "description": "Test Existing SIR model",
+    }
 
     if settings.MOCK_TDS:
         http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-        http_mock.get(f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header})
+        http_mock.get(
+            f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header}
+        )
         http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
         http_mock.post(
             f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
@@ -295,7 +308,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
 
     job2 = Job.fetch(job_id, connection=worker.connection)
     if job2.result is not None:
-        amr_instance_2 = AMR(job2.result["amr"])    
+        amr_instance_2 = AMR(job2.result["amr"])
 
     #### ASSERT ####
     # Case 1
