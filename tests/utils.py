@@ -9,8 +9,6 @@ from lib.settings import settings
 
 import yaml
 
-rmtree("tests/output/qual.csv")
-
 def get_parameterizations():
     selections = defaultdict(list)
     options = listdir("tests/scenarios") if not settings.MOCK_TA1 else ["basic"]

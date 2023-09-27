@@ -5,3 +5,4 @@ enabled:
   - pdf_extraction
   - pdf_to_text
   - code_to_amr
+  - profile_model

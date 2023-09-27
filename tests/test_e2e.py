@@ -1,7 +1,6 @@
 import json
 import os
 import logging
-from shutil import rmtree
 
 import pytest
 import requests
@@ -352,7 +351,7 @@ def test_profile_model(
     file_storage.upload("code.py", code)
 
     model_id = "test_profile_model"
-    amr = json.load(open(f"{context_dir}/amr.json"))
+    amr = json.load(open(f"./tests/amr.json"))
     if settings.MOCK_TDS:
         http_mock.post(
             f"{settings.TDS_URL}/provenance/search?search_type=models_from_code",
