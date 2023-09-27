@@ -193,12 +193,22 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "name": "test model 2",
         "description": "test description 2",
     }
+   
+    mock_amr_header = {
+            "name": "Test SIR Model",
+            "schema": "petrinet_schema.json",
+            "description": "Test SIR model",
+            "schema_name": "petrinet",
+            "model_version": "0.1"
+        }
 
-    http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-    http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
-    http_mock.post(
-        f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
-    )
+    if settings.MOCK_TDS:
+        http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+        http_mock.get(f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header})
+        http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
+        http_mock.post(
+            f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
+        )
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
