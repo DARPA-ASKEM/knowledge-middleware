@@ -436,7 +436,7 @@ def test_profile_model(
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
-    generated_card = status_response.json()["job_result"]["card"]
+    generated_card = status_response.json()["result"]["job_result"]["card"]
 
     #### ASSERT ####
     assert results.get("status") == "queued"
@@ -456,7 +456,10 @@ def test_profile_model(
             params={"gpt_key": settings.OPENAI_API_KEY},
             files=files
         )
-        accuracy = eval.json()["accuracy"]
+        if eval.status_code < 300
+            accuracy = eval.json()["accuracy"]
+        else:
+            accuracy = False
         record_quality_check(context_dir, "Accuracy", "test_profile_model", accuracy)
 
 

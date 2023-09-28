@@ -517,14 +517,21 @@ def model_card(*args, **kwargs):
     text_file = paper_document_json.get(
         "text", "There is no documentation for this model"
     ).encode()
+    text_file = (
+        paper_document_json
+        .get("text", "There is no documentation for this model")
+    )
+
+    # TODO: Remove when no character limit exists for MIT
+    text_file = text_file[:9000]
 
     amr = get_model_from_tds(model_id).json()
 
     params = {"gpt_key": openai_key}
 
     files = {
-        "text_file": ("text_file", text_file),
-        "code_file": ("doc_file", code_file),
+        "text_file": text_file,
+        "code_file": code_file,
     }
 
     url = f"{MIT_API}/cards/get_model_card"
