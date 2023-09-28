@@ -1,1 +1,0 @@
-This is a readme for the SIR model in the base test scenario. This contains no code.

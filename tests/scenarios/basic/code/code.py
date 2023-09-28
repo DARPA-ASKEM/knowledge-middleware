@@ -15,3 +15,6 @@ if __name__ == "main":
     result = sir(0.99, 0.01, 0, 0.2, 0.1, 1)
 
     print(result)
+
+
+# 7e475a4c-cf38-44f3-b349-2badeff967e8

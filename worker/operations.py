@@ -154,7 +154,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )        
+        )
         extraction_json = response.json()
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
@@ -186,7 +186,9 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         logger.info(f"Getting Cosmos extraction request from {result_endpoint_text}")
         text_extractions_result = requests.get(result_endpoint_text)
-        logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
+        logger.info(
+            f"Cosmos response status code: {text_extractions_result.status_code}"
+        )
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
@@ -200,10 +202,12 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             zip_ref.extractall(temp_dir)
 
         # Assets requests
-        logger.info(f"Fetching Cosmos assets from:\n" \
-                    f"\t - {equations_endpoint}\n" \
-                    f"\t - {figures_endpoint}\n" \
-                    f"\t - {tables_endpoint}\n")
+        logger.info(
+            f"Fetching Cosmos assets from:\n"
+            f"\t - {equations_endpoint}\n"
+            f"\t - {figures_endpoint}\n"
+            f"\t - {tables_endpoint}\n"
+        )
         equations_resp = requests.get(equations_endpoint)
         figures_resp = requests.get(figures_endpoint)
         tables_resp = requests.get(tables_endpoint)
@@ -647,7 +651,7 @@ def code_to_amr(*args, **kwargs):
         names = []
         for code_name, code_content in downloaded_code_object.items():
             names.append(code_name)
-            blobs.append(code_content.decode("utf-8"))
+            blobs.extend(code_content)
         request_payload = {
             "files": names,
             "blobs": blobs,
@@ -665,9 +669,15 @@ def code_to_amr(*args, **kwargs):
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
-    amr_response = requests.post(
-        code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
-    )
+
+    logger.info(f"Request payload: {request_payload}")
+    if isinstance(request_payload, dict):
+        amr_response = requests.post(
+            code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
+        )
+    else:
+        files = {"zip_file": ("zip_file.zip", request_payload)}
+        amr_response = requests.post(code_amr_workflow_url, files=files)
     logger.info(
         f"Response received from backend knowledge service with status code: {amr_response.status_code}"
     )
@@ -719,4 +729,5 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
+        logger.error(f"Content: {amr_response.content}")
         raise Exception(f"Code extraction failure: {amr_response.text}")

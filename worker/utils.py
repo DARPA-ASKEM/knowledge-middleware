@@ -52,10 +52,14 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
 
         # Keep name and information from existing model
         fetched_amr = model_response.json()
-        amr_payload["header"]["name"] = fetched_amr.get("header",{}).get("name", None)
-        amr_payload["header"]["description"] = fetched_amr.get("header",{}).get("description", None)
+        amr_payload["header"]["name"] = fetched_amr.get("header", {}).get("name", None)
+        amr_payload["header"]["description"] = fetched_amr.get("header", {}).get(
+            "description", None
+        )
 
-        update_model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+        update_model_response = requests.put(
+            tds_models, json=amr_payload, headers=headers
+        )
         if update_model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}"
@@ -218,20 +222,22 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
     logger.info(code_json)
 
     files = code_json.get("files")
-    file_names = []
+    logger.info(files)
+    file_names = {}
+    logger.info(files.items())
     if dynamics_only:
         for file_path, file_details in files.items():
-            if file_details.get("dynamics").get("block") is not []:
-                file_names.append(file_path)
+            dynamics = file_details.get("dynamics")
+            if dynamics and dynamics.get("block"):
+                file_names[file_path] = dynamics["block"]
     else:
-        file_names = list(files.keys())
+        file_names = files
 
     content_object = {}
 
-    for name in file_names:
-        download_url = (
-            f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={name}"
-        )
+    for name, blocks in file_names.items():
+        name = name.split("/")[-1]
+        download_url = f"{TDS_API}/code/{code_id}/download-url?filename={name}"
         code_download_url = requests.get(download_url)
 
         presigned_download = code_download_url.json().get("url")
@@ -242,7 +248,29 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
 
         logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
 
-        content_object[name] = downloaded_code.content
+        if dynamics_only:
+            all_dynamic_blocks = []
+            for block in blocks:
+                start_line, end_line = block.split("-")
+
+                # Convert the extracted strings to integers, removing leading 'L'
+                start_line = int(start_line[1:])
+                end_line = int(end_line[1:])
+
+                # Get the lines from the code
+                code_lines = downloaded_code.content.splitlines()
+                target_lines = code_lines[start_line - 1 : end_line]
+                logger.info(target_lines)
+
+                # Join the lines into a single string
+                target_block = b"".join(target_lines)
+
+                # Add the block to the list of blocks
+                all_dynamic_blocks.append(target_block.decode("utf-8"))
+
+            content_object[name] = all_dynamic_blocks
+        else:
+            content_object[name] = downloaded_code.content
 
     return code_json, content_object
 
