@@ -232,12 +232,19 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "name": "test model 2",
         "description": "test description 2",
     }
+   
+    mock_amr_header = {
+            "name": "Test Existing SIR Model",
+            "description": "Test Existing SIR model"
+        }
 
-    http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-    http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
-    http_mock.post(
-        f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
-    )
+    if settings.MOCK_TDS:
+        http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+        http_mock.get(f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header})
+        http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
+        http_mock.post(
+            f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
+        )
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
@@ -282,6 +289,10 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job2 = Job.fetch(job_id, connection=worker.connection)
+    if job2.result is not None:
+        amr_instance_2 = AMR(job2.result["amr"])    
+
     #### ASSERT ####
     # Case 1
     assert results.get("status") == "queued"
@@ -303,6 +314,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert status_config_response.status_code == 200
 
     assert storage[1].get("model_id") == "test2"
+    assert amr_instance_2.header["name"] == mock_amr_header["name"]
 
     #### POSTAMBLE ####
     # if 'amr' in locals():
