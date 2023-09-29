@@ -468,7 +468,7 @@ def test_profile_model(
             params={"gpt_key": settings.OPENAI_API_KEY},
             files=files
         )
-        if eval.status_code < 300
+        if eval.status_code < 300:
             accuracy = eval.json()["accuracy"]
         else:
             accuracy = False
