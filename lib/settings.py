@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 prod_names = {
     "AWS_PROD_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
     "AWS_PROD_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
-    "AWS_PROD_BUCKET": "BUCKET"
+    "AWS_PROD_BUCKET": "BUCKET",
 }
 
 for from_var, to_var in prod_names.items():
