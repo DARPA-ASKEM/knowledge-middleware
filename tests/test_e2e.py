@@ -472,7 +472,7 @@ def test_profile_model(
             accuracy = eval.json()["accuracy"]
         else:
             accuracy = False
-        record_quality_check(context_dir, "Accuracy", "test_profile_model", accuracy)
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
 
 
 @pytest.mark.parametrize("resource", params["link_amr"])
