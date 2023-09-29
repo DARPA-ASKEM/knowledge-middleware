@@ -66,6 +66,8 @@ services:
     extends:
       file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
       service: skema-unified
+    networks:
+      - knowledge-middleware
   skema-rs:
     extends:
       file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml

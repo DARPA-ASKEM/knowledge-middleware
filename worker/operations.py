@@ -664,7 +664,8 @@ def code_to_amr(*args, **kwargs):
             for code_name, code_content in downloaded_code_object.items():
                 zipf.writestr(code_name, code_content.decode("utf-8"))
 
-        request_payload = zip_buffer.getvalue()
+        zip_buffer.seek(0)
+        request_payload = zip_buffer  # .getvalue()
 
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
@@ -676,7 +677,9 @@ def code_to_amr(*args, **kwargs):
             code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
         )
     else:
-        files = {"zip_file": ("zip_file.zip", request_payload)}
+        files = {
+            "zip_file": ("zip_file.zip", request_payload.read(), "application/zip")
+        }
         amr_response = requests.post(code_amr_workflow_url, files=files)
     logger.info(
         f"Response received from backend knowledge service with status code: {amr_response.status_code}"

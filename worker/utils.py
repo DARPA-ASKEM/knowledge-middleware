@@ -263,7 +263,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
                 logger.info(target_lines)
 
                 # Join the lines into a single string
-                target_block = b"".join(target_lines)
+                target_block = b"\n".join(target_lines)
 
                 # Add the block to the list of blocks
                 all_dynamic_blocks.append(target_block.decode("utf-8"))
