@@ -638,9 +638,13 @@ def code_to_amr(*args, **kwargs):
     description = kwargs.get("description")
     dynamics_only = kwargs.get("dynamics_only", False)
 
-    code_json, downloaded_code_object = get_code_from_tds(
+    code_json, downloaded_code_object, dynamics_off_flag = get_code_from_tds(
         code_id, code=True, dynamics_only=dynamics_only
     )
+
+    # Checks the return flag fromm the dynamics retrieval process
+    if dynamics_off_flag:
+        dynamics_only = False
 
     code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
     if dynamics_only:

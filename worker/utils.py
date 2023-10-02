@@ -215,6 +215,7 @@ def get_document_from_tds(document_id, code=False):
 
 
 def get_code_from_tds(code_id, code=False, dynamics_only=False):
+    dynamics_off = False
     tds_codes_url = f"{TDS_API}/code/{code_id}"
     logger.info(tds_codes_url)
     code = requests.get(tds_codes_url)
@@ -230,6 +231,15 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
             dynamics = file_details.get("dynamics")
             if dynamics and dynamics.get("block"):
                 file_names[file_path] = dynamics["block"]
+
+        # Fail gracefully if no dynamics are found
+        if file_names == {}:
+            logger.warning(
+                "No dynamics found in TDS code object, turned dynamics_only off."
+            )
+            dynamics_only = False
+            file_names = files
+            dynamics_off = True
     else:
         file_names = files
 
@@ -272,7 +282,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
         else:
             content_object[name] = downloaded_code.content
 
-    return code_json, content_object
+    return code_json, content_object, dynamics_off
 
 
 def get_dataset_from_tds(dataset_id):
