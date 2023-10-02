@@ -20,8 +20,12 @@ def get_parameterizations():
             config = yaml.load(file, yaml.CLoader)
             for selection in config["enabled"]:
                 for resource in spec[selection]:
-                    if not path.exists(dir + "/" + resource):
-                        raise Exception(f"Cannot test scenario '{pick}': Missing resource '{resource}'")
+                    if isinstance(resource, dict) and 'optional' in resource:
+                        # this is the optional dictionary and can be ignored
+                        pass
+                    else:
+                        if not path.exists(dir + "/" + resource):
+                            raise Exception(f"Cannot test scenario '{pick}': Missing resource '{resource}'")
                 selections[selection].append(pick) 
     return selections
         

@@ -458,7 +458,7 @@ def test_profile_model(
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
     #### POSTAMBLE ####
-    if not settings.MOCK_TA1:
+    if not settings.MOCK_TA1 and os.path.exists(f"{context_dir}/ground_truth_model_card.json"):
         files = {
             "test_json_file": json.dumps(generated_card),
             "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
