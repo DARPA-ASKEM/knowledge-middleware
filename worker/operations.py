@@ -669,7 +669,7 @@ def code_to_amr(*args, **kwargs):
                 zipf.writestr(code_name, code_content.decode("utf-8"))
 
         zip_buffer.seek(0)
-        request_payload = zip_buffer  # .getvalue()
+        request_payload = zip_buffer
 
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
