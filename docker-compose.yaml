@@ -62,10 +62,6 @@ services:
       service: skema-py
     networks:
       - knowledge-middleware
-  skema-unified:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: skema-unified
   skema-rs:
     extends:
       file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
