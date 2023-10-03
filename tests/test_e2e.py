@@ -1,3 +1,4 @@
+import inspect
 import json
 import os
 import logging
@@ -6,6 +7,7 @@ from shutil import rmtree
 import pytest
 import requests
 from rq.job import Job
+import yaml
 
 from lib.settings import settings, ExtractionServices
 from tests.utils import get_parameterizations, record_quality_check, AMR
@@ -86,44 +88,55 @@ def test_pdf_to_cosmos(
         if settings.PDF_EXTRACTOR == ExtractionServices.SKEMA:
             extractions = json.load(open(f"{context_dir}/text.json"))
             http_mock.post(
-                f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json", json=extractions
+                f"{settings.TA1_UNIFIED_URL}/text-reading/cosmos_to_json",
+                json=extractions,
             )
-        elif settings.PDF_EXTRACTOR == ExtractionServices.COSMOS:        
-            job_id = 'test-job'
-            text_extractions_result = json.load(open(f"{context_dir}/cosmos_result.json"))
+        elif settings.PDF_EXTRACTOR == ExtractionServices.COSMOS:
+            job_id = "test-job"
+            text_extractions_result = json.load(
+                open(f"{context_dir}/cosmos_result.json")
+            )
             equations = json.load(open(f"{context_dir}/cosmos_equations.json"))
             figures = json.load(open(f"{context_dir}/cosmos_figures.json"))
             tables = json.load(open(f"{context_dir}/cosmos_tables.json"))
-            with open(f"{context_dir}/paper_cosmos_output.zip", 'rb') as f:
+            with open(f"{context_dir}/paper_cosmos_output.zip", "rb") as f:
                 zip_content = f.read()
 
-            cosmos_job_response = {'job_id': job_id, 
-                                    'status_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/status",
-                                    'result_endpoint': f"{settings.COSMOS_URL}/process/{job_id}/result"}
-            
-            cosmos_job_status = {'job_started': True, 'job_completed': True, 'error': None}
-            
-            http_mock.post(
-                f"{settings.COSMOS_URL}/process/", json=cosmos_job_response
-            )
+            cosmos_job_response = {
+                "job_id": job_id,
+                "status_endpoint": f"{settings.COSMOS_URL}/process/{job_id}/status",
+                "result_endpoint": f"{settings.COSMOS_URL}/process/{job_id}/result",
+            }
+
+            cosmos_job_status = {
+                "job_started": True,
+                "job_completed": True,
+                "error": None,
+            }
+
+            http_mock.post(f"{settings.COSMOS_URL}/process/", json=cosmos_job_response)
             http_mock.get(
                 f"{settings.COSMOS_URL}/process/{job_id}/status", json=cosmos_job_status
-            )            
+            )
             http_mock.get(
                 f"{settings.COSMOS_URL}/process/{job_id}/result", content=zip_content
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/text", json=text_extractions_result
+                f"{settings.COSMOS_URL}/process/{job_id}/result/text",
+                json=text_extractions_result,
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/equations", json=equations
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/equations",
+                json=equations,
             )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/figures", json=figures
-            )      
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/figures",
+                json=figures,
+            )
             http_mock.get(
-                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/tables", json=tables
-            )                                    
+                f"{settings.COSMOS_URL}/process/{job_id}/result/extractions/tables",
+                json=tables,
+            )
 
     #### ACT ####
     response = client.post(
@@ -143,6 +156,24 @@ def test_pdf_to_cosmos(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
+    #### POSTAMBLE ####
+    # STUB
+    # if not settings.MOCK_TA1:
+    #     with open(f"{context_dir}/cosmos_ground_truth/ground_truth.yaml") as f:
+    #         ground_truth = yaml.load(f)
+
+    #         # Post ground truth to Cosmos Eval endpoint
+    #         response = requests.post(
+    #             f"{settings.COSMOS_URL}/eval", json=json.loads(json.dumps(ground_truth))
+    #         )
+
+    #         if eval.status_code < 300:
+    #             accuracy = eval.json()["accuracy"]
+    #         else:
+    #             accuracy = False
+
+    #     record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
+
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
 def test_code_to_amr(
@@ -151,7 +182,7 @@ def test_code_to_amr(
     #### ARRANGE ####
     code = open(f"{context_dir}/code.py").read()
     tds_code = gen_tds_artifact(
-        code=True, id=f"test_code_to_amr_{resource}", file_names=["code.py"]
+        code=True, id=f"test_code_to_amr_{resource}", filez_names=["code.py"]
     )
     tds_code["file_names"] = ["code.py"]
     file_storage.upload("code.py", code)
@@ -233,15 +264,17 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "name": "test model 2",
         "description": "test description 2",
     }
-   
+
     mock_amr_header = {
-            "name": "Test Existing SIR Model",
-            "description": "Test Existing SIR model"
-        }
+        "name": "Test Existing SIR Model",
+        "description": "Test Existing SIR model",
+    }
 
     if settings.MOCK_TDS:
         http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-        http_mock.get(f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header})
+        http_mock.get(
+            f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header}
+        )
         http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
         http_mock.post(
             f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
@@ -292,7 +325,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
 
     job2 = Job.fetch(job_id, connection=worker.connection)
     if job2.result is not None:
-        amr_instance_2 = AMR(job2.result["amr"])    
+        amr_instance_2 = AMR(job2.result["amr"])
 
     #### ASSERT ####
     # Case 1
@@ -460,7 +493,14 @@ def test_profile_model(
 
 @pytest.mark.parametrize("resource", params["link_amr"])
 def test_link_amr(
-    context_dir, http_mock, client, worker, gen_tds_artifact, gen_tds_model, file_storage, resource
+    context_dir,
+    http_mock,
+    client,
+    worker,
+    gen_tds_artifact,
+    gen_tds_model,
+    file_storage,
+    resource,
 ):
     #### ARRANGE ####
     extractions = json.load(open(f"{context_dir}/extractions.json"))
@@ -471,25 +511,19 @@ def test_link_amr(
     # TODO: if TDS is NOT mocked, how do we know the ID of the document
     # that is generated?
     document = gen_tds_artifact(
-        id=document_id,
-        file_names=["paper.pdf"],
-        metadata=extractions
+        id=document_id, file_names=["paper.pdf"], metadata=extractions
     )
-    
+
     pdf = open(f"{context_dir}/paper.pdf", "rb")
     file_storage.upload("paper.pdf", pdf)
 
     # overwrite model_id with the response in case TDS is NOT mocked and we get
     # back a real model ID
-    model_id = gen_tds_model(model_id=model_id, amr=amr)    
+    model_id = gen_tds_model(model_id=model_id, amr=amr)
 
     if settings.MOCK_TDS:
-        http_mock.get(
-            f"{settings.TDS_URL}/models/{model_id}", json=amr
-        )
-        http_mock.get(
-            f"{settings.TDS_URL}/documents/{document_id}", json=document
-        )        
+        http_mock.get(f"{settings.TDS_URL}/models/{model_id}", json=amr)
+        http_mock.get(f"{settings.TDS_URL}/documents/{document_id}", json=document)
         http_mock.put(f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id})
 
     if settings.MOCK_TA1:
@@ -498,10 +532,7 @@ def test_link_amr(
             json=amr,
         )
 
-    query_params = {
-        "model_id": model_id,
-        "document_id": document_id
-    }
+    query_params = {"model_id": model_id, "document_id": document_id}
 
     #### ACT ####
     response = client.post(
@@ -526,6 +557,4 @@ def test_link_amr(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
-    assert (
-        amr_instance.is_valid()
-    )
+    assert amr_instance.is_valid()
