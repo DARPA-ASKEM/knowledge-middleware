@@ -148,11 +148,10 @@ def put_code_extraction_to_tds(
     code_id,
     name,
     description,
-    filename,
+    files,
     extractions=None,
     text=None,
     model_id=None,
-    code_language=None,
 ):
     """
     Update a code object in TDS.
@@ -173,12 +172,9 @@ def put_code_extraction_to_tds(
         "username": "extraction_service",
         "name": name,
         "description": description,
-        "file_names": [filename],
+        "files": files,
         "metadata": metadata,
     }
-    if code_language:
-        code_payload["filename"] = code_payload.pop("file_names")[0]
-        code_payload["language"] = code_language
     logger.info(f"Storing extraction to TDS for code: {code_id}")
     # patch TDS code/code
     tds_code = f"{TDS_API}/code/{code_id}"

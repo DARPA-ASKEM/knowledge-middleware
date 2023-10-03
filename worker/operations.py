@@ -709,10 +709,9 @@ def code_to_amr(*args, **kwargs):
         put_code_extraction_to_tds(
             code_id=code_id,
             name=code_json.get("name", None),
-            filename=code_json.get("filename"),
+            files=code_json.get("files"),
             description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
-            code_language=code_json.get("language"),
         )
 
         try:
