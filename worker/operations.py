@@ -22,7 +22,8 @@ from worker.utils import (
 from lib.settings import settings, ExtractionServices
 
 TDS_API = settings.TDS_URL
-SKEMA_API = settings.SKEMA_RS_URL
+SKEMA_RS_API = settings.SKEMA_RS_URL
+SKEMA_TR_API = settings.SKEMA_TR_URL
 UNIFIED_API = settings.TA1_UNIFIED_URL
 MIT_API = settings.MIT_TR_URL
 LOG_LEVEL = settings.LOG_LEVEL.upper()
@@ -55,7 +56,7 @@ def equations_to_amr(*args, **kwargs):
     if equation_type == "mathml":
         # PUT the mathml to the skema endpoint.
         logger.info("Processing mathml")
-        url = f"{SKEMA_API}/mathml/amr"
+        url = f"{SKEMA_RS_API}/mathml/amr"
         put_payload = {"mathml": equations, "model": model}
     elif equation_type == "latex":
         logger.info("Processing latex")
@@ -154,7 +155,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )        
+        )
         extraction_json = response.json()
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]

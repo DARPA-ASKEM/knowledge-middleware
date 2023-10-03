@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     TA1_UNIFIED_URL: str = "http://ta1:5"
     SKEMA_RS_URL: str = "http://skema-rs.staging.terarium.ai"
+    SKEMA_TR_URL: str = "http://skema-tr.staging.terarium.ai"
     MIT_TR_URL: str = "http://mit:10"
     TDS_URL: str = "http://tds:15"
     COSMOS_URL: str = "http://xdd.wisc.edu/cosmos_service"
