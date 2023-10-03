@@ -45,12 +45,23 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     # Update model if it exists in TDS already.
     if model_id:
         tds_models = f"{TDS_API}/models/{model_id}"
-        model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+
+        model_response = requests.get(tds_models, headers=headers)
         if model_response.status_code != 200:
+            raise Exception(f"Cannot fetch model {model_id} in TDS")
+
+        # Keep name and information from existing model
+        fetched_amr = model_response.json()
+        amr_payload["header"]["name"] = fetched_amr.get("header",{}).get("name", None)
+        amr_payload["header"]["description"] = fetched_amr.get("header",{}).get("description", None)
+
+        update_model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+        if update_model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}"
             )
         logger.info(f"Updated model in TDS with id {model_id}")
+
     # Create TDS model
     else:
         tds_models = f"{TDS_API}/models"

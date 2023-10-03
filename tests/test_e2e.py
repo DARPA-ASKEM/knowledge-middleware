@@ -1,7 +1,6 @@
 import json
 import os
 import logging
-from shutil import rmtree
 
 import pytest
 import requests
@@ -233,12 +232,19 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         "name": "test model 2",
         "description": "test description 2",
     }
+   
+    mock_amr_header = {
+            "name": "Test Existing SIR Model",
+            "description": "Test Existing SIR model"
+        }
 
-    http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-    http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
-    http_mock.post(
-        f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
-    )
+    if settings.MOCK_TDS:
+        http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+        http_mock.get(f"{settings.TDS_URL}/models/test2", json={"header": mock_amr_header})
+        http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
+        http_mock.post(
+            f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
+        )
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
@@ -283,6 +289,10 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
 
+    job2 = Job.fetch(job_id, connection=worker.connection)
+    if job2.result is not None:
+        amr_instance_2 = AMR(job2.result["amr"])    
+
     #### ASSERT ####
     # Case 1
     assert results.get("status") == "queued"
@@ -304,6 +314,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
     assert status_config_response.status_code == 200
 
     assert storage[1].get("model_id") == "test2"
+    assert amr_instance_2.header["name"] == mock_amr_header["name"]
 
     #### POSTAMBLE ####
     # if 'amr' in locals():
@@ -393,7 +404,7 @@ def test_profile_model(
     file_storage.upload("code.py", code)
 
     model_id = "test_profile_model"
-    amr = json.load(open(f"{context_dir}/amr.json"))
+    amr = json.load(open(f"./tests/amr.json"))
     if settings.MOCK_TDS:
         http_mock.post(
             f"{settings.TDS_URL}/provenance/search?search_type=models_from_code",
@@ -437,6 +448,7 @@ def test_profile_model(
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
+    generated_card = status_response.json()["result"]["job_result"]["card"]
 
     #### ASSERT ####
     assert results.get("status") == "queued"
@@ -444,6 +456,23 @@ def test_profile_model(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+
+    #### POSTAMBLE ####
+    if not settings.MOCK_TA1 and os.path.exists(f"{context_dir}/ground_truth_model_card.json"):
+        files = {
+            "test_json_file": json.dumps(generated_card),
+            "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
+        }    
+        eval = requests.post(
+            f"{settings.MIT_TR_URL}/evaluation/eval_model_card", 
+            params={"gpt_key": settings.OPENAI_API_KEY},
+            files=files
+        )
+        if eval.status_code < 300:
+            accuracy = eval.json()["accuracy"]
+        else:
+            accuracy = False
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
 
 
 @pytest.mark.parametrize("resource", params["link_amr"])
