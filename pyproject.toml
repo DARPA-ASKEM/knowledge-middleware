@@ -4,7 +4,7 @@ version = "1.6.0"
 description = ""
 authors = ["Powell Fendley"]
 readme = "README.md"
-packages = [{ include = "lib" }, { include = "worker" }, { include = "api" }, { include = "tests" }]
+packages = [{include = "lib"}, {include = "worker"}, {include = "api"}, {include = "tests"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,7 +22,7 @@ pypdf = "^3.12.0"
 boto3 = "^1.28.44"
 
 [tool.poetry.group.dev.dependencies]
-service-test-tools = { git = "https://github.com/jataware/service-test-tools" }
+service-test-tools = {git = "https://github.com/jataware/service-test-tools"}
 yamllint = "^1.32.0"
 poethepoet = "^0.22.0"
 pyyaml = "^6.0.1"

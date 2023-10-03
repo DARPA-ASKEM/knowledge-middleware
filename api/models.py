@@ -8,30 +8,30 @@ from pydantic import BaseModel
 
 
 class Status(Enum):
-	started = "started"
-	finished = "finished"
-	cancelled = "cancelled"
-	complete = "complete"
-	error = "error"
-	queued = "queued"
-	running = "running"
-	failed = "failed"
+    started = "started"
+    finished = "finished"
+    cancelled = "cancelled"
+    complete = "complete"
+    error = "error"
+    queued = "queued"
+    running = "running"
+    failed = "failed"
 
 
 class Result(BaseModel):
-	created_at: datetime
-	enqueued_at: datetime
-	started_at: datetime | None
-	job_result: dict | None
-	job_error: str | None
+    created_at: datetime
+    enqueued_at: datetime
+    started_at: datetime | None
+    job_result: dict | None
+    job_error: str | None
 
 
 class ExtractionJob(BaseModel):
-	id: str
-	status: Status
-	result: Result | None
+    id: str
+    status: Status
+    result: Result | None
 
 
 class EquationType(Enum):
-	LATEX = "latex"
-	MATHML = "mathml"
+    LATEX = "latex"
+    MATHML = "mathml"

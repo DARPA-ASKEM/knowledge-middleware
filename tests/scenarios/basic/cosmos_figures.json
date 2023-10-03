@@ -1,856 +1,856 @@
 [
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "1",
-		"bounding_box": [
-			634,
-			218,
-			849,
-			455
-		],
-		"detect_score": -2.5693564415,
-		"content": "",
-		"postprocess_score": 0.5748158693,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/c766eddd-ce45-4540-8e70-62f808cd4a2d.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			167,
-			137,
-			488,
-			512
-		],
-		"detect_score": -4.0467090607,
-		"content": "",
-		"postprocess_score": 0.9999753237,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/6ebdf830-a584-49d8-8776-df430636f876.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			158,
-			543,
-			488,
-			909
-		],
-		"detect_score": -4.0443725586,
-		"content": "",
-		"postprocess_score": 0.9999625683,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/de7e4980-c91f-497a-a537-d2bf45593225.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			865,
-			144,
-			1179,
-			512
-		],
-		"detect_score": -2.7618238926,
-		"content": "",
-		"postprocess_score": 0.9999905825,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/00849679-1b35-42db-bf74-a73ddf9a2458.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			527,
-			145,
-			834,
-			512
-		],
-		"detect_score": -2.3328213692,
-		"content": "",
-		"postprocess_score": 0.9999841452,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/0f1f3e40-ebb3-43a1-9a2e-af5cf7bb0c3e.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			514,
-			543,
-			834,
-			909
-		],
-		"detect_score": -3.177952528,
-		"content": "",
-		"postprocess_score": 0.9999858141,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a9b6f122-4d5f-4e66-ad07-f8c52c118f8b.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "5",
-		"bounding_box": [
-			905,
-			783,
-			1259,
-			898
-		],
-		"detect_score": -3.2955610752,
-		"content": "",
-		"postprocess_score": 0.6019153595,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/964084ad-209c-480f-82b7-e595fe0ff4e0.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			297,
-			356,
-			728,
-			635
-		],
-		"detect_score": -1.8897101879,
-		"content": "",
-		"postprocess_score": 0.9997722507,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/97ba5da2-5c94-4250-b8ea-e888ab8374e4.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			181,
-			996,
-			520,
-			1354
-		],
-		"detect_score": -3.0143077374,
-		"content": "",
-		"postprocess_score": 0.9998668432,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/096820cf-ae8e-4711-9f51-bbea5c1ca5d1.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			201,
-			1381,
-			862,
-			1731
-		],
-		"detect_score": -3.1576080322,
-		"content": "",
-		"postprocess_score": 0.9998521805,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/3b5bbc10-b703-43b0-85fa-a58feeacfe01.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			748,
-			168,
-			1167,
-			471
-		],
-		"detect_score": -1.5734174252,
-		"content": "",
-		"postprocess_score": 0.9999638796,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/c9202836-b1c5-4971-b451-1a47b3048995.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			748,
-			497,
-			1160,
-			791
-		],
-		"detect_score": -3.5085437298,
-		"content": "",
-		"postprocess_score": 0.9999063015,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/fa566d7c-45ef-4d17-852a-382ed5028ac9.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			537,
-			1004,
-			1203,
-			1354
-		],
-		"detect_score": -3.6628472805,
-		"content": "",
-		"postprocess_score": 0.9997650981,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/43decdf1-b02a-4d7a-b7a3-3cc2faa24734.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "6",
-		"bounding_box": [
-			932,
-			1459,
-			1282,
-			1568
-		],
-		"detect_score": -2.9999716282,
-		"content": "",
-		"postprocess_score": 0.4926264584,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9c5eaac0-5d7e-4cb3-9672-ef9aa1dfb1e6.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			273,
-			302,
-			658,
-			571
-		],
-		"detect_score": -1.0018720627,
-		"content": "",
-		"postprocess_score": 0.9999177456,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9680f959-7527-4a0b-a242-35415b93044d.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			184,
-			886,
-			492,
-			1232
-		],
-		"detect_score": -3.1495950222,
-		"content": "",
-		"postprocess_score": 0.9997445941,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/3e9fca5c-1550-4fe0-b3ee-a211085d3634.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			158,
-			1257,
-			492,
-			1595
-		],
-		"detect_score": -2.5730977058,
-		"content": "",
-		"postprocess_score": 0.9999455214,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/cc3332e3-8f1a-4f8d-8d5f-3034403ec8d9.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			676,
-			137,
-			1143,
-			411
-		],
-		"detect_score": -4.144402504,
-		"content": "",
-		"postprocess_score": 0.9999591112,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/abe5aa6b-a2bd-45e0-8cbb-294aa801054d.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			676,
-			460,
-			1137,
-			722
-		],
-		"detect_score": -2.7878081799,
-		"content": "",
-		"postprocess_score": 0.9993543029,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/de929a49-e723-44f0-bb3c-84719235c6ad.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			516,
-			893,
-			830,
-			1232
-		],
-		"detect_score": -3.9394185543,
-		"content": "",
-		"postprocess_score": 0.9984112978,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/2b4c72f0-3c71-4d35-a95a-c3c84d88c423.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			853,
-			893,
-			1168,
-			1232
-		],
-		"detect_score": -4.8892045021,
-		"content": "",
-		"postprocess_score": 0.9999582767,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ceb17a00-bc7a-49cc-9496-2a769d0d9ea9.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "7",
-		"bounding_box": [
-			515,
-			1257,
-			830,
-			1595
-		],
-		"detect_score": -2.9700899124,
-		"content": "",
-		"postprocess_score": 0.9999526739,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9f02bdaf-4abb-4578-8568-423954cfba89.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			297,
-			357,
-			682,
-			855
-		],
-		"detect_score": -1.8648295403,
-		"content": "",
-		"postprocess_score": 0.9998959303,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/79062c05-ea8f-4b4e-b205-6c8ae9aca634.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			768,
-			492,
-			1166,
-			785
-		],
-		"detect_score": -2.0164601803,
-		"content": "",
-		"postprocess_score": 0.9997652173,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/78c81080-2ee6-4dbb-a33c-514ec3b03bcb.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			768,
-			166,
-			1167,
-			465
-		],
-		"detect_score": -4.4959640503,
-		"content": "",
-		"postprocess_score": 0.9991463423,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/32f3a794-e948-40f5-834a-73a58a448a59.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			181,
-			989,
-			1199,
-			1352
-		],
-		"detect_score": -4.988483429,
-		"content": "",
-		"postprocess_score": 0.9916501045,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/32331ca4-df3a-46ea-9a12-895270c8452b.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			194,
-			1380,
-			515,
-			1734
-		],
-		"detect_score": -3.7899298668,
-		"content": "",
-		"postprocess_score": 0.9999480247,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/8848aa61-4a9c-4ee0-a66e-600de9ae33ba.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "8",
-		"bounding_box": [
-			540,
-			1380,
-			857,
-			1734
-		],
-		"detect_score": -3.544885397,
-		"content": "",
-		"postprocess_score": 0.999986887,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ef863ffb-46e7-48d0-bf3e-49b8b9d3f85b.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			274,
-			337,
-			655,
-			618
-		],
-		"detect_score": -2.9510085583,
-		"content": "",
-		"postprocess_score": 0.9998918772,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/b5d179f9-c13f-401a-841d-d0d44d47d9a0.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			158,
-			982,
-			478,
-			1346
-		],
-		"detect_score": -2.1802184582,
-		"content": "",
-		"postprocess_score": 0.9997614026,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d4a01d33-1bca-4960-b6f8-2b57702ebea1.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			166,
-			1372,
-			478,
-			1728
-		],
-		"detect_score": -4.044552803,
-		"content": "",
-		"postprocess_score": 0.9998310804,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a636c9b6-98e3-4b61-ab47-8a738806491c.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			690,
-			170,
-			1143,
-			449
-		],
-		"detect_score": -5.7125692368,
-		"content": "",
-		"postprocess_score": 0.9952076077,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ca022e23-9b8b-4256-9b50-f2b2a799b667.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			690,
-			506,
-			1143,
-			774
-		],
-		"detect_score": -1.937095046,
-		"content": "",
-		"postprocess_score": 0.9998959303,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/14817171-559a-4e02-936e-c561122c79d7.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			850,
-			989,
-			1161,
-			1346
-		],
-		"detect_score": -4.1359729767,
-		"content": "",
-		"postprocess_score": 0.9990087748,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/21948bba-c1d4-496a-9622-a5931ed7a253.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			510,
-			990,
-			820,
-			1346
-		],
-		"detect_score": -1.574930191,
-		"content": "",
-		"postprocess_score": 0.9998363256,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/185e792b-75c6-422e-bd40-32c21800affa.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "9",
-		"bounding_box": [
-			504,
-			1373,
-			820,
-			1728
-		],
-		"detect_score": -3.3029215336,
-		"content": "",
-		"postprocess_score": 0.9997759461,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/0c086280-0295-4d8a-804c-4843114c6c9d.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "10",
-		"bounding_box": [
-			297,
-			308,
-			662,
-			859
-		],
-		"detect_score": 1.1488877535,
-		"content": "",
-		"postprocess_score": 0.9999864101,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9984421e-6c9e-40fe-9015-c70dfc1a87b1.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "10",
-		"bounding_box": [
-			751,
-			138,
-			1167,
-			449
-		],
-		"detect_score": -4.1455821991,
-		"content": "",
-		"postprocess_score": 0.9999665022,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d3564e36-d33a-4161-8c8c-ec507a79c28f.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "10",
-		"bounding_box": [
-			752,
-			478,
-			1167,
-			782
-		],
-		"detect_score": -2.5091948509,
-		"content": "",
-		"postprocess_score": 0.9980486631,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/f5ca7a2d-4730-4f4a-9df1-c676fadc4c56.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			236,
-			138,
-			513,
-			386
-		],
-		"detect_score": -2.6236674786,
-		"content": "",
-		"postprocess_score": 0.9999366999,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/bb5c2e2f-8984-48a4-870f-53c107e7343d.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			228,
-			405,
-			513,
-			646
-		],
-		"detect_score": -3.4855673313,
-		"content": "",
-		"postprocess_score": 0.9996958971,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/911576bb-aaf7-4068-9ed6-384133b7457a.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			274,
-			905,
-			655,
-			1404
-		],
-		"detect_score": 2.1702032089,
-		"content": "",
-		"postprocess_score": 0.9997959733,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ffd6842e-b090-4b4c-8eaf-ad7d49a8e61a.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			535,
-			144,
-			810,
-			386
-		],
-		"detect_score": -3.4479863644,
-		"content": "",
-		"postprocess_score": 0.9998819828,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/2d6b83b8-621a-4cba-8a14-02c2296164c3.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			836,
-			144,
-			1108,
-			386
-		],
-		"detect_score": -2.4109332561,
-		"content": "",
-		"postprocess_score": 0.9999467134,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a55ada55-cddf-4c92-a9b2-a2b7b4bb71be.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			535,
-			405,
-			810,
-			646
-		],
-		"detect_score": -2.7379980087,
-		"content": "",
-		"postprocess_score": 0.9997373223,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/89719691-bb84-479a-b83f-881441c14948.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			871,
-			416,
-			1187,
-			533
-		],
-		"detect_score": -3.6509039402,
-		"content": "",
-		"postprocess_score": 0.7445672154,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d440be72-1766-47ab-b3fd-d389a1bfa54a.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			724,
-			713,
-			1142,
-			1014
-		],
-		"detect_score": -1.4294627905,
-		"content": "",
-		"postprocess_score": 0.9999728203,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/790063b9-c6bc-4512-9403-94c38ecc181f.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "11",
-		"bounding_box": [
-			724,
-			1041,
-			1134,
-			1337
-		],
-		"detect_score": -1.4917943478,
-		"content": "",
-		"postprocess_score": 0.9987780452,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/e0f1b9dc-aff3-4021-9984-ab3c50e37876.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "12",
-		"bounding_box": [
-			352,
-			138,
-			685,
-			666
-		],
-		"detect_score": -0.3160360456,
-		"content": "",
-		"postprocess_score": 0.9999830723,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/22d1f637-d725-40e2-9c2d-8650761033f3.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "12",
-		"bounding_box": [
-			146,
-			809,
-			667,
-			1238
-		],
-		"detect_score": -0.147577703,
-		"content": "",
-		"postprocess_score": 0.999917984,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/941792f4-6f71-406a-89d2-f2d6ab93ba10.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "12",
-		"bounding_box": [
-			704,
-			143,
-			1046,
-			512
-		],
-		"detect_score": -1.1937574148,
-		"content": "",
-		"postprocess_score": 0.9999790192,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/28c44f9b-4a62-4700-b032-9c3a58f715b8.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			225,
-			139,
-			509,
-			393
-		],
-		"detect_score": -3.8998398781,
-		"content": "",
-		"postprocess_score": 0.9998694658,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a621be11-1c1d-4faf-a959-6629151c5c73.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			241,
-			412,
-			509,
-			660
-		],
-		"detect_score": -2.4877710342,
-		"content": "",
-		"postprocess_score": 0.9995937943,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/021b6106-e951-434f-826f-6b4c33bc46af.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			274,
-			902,
-			628,
-			1463
-		],
-		"detect_score": -0.4556277394,
-		"content": "",
-		"postprocess_score": 0.9999705553,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/be46ea5c-fabe-468f-87d2-fddb2cec7fd4.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			535,
-			144,
-			1109,
-			393
-		],
-		"detect_score": -1.9140774012,
-		"content": "",
-		"postprocess_score": 0.9999533892,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/cf4097a3-1ff2-4c95-b67b-b81f655770ed.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			531,
-			412,
-			809,
-			660
-		],
-		"detect_score": -3.8241713047,
-		"content": "",
-		"postprocess_score": 0.9997217059,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/60648881-42c2-489d-8d79-3be5f094339b.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			870,
-			425,
-			1192,
-			544
-		],
-		"detect_score": -4.2483596802,
-		"content": "",
-		"postprocess_score": 0.4699611962,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/53e069ef-e962-4f2f-9167-8b6c7fba4414.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			723,
-			727,
-			1143,
-			1048
-		],
-		"detect_score": -1.22649014,
-		"content": "",
-		"postprocess_score": 0.9999067783,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d51cde0b-1c4d-483d-95b8-79543d1fbdcc.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "13",
-		"bounding_box": [
-			723,
-			1076,
-			1141,
-			1389
-		],
-		"detect_score": -0.4213189185,
-		"content": "",
-		"postprocess_score": 0.9999684095,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a2e3d657-e75a-4a70-878d-17f5b5c25676.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "14",
-		"bounding_box": [
-			297,
-			218,
-			623,
-			486
-		],
-		"detect_score": -3.0958020687,
-		"content": "",
-		"postprocess_score": 0.9999445677,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/10879c9c-c081-4adf-ad63-b0568fc82230.png"
-	},
-	{
-		"pdf_name": "paper.pdf",
-		"page_num": "14",
-		"bounding_box": [
-			673,
-			139,
-			1167,
-			588
-		],
-		"detect_score": 1.2988601923,
-		"content": "",
-		"postprocess_score": 0.9999545813,
-		"img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/77055ee8-0741-4d6e-97f6-0f6735965e6d.png"
-	}
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "1",
+        "bounding_box": [
+            634,
+            218,
+            849,
+            455
+        ],
+        "detect_score": -2.5693564415,
+        "content": "",
+        "postprocess_score": 0.5748158693,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/c766eddd-ce45-4540-8e70-62f808cd4a2d.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            167,
+            137,
+            488,
+            512
+        ],
+        "detect_score": -4.0467090607,
+        "content": "",
+        "postprocess_score": 0.9999753237,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/6ebdf830-a584-49d8-8776-df430636f876.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            158,
+            543,
+            488,
+            909
+        ],
+        "detect_score": -4.0443725586,
+        "content": "",
+        "postprocess_score": 0.9999625683,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/de7e4980-c91f-497a-a537-d2bf45593225.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            865,
+            144,
+            1179,
+            512
+        ],
+        "detect_score": -2.7618238926,
+        "content": "",
+        "postprocess_score": 0.9999905825,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/00849679-1b35-42db-bf74-a73ddf9a2458.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            527,
+            145,
+            834,
+            512
+        ],
+        "detect_score": -2.3328213692,
+        "content": "",
+        "postprocess_score": 0.9999841452,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/0f1f3e40-ebb3-43a1-9a2e-af5cf7bb0c3e.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            514,
+            543,
+            834,
+            909
+        ],
+        "detect_score": -3.177952528,
+        "content": "",
+        "postprocess_score": 0.9999858141,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a9b6f122-4d5f-4e66-ad07-f8c52c118f8b.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "5",
+        "bounding_box": [
+            905,
+            783,
+            1259,
+            898
+        ],
+        "detect_score": -3.2955610752,
+        "content": "",
+        "postprocess_score": 0.6019153595,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/964084ad-209c-480f-82b7-e595fe0ff4e0.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            297,
+            356,
+            728,
+            635
+        ],
+        "detect_score": -1.8897101879,
+        "content": "",
+        "postprocess_score": 0.9997722507,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/97ba5da2-5c94-4250-b8ea-e888ab8374e4.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            181,
+            996,
+            520,
+            1354
+        ],
+        "detect_score": -3.0143077374,
+        "content": "",
+        "postprocess_score": 0.9998668432,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/096820cf-ae8e-4711-9f51-bbea5c1ca5d1.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            201,
+            1381,
+            862,
+            1731
+        ],
+        "detect_score": -3.1576080322,
+        "content": "",
+        "postprocess_score": 0.9998521805,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/3b5bbc10-b703-43b0-85fa-a58feeacfe01.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            748,
+            168,
+            1167,
+            471
+        ],
+        "detect_score": -1.5734174252,
+        "content": "",
+        "postprocess_score": 0.9999638796,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/c9202836-b1c5-4971-b451-1a47b3048995.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            748,
+            497,
+            1160,
+            791
+        ],
+        "detect_score": -3.5085437298,
+        "content": "",
+        "postprocess_score": 0.9999063015,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/fa566d7c-45ef-4d17-852a-382ed5028ac9.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            537,
+            1004,
+            1203,
+            1354
+        ],
+        "detect_score": -3.6628472805,
+        "content": "",
+        "postprocess_score": 0.9997650981,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/43decdf1-b02a-4d7a-b7a3-3cc2faa24734.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "6",
+        "bounding_box": [
+            932,
+            1459,
+            1282,
+            1568
+        ],
+        "detect_score": -2.9999716282,
+        "content": "",
+        "postprocess_score": 0.4926264584,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9c5eaac0-5d7e-4cb3-9672-ef9aa1dfb1e6.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            273,
+            302,
+            658,
+            571
+        ],
+        "detect_score": -1.0018720627,
+        "content": "",
+        "postprocess_score": 0.9999177456,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9680f959-7527-4a0b-a242-35415b93044d.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            184,
+            886,
+            492,
+            1232
+        ],
+        "detect_score": -3.1495950222,
+        "content": "",
+        "postprocess_score": 0.9997445941,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/3e9fca5c-1550-4fe0-b3ee-a211085d3634.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            158,
+            1257,
+            492,
+            1595
+        ],
+        "detect_score": -2.5730977058,
+        "content": "",
+        "postprocess_score": 0.9999455214,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/cc3332e3-8f1a-4f8d-8d5f-3034403ec8d9.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            676,
+            137,
+            1143,
+            411
+        ],
+        "detect_score": -4.144402504,
+        "content": "",
+        "postprocess_score": 0.9999591112,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/abe5aa6b-a2bd-45e0-8cbb-294aa801054d.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            676,
+            460,
+            1137,
+            722
+        ],
+        "detect_score": -2.7878081799,
+        "content": "",
+        "postprocess_score": 0.9993543029,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/de929a49-e723-44f0-bb3c-84719235c6ad.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            516,
+            893,
+            830,
+            1232
+        ],
+        "detect_score": -3.9394185543,
+        "content": "",
+        "postprocess_score": 0.9984112978,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/2b4c72f0-3c71-4d35-a95a-c3c84d88c423.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            853,
+            893,
+            1168,
+            1232
+        ],
+        "detect_score": -4.8892045021,
+        "content": "",
+        "postprocess_score": 0.9999582767,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ceb17a00-bc7a-49cc-9496-2a769d0d9ea9.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "7",
+        "bounding_box": [
+            515,
+            1257,
+            830,
+            1595
+        ],
+        "detect_score": -2.9700899124,
+        "content": "",
+        "postprocess_score": 0.9999526739,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9f02bdaf-4abb-4578-8568-423954cfba89.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            297,
+            357,
+            682,
+            855
+        ],
+        "detect_score": -1.8648295403,
+        "content": "",
+        "postprocess_score": 0.9998959303,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/79062c05-ea8f-4b4e-b205-6c8ae9aca634.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            768,
+            492,
+            1166,
+            785
+        ],
+        "detect_score": -2.0164601803,
+        "content": "",
+        "postprocess_score": 0.9997652173,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/78c81080-2ee6-4dbb-a33c-514ec3b03bcb.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            768,
+            166,
+            1167,
+            465
+        ],
+        "detect_score": -4.4959640503,
+        "content": "",
+        "postprocess_score": 0.9991463423,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/32f3a794-e948-40f5-834a-73a58a448a59.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            181,
+            989,
+            1199,
+            1352
+        ],
+        "detect_score": -4.988483429,
+        "content": "",
+        "postprocess_score": 0.9916501045,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/32331ca4-df3a-46ea-9a12-895270c8452b.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            194,
+            1380,
+            515,
+            1734
+        ],
+        "detect_score": -3.7899298668,
+        "content": "",
+        "postprocess_score": 0.9999480247,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/8848aa61-4a9c-4ee0-a66e-600de9ae33ba.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "8",
+        "bounding_box": [
+            540,
+            1380,
+            857,
+            1734
+        ],
+        "detect_score": -3.544885397,
+        "content": "",
+        "postprocess_score": 0.999986887,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ef863ffb-46e7-48d0-bf3e-49b8b9d3f85b.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            274,
+            337,
+            655,
+            618
+        ],
+        "detect_score": -2.9510085583,
+        "content": "",
+        "postprocess_score": 0.9998918772,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/b5d179f9-c13f-401a-841d-d0d44d47d9a0.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            158,
+            982,
+            478,
+            1346
+        ],
+        "detect_score": -2.1802184582,
+        "content": "",
+        "postprocess_score": 0.9997614026,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d4a01d33-1bca-4960-b6f8-2b57702ebea1.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            166,
+            1372,
+            478,
+            1728
+        ],
+        "detect_score": -4.044552803,
+        "content": "",
+        "postprocess_score": 0.9998310804,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a636c9b6-98e3-4b61-ab47-8a738806491c.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            690,
+            170,
+            1143,
+            449
+        ],
+        "detect_score": -5.7125692368,
+        "content": "",
+        "postprocess_score": 0.9952076077,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ca022e23-9b8b-4256-9b50-f2b2a799b667.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            690,
+            506,
+            1143,
+            774
+        ],
+        "detect_score": -1.937095046,
+        "content": "",
+        "postprocess_score": 0.9998959303,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/14817171-559a-4e02-936e-c561122c79d7.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            850,
+            989,
+            1161,
+            1346
+        ],
+        "detect_score": -4.1359729767,
+        "content": "",
+        "postprocess_score": 0.9990087748,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/21948bba-c1d4-496a-9622-a5931ed7a253.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            510,
+            990,
+            820,
+            1346
+        ],
+        "detect_score": -1.574930191,
+        "content": "",
+        "postprocess_score": 0.9998363256,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/185e792b-75c6-422e-bd40-32c21800affa.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "9",
+        "bounding_box": [
+            504,
+            1373,
+            820,
+            1728
+        ],
+        "detect_score": -3.3029215336,
+        "content": "",
+        "postprocess_score": 0.9997759461,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/0c086280-0295-4d8a-804c-4843114c6c9d.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "10",
+        "bounding_box": [
+            297,
+            308,
+            662,
+            859
+        ],
+        "detect_score": 1.1488877535,
+        "content": "",
+        "postprocess_score": 0.9999864101,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/9984421e-6c9e-40fe-9015-c70dfc1a87b1.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "10",
+        "bounding_box": [
+            751,
+            138,
+            1167,
+            449
+        ],
+        "detect_score": -4.1455821991,
+        "content": "",
+        "postprocess_score": 0.9999665022,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d3564e36-d33a-4161-8c8c-ec507a79c28f.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "10",
+        "bounding_box": [
+            752,
+            478,
+            1167,
+            782
+        ],
+        "detect_score": -2.5091948509,
+        "content": "",
+        "postprocess_score": 0.9980486631,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/f5ca7a2d-4730-4f4a-9df1-c676fadc4c56.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            236,
+            138,
+            513,
+            386
+        ],
+        "detect_score": -2.6236674786,
+        "content": "",
+        "postprocess_score": 0.9999366999,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/bb5c2e2f-8984-48a4-870f-53c107e7343d.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            228,
+            405,
+            513,
+            646
+        ],
+        "detect_score": -3.4855673313,
+        "content": "",
+        "postprocess_score": 0.9996958971,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/911576bb-aaf7-4068-9ed6-384133b7457a.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            274,
+            905,
+            655,
+            1404
+        ],
+        "detect_score": 2.1702032089,
+        "content": "",
+        "postprocess_score": 0.9997959733,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/ffd6842e-b090-4b4c-8eaf-ad7d49a8e61a.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            535,
+            144,
+            810,
+            386
+        ],
+        "detect_score": -3.4479863644,
+        "content": "",
+        "postprocess_score": 0.9998819828,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/2d6b83b8-621a-4cba-8a14-02c2296164c3.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            836,
+            144,
+            1108,
+            386
+        ],
+        "detect_score": -2.4109332561,
+        "content": "",
+        "postprocess_score": 0.9999467134,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a55ada55-cddf-4c92-a9b2-a2b7b4bb71be.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            535,
+            405,
+            810,
+            646
+        ],
+        "detect_score": -2.7379980087,
+        "content": "",
+        "postprocess_score": 0.9997373223,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/89719691-bb84-479a-b83f-881441c14948.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            871,
+            416,
+            1187,
+            533
+        ],
+        "detect_score": -3.6509039402,
+        "content": "",
+        "postprocess_score": 0.7445672154,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d440be72-1766-47ab-b3fd-d389a1bfa54a.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            724,
+            713,
+            1142,
+            1014
+        ],
+        "detect_score": -1.4294627905,
+        "content": "",
+        "postprocess_score": 0.9999728203,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/790063b9-c6bc-4512-9403-94c38ecc181f.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "11",
+        "bounding_box": [
+            724,
+            1041,
+            1134,
+            1337
+        ],
+        "detect_score": -1.4917943478,
+        "content": "",
+        "postprocess_score": 0.9987780452,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/e0f1b9dc-aff3-4021-9984-ab3c50e37876.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "12",
+        "bounding_box": [
+            352,
+            138,
+            685,
+            666
+        ],
+        "detect_score": -0.3160360456,
+        "content": "",
+        "postprocess_score": 0.9999830723,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/22d1f637-d725-40e2-9c2d-8650761033f3.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "12",
+        "bounding_box": [
+            146,
+            809,
+            667,
+            1238
+        ],
+        "detect_score": -0.147577703,
+        "content": "",
+        "postprocess_score": 0.999917984,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/941792f4-6f71-406a-89d2-f2d6ab93ba10.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "12",
+        "bounding_box": [
+            704,
+            143,
+            1046,
+            512
+        ],
+        "detect_score": -1.1937574148,
+        "content": "",
+        "postprocess_score": 0.9999790192,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/28c44f9b-4a62-4700-b032-9c3a58f715b8.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            225,
+            139,
+            509,
+            393
+        ],
+        "detect_score": -3.8998398781,
+        "content": "",
+        "postprocess_score": 0.9998694658,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a621be11-1c1d-4faf-a959-6629151c5c73.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            241,
+            412,
+            509,
+            660
+        ],
+        "detect_score": -2.4877710342,
+        "content": "",
+        "postprocess_score": 0.9995937943,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/021b6106-e951-434f-826f-6b4c33bc46af.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            274,
+            902,
+            628,
+            1463
+        ],
+        "detect_score": -0.4556277394,
+        "content": "",
+        "postprocess_score": 0.9999705553,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/be46ea5c-fabe-468f-87d2-fddb2cec7fd4.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            535,
+            144,
+            1109,
+            393
+        ],
+        "detect_score": -1.9140774012,
+        "content": "",
+        "postprocess_score": 0.9999533892,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/cf4097a3-1ff2-4c95-b67b-b81f655770ed.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            531,
+            412,
+            809,
+            660
+        ],
+        "detect_score": -3.8241713047,
+        "content": "",
+        "postprocess_score": 0.9997217059,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/60648881-42c2-489d-8d79-3be5f094339b.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            870,
+            425,
+            1192,
+            544
+        ],
+        "detect_score": -4.2483596802,
+        "content": "",
+        "postprocess_score": 0.4699611962,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/53e069ef-e962-4f2f-9167-8b6c7fba4414.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            723,
+            727,
+            1143,
+            1048
+        ],
+        "detect_score": -1.22649014,
+        "content": "",
+        "postprocess_score": 0.9999067783,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/d51cde0b-1c4d-483d-95b8-79543d1fbdcc.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "13",
+        "bounding_box": [
+            723,
+            1076,
+            1141,
+            1389
+        ],
+        "detect_score": -0.4213189185,
+        "content": "",
+        "postprocess_score": 0.9999684095,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/a2e3d657-e75a-4a70-878d-17f5b5c25676.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "14",
+        "bounding_box": [
+            297,
+            218,
+            623,
+            486
+        ],
+        "detect_score": -3.0958020687,
+        "content": "",
+        "postprocess_score": 0.9999445677,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/10879c9c-c081-4adf-ad63-b0568fc82230.png"
+    },
+    {
+        "pdf_name": "paper.pdf",
+        "page_num": "14",
+        "bounding_box": [
+            673,
+            139,
+            1167,
+            588
+        ],
+        "detect_score": 1.2988601923,
+        "content": "",
+        "postprocess_score": 0.9999545813,
+        "img_pth": "http://xdd.wisc.edu/cosmos_service/process/16844daf-1100-40be-afe6-c6bcb700fc81/result/images/77055ee8-0741-4d6e-97f6-0f6735965e6d.png"
+    }
 ]

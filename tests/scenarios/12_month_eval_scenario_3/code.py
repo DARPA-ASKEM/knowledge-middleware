@@ -14,9 +14,10 @@ from scipy.integrate import solve_ivp
 import os
 import h5py
 
+
 # Load data using pandas
 data_orig = pd.read_csv('data.csv', parse_dates=['Date'])
-# data = scipy.io.loadmat(os.path.join('1-s2.0-S0048969722064257-mmc1','data_SEIRV_fit.mat'))
+#data = scipy.io.loadmat(os.path.join('1-s2.0-S0048969722064257-mmc1','data_SEIRV_fit.mat'))
 
 
 # In[ ]:
@@ -25,7 +26,7 @@ data_orig = pd.read_csv('data.csv', parse_dates=['Date'])
 """
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This code carries out data fitting for the second wave using the SEIRV
-% model.
+% model. 
 %
 % NOTE: High titer -> Mean half-life 0.99 days
 %       Low titer  -> Mean half-life 7.9 days
@@ -37,7 +38,7 @@ rng('default');
 clear;clc
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
 set(groot, 'defaultLegendInterpreter','latex');
-set(0,'defaulttextInterpreter','latex','defaultAxesFontSize',16)
+set(0,'defaulttextInterpreter','latex','defaultAxesFontSize',16) 
 format long
 
 bl = '#0072BD';
@@ -59,7 +60,7 @@ options = optimoptions('fmincon','TolX',1e-12,'TolFun',1e-12,'MaxIter',50000,'Ma
     ub = [1E-4  796   beta_fixed  5000];
     p0 = [9.06e-08 360 beta_fixed 1182];
 
-%
+% 
 %% try Global Search
 gs = GlobalSearch;
 ms = MultiStart('Display','iter');
@@ -90,7 +91,7 @@ E0 = best_params(4);
 I0 = V(1)/(alpha*beta*(1-eta));
 R0 = 0;
 S0 = N0 - (E0 + I0 + R0);
-V0 = V(1); % use first data point
+V0 = V(1); % use first data point 
 ICs  = [S0 E0 I0 R0 V0 E0];
 
 [T,Y] = ode45(@SEIRV,1:length(cRNA2),ICs,[],best_params);
@@ -126,14 +127,14 @@ figure()
     xlim([time2(2) time2(118)])
 
     hold off
-
+    
     %%
-
+    
     f = gcf;
     exportgraphics(f,'fitting_with_temperature.pdf','Resolution',600)
 
     %%
-
+    
     figure
     box on; hold on;
 
@@ -154,7 +155,7 @@ figure()
     %calculate R2
     Rsq2 = 1 - sum((y-yCalc2).^2)/sum((y-mean(y)).^2);
 
-    R = corrcoef(x,y);
+    R = corrcoef(x,y); 
 
     f = gcf;
     exportgraphics(f,'corr_1.pdf','Resolution',600)
@@ -173,7 +174,7 @@ function err = obj_fun(param,tspan,data)
     I0 = data(1)/(param(2)*param(3)*(1-eta));
     R0 = 0;
     S0 = N0 - (E0 + I0 + R0);
-    V0 = data(1);
+    V0 = data(1);                
     ICs  = [S0 E0 I0 R0 V0 E0];
 
     [~,Y] = ode45(@SEIRV,tspan,ICs,[],param(1:4));
@@ -190,7 +191,7 @@ end
 
 function k = getDecay(t)
     % compute temperature-adjusted decay rate of viral RNA
-
+    
     % high titer -> tau0 = 0.99 days * 24 hours/day = 23.76
     % low titer  -> tau0 = 7.9 days * 24 hours/day  = 189.6
 
@@ -222,9 +223,9 @@ function dy = SEIRV(t,y,param)
     beta = param(3);
 
     dy = zeros(6,1);
-
-    S = y(1);
-    E = y(2);
+    
+    S = y(1);  
+    E = y(2);      
     I = y(3);
     R = y(4);
     V = y(5);
@@ -236,10 +237,10 @@ function dy = SEIRV(t,y,param)
 
     sigma = 1/3;
     gamma = 1/8;
-
+    
 
     dy(1) = -lambda*S*I;
-    dy(2) = lambda*S*I - sigma*E;
+    dy(2) = lambda*S*I - sigma*E;                               
     dy(3) = sigma*E - gamma*I;
     dy(4) = gamma*I;
     dy(5) = alpha*beta*(1-eta)*I;
@@ -251,178 +252,181 @@ end
 # In[ ]:
 
 
-# remake all the functions
+#remake all the functions
 def SEIRV(y, t, lambd, alpha, beta):
-	# parameters to be fit
-	# eta = param[0] #was lambda but that's a special word in python
-	# alpha = param[1]
-	# beta = param[2]
-	# eta, alpha, beta, E0=param
-	dy = np.zeros(6)
-	# print(f'y: {y}')
-	S, E, I, R, V, cases = y
-	# S = y[0]
-	# E = y[1]
-	# I = y[2]
-	# R = y[3]
-	# V = y[4]
-	traveltime = 18  # hours
-	k = getDecay(t)  #
+    #parameters to be fit
+    #eta = param[0] #was lambda but that's a special word in python
+    #alpha = param[1]
+    #beta = param[2]
+    #eta, alpha, beta, E0=param
+    dy = np.zeros(6)
+    #print(f'y: {y}')
+    S, E, I, R, V, cases = y
+    #S = y[0]
+    #E = y[1]
+    #I = y[2]
+    #R = y[3]
+    #V = y[4]
+    traveltime = 18#hours
+    k = getDecay(t)#
 
-	eta = 1 - np.exp(-k * traveltime)
+    eta = 1 - np.exp(-k*traveltime)
 
-	sigma = 1 / 3
-	gamma = 1 / 8
+    sigma = 1/3
+    gamma = 1/8
+    
 
-	dy[0] = -lambd * S * I
-	dy[1] = lambd * S * I - sigma * E
-	dy[2] = sigma * E - gamma * I
-	dy[3] = gamma * I
-	dy[4] = alpha * beta * (1 - eta) * I
-	dy[5] = lambd * S * I  # track cumulative cases
-	return (dy)
+    dy[0] = -lambd*S*I
+    dy[1] = lambd*S*I - sigma*E                          
+    dy[2] = sigma*E - gamma*I
+    dy[3] = gamma*I
+    dy[4] = alpha*beta*(1-eta)*I
+    dy[5] = lambd*S*I       #track cumulative cases
+    return(dy)
 
 
 def getDecay(t):
-	# compute temperature-adjusted decay rate of viral RNA
+    # compute temperature-adjusted decay rate of viral RNA
+    
+    # high titer -> tau0 = 0.99 days * 24 hours/day = 23.76
+    # low titer  -> tau0 = 7.9 days * 24 hours/day  = 189.6
 
-	# high titer -> tau0 = 0.99 days * 24 hours/day = 23.76
-	# low titer  -> tau0 = 7.9 days * 24 hours/day  = 189.6
+    tau0 = 189.6 #23.76;
+    Q0 = 2.5
+    T0 = 20
 
-	tau0 = 189.6  # 23.76;
-	Q0 = 2.5
-	T0 = 20
+    #get current temperature using best-fit sine function
+    A = 3.624836409841919
+    B = 0.020222716119084
+    C = 4.466530666828714
+    D = 16.229757918464635
 
-	# get current temperature using best-fit sine function
-	A = 3.624836409841919
-	B = 0.020222716119084
-	C = 4.466530666828714
-	D = 16.229757918464635
+    T = A*np.sin(B*t - C) + D
 
-	T = A * np.sin(B * t - C) + D
+    tau = tau0*Q0**(-(T - T0)/10)
 
-	tau = tau0 * Q0 ** (-(T - T0) / 10)
+    k = np.log(2)/tau
+    return(k)
 
-	k = np.log(2) / tau
-	return (k)
+def obj_fun(param,tspan,data):
+    #lambd = param[0] #was lambda but that's a special word in python
+    #alpha = param[1]
+    #beta = param[2]
+    lambd, alpha, beta, E0 = param
+    traveltime = 18 #hours
+    k = getDecay(1)#use first time point
 
+    eta = 1 - np.exp(-k*traveltime)
 
-def obj_fun(param, tspan, data):
-	# lambd = param[0] #was lambda but that's a special word in python
-	# alpha = param[1]
-	# beta = param[2]
-	lambd, alpha, beta, E0 = param
-	traveltime = 18  # hours
-	k = getDecay(1)  # use first time point
+    #total population served by DITP
+    N0 = 2300000
 
-	eta = 1 - np.exp(-k * traveltime)
+    #E0 = param[3]
+    I0 = data[0]/(param[1]*param[2]*(1-eta))
+    R0 = 0
+    S0 = N0 - (E0 + I0 + R0)
+    V0 = data[0]
+    cases0=0
+    ICs  = [S0,E0,I0,R0,V[0], cases0]
+    #print(f'ICs: {ICs}')
+    #print(f'tspan: {tspan}')
+    #print(f'param: {param}')
+    results = odeint(SEIRV, ICs, tspan, args=(lambd, alpha, beta))
+    #err = np.sum(np.log10(results[:, 4]) - np.log10(data**2))
+    cumVirus=results[:, 5]
+    dailyVirus = np.diff(cumVirus)
+    temp = np.log10(data[1:])-np.log10(np.abs(dailyVirus))
+    adiff = temp[~np.isnan(temp)] #remove NAs
+    err = np.sum(adiff**2)
+    """
+    cumVirus = Y(:,5); I got rid of dy[5] becaues it was causing issues
+    #get daily virus
+    dailyVirus = diff(cumVirus)
 
-	# total population served by DITP
-	N0 = 2300000
+    temp = log10(data(2:end)) - log10(abs(dailyVirus))
+    adiff = rmmissing(temp)
 
-	# E0 = param[3]
-	I0 = data[0] / (param[1] * param[2] * (1 - eta))
-	R0 = 0
-	S0 = N0 - (E0 + I0 + R0)
-	V0 = data[0]
-	cases0 = 0
-	ICs = [S0, E0, I0, R0, V[0], cases0]
-	# print(f'ICs: {ICs}')
-	# print(f'tspan: {tspan}')
-	# print(f'param: {param}')
-	results = odeint(SEIRV, ICs, tspan, args=(lambd, alpha, beta))
-	# err = np.sum(np.log10(results[:, 4]) - np.log10(data**2))
-	cumVirus = results[:, 5]
-	dailyVirus = np.diff(cumVirus)
-	temp = np.log10(data[1:]) - np.log10(np.abs(dailyVirus))
-	adiff = temp[~np.isnan(temp)]  # remove NAs
-	err = np.sum(adiff ** 2)
-	"""
-	cumVirus = Y(:,5); I got rid of dy[5] becaues it was causing issues
-	#get daily virus
-	dailyVirus = diff(cumVirus)
-
-	temp = log10(data(2:end)) - log10(abs(dailyVirus))
-	adiff = rmmissing(temp)
-
-	err = sum((adiff).^2)
-	"""
-	return (err)
+    err = sum((adiff).^2)
+    """
+    return(err)
 
 
 # In[ ]:
 
 
 data = data_orig.tail(225).reset_index()
-data['V'] = data['cRNA2'] * data['F2']
-split = 78;  # plit 1 week after first day of vaccine (12/11/2020)
-V = data.iloc[:split]['V']
+data['V'] = data['cRNA2']*data['F2']
+split = 78; #plit 1 week after first day of vaccine (12/11/2020)
+V=data.iloc[:split]['V']
 data['tspan'] = (data['Date'] - data['Date'].min()).dt.days
-tspan = data.iloc[:split]['tspan']
+tspan=data.iloc[:split]['tspan']
 
-# Curve-fitting
-beta_fixed = 4.48526 * 10 ** 7
-lb = [0, 51, beta_fixed, 10]
-ub = [0.0001, 796, beta_fixed, 5000]
-p0 = [9.06 * 10 ** (-8), 360, beta_fixed, 1182]
+#Curve-fitting
+beta_fixed = 4.48526*10**7
+lb = [0,51,beta_fixed,10]
+ub = [0.0001,796,beta_fixed,5000]
+p0 = [9.06*10**(-8),360,beta_fixed,1182]
+
 
 # Perform parameter estimation
-# result = minimize(obj_fun, p0, args=(eta, alpha, beta, E0), bounds=list(zip(lb, ub)))
+#result = minimize(obj_fun, p0, args=(eta, alpha, beta, E0), bounds=list(zip(lb, ub)))
 result = minimize(obj_fun, p0, args=(tspan, V), bounds=list(zip(lb, ub)))
 params_opt = result.x
 alpha = params_opt[1]
 beta = params_opt[2]
-traveltime = 18  # hours
-k = getDecay(1)  # use first time point
-eta = 1 - np.exp(-k * traveltime)
-# total population served by DITP
+traveltime = 18#hours
+k = getDecay(1)#use first time point
+eta = 1 - np.exp(-k*traveltime)
+#total population served by DITP
 N0 = 2300000
 E0 = params_opt[3]
-I0 = V[0] / (alpha * beta * (1 - eta))
+I0 = V[0]/(alpha*beta*(1-eta))
 R0 = 0
 S0 = N0 - (E0 + I0 + R0)
-V0 = V[0]  # use first data point
-cases0 = 0
-ICs = [S0, E0, I0, R0, V0, cases0]
-# def SEIRV(y, t, eta, alpha, beta):
+V0 = V[0] # use first data point 
+cases0=0
+ICs  = [S0,E0,I0,R0,V0,cases0]
+#def SEIRV(y, t, eta, alpha, beta):
 
 sol_opt = odeint(SEIRV, ICs, tspan, args=tuple(params_opt[:3]))
 
-# solve it further in time?
-tspan2 = data['tspan']
+#solve it further in time?
+tspan2=data['tspan']
 sol_opt2 = odeint(SEIRV, ICs, tspan2, args=tuple(params_opt[:3]))
 
 # Plotting
 plt.figure()
 plt.plot(tspan, np.log10(V), 'bo', label='Train')
 plt.plot(tspan[1:], np.log10(np.diff(sol_opt[:, 4])), 'k-', label='Train Fitting')
-plt.plot(tspan2[split + 1:], np.log10(np.diff(sol_opt2[split:, 4])), 'g-', label='Train Fitting')
+plt.plot(tspan2[split+1:], np.log10(np.diff(sol_opt2[split:, 4])), 'g-', label='Train Fitting')
 plt.scatter(data['tspan'][split:], np.log10(data['V'][split:]), color='red', label='Test Fitting')
 plt.xlabel('Time')
 plt.ylabel('Viral RNA in wastewater')
 plt.legend()
 plt.show()
+
 
 # Best fit parameters: λ = 9.66 × 10−8 day−1person−1, α = 249 g, γ = 0.08, and E(0) = 11 people) as well as the fixed beta (4.49*10^7)
 
 # In[ ]:
 
 
-# lambd, alpha, beta, E0 = param
-params_best = [9.66 * 10 ** (-8), 240, 4.49 * 10 ** 7, 11]
+#lambd, alpha, beta, E0 = param
+params_best=[9.66*10**(-8), 240, 4.49*10**7, 11]
 sol_opt = odeint(SEIRV, ICs, tspan, args=tuple(params_best[:3]))
 
-# solve it further in time?
-tspan2 = data['tspan']
+#solve it further in time?
+tspan2=data['tspan']
 sol_opt2 = odeint(SEIRV, ICs, tspan2, args=tuple(params_best[:3]))
 
 # Plotting
 plt.figure()
 plt.plot(tspan, np.log10(V), 'bo', label='Train')
 plt.plot(tspan[1:], np.log10(np.diff(sol_opt[:, 4])), 'k-', label='Train Fitting')
-plt.plot(tspan2[split + 1:], np.log10(np.diff(sol_opt2[split:, 4])), 'g-', label='Train Fitting')
+plt.plot(tspan2[split+1:], np.log10(np.diff(sol_opt2[split:, 4])), 'g-', label='Train Fitting')
 plt.scatter(data['tspan'][split:], np.log10(data['V'][split:]), color='red', label='Test Fitting')
 plt.xlabel('Time')
 plt.ylabel('Viral RNA in wastewater')
 plt.legend()
 plt.show()
+

@@ -17,7 +17,7 @@ profile_model:
   - paper.pdf
   - code.py
   - optional:
-      - ground_truth_model_card.json
+    - ground_truth_model_card.json
 link_amr:
   - paper.pdf
   - extractions.json

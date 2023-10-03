@@ -4,87 +4,57 @@ import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
 
-
-def SIDARTHE_model(y, t, alpha, beta, gamma, delta, epsilon, mu, zeta, lamb, eta, rho, theta, kappa, nu, xi, sigma,
-									 tau):
-	S, I, D, A, R, T, H, E = y
-	dSdt = -S * (alpha(t) * I + beta(t) * D + gamma(t) * A + delta(t) * R)
-	dIdt = S * (alpha(t) * I + gamma(t) * D + beta(t) * A + delta(t) * R) - (zeta(t) + lamb(t)) * I
-	dDdt = epsilon(t) / 3 * I - (eta(t)) * D
-	dAdt = zeta(t) * I - (theta(t) + mu(t) + kappa(t)) * A
-	dRdt = eta(t) * D + theta(t) * A - (nu(t) + xi(t)) * R
-	dTdt = mu(t) * A + nu(t) * R - sigma(t) * T + tau(t) * T
-	dHdt = lamb(t) * I + sigma(t) * D + xi(t) * R + kappa(t) * T
-	dEdt = -tau(t) * T
-
-	return dSdt, dIdt, dDdt, dAdt, dRdt, dTdt, dHdt, dEdt
-
-
+def SIDARTHE_model(y, t, alpha, beta, gamma, delta, epsilon, mu, zeta, lamb, eta, rho, theta, kappa, nu, xi, sigma, tau):
+    S, I, D, A, R, T, H, E = y
+    dSdt = -S*(alpha(t)*I + beta(t)*D + gamma(t)*A + delta(t)*R)
+    dIdt = S*(alpha(t)*I + gamma(t)*D + beta(t)*A + delta(t)*R) - (zeta(t) + lamb(t))*I
+    dDdt = epsilon(t)/3*I - (eta(t))*D
+    dAdt = zeta(t)*I - (theta(t) + mu(t) + kappa(t))*A
+    dRdt = eta(t)*D + theta(t)*A - (nu(t) + xi(t))*R
+    dTdt = mu(t)*A + nu(t)*R - sigma(t)*T + tau(t)*T
+    dHdt = lamb(t)*I + sigma(t)*D + xi(t)*R + kappa(t)*T
+    dEdt = -tau(t)*T
+    
+    return dSdt, dIdt, dDdt, dAdt, dRdt, dTdt, dHdt, dEdt
+    
 # Example Simulation and Plot
 
-def alpha(t): return np.piecewise(t, [t >= 0], [0.75])
+def alpha(t): return np.piecewise(t, [t>=0], [0.75])
+def beta(t): return np.piecewise(t, [t>=0], [0.1])
+def delta(t): return np.piecewise(t, [t>=0], [0.05])
+def gamma(t): return np.piecewise(t, [t>=0], [0.2])
 
+def epsilon(t): return np.piecewise(t, [t>=0], [0.1])
+def theta(t): return np.piecewise(t, [t>=0], [0.1])
 
-def beta(t): return np.piecewise(t, [t >= 0], [0.1])
+def zeta(t): return np.piecewise(t, [t>=0], [0.05])
+def eta(t): return np.piecewise(t, [t>=0], [0.05])
 
+def mu(t): return np.piecewise(t, [t>=0], [0.05])
+def nu(t): return np.piecewise(t, [t>=0], [0.05])
+def lamb(t): return np.piecewise(t, [t>=0], [0.05])
+def rho(t): return np.piecewise(t, [t>=0], [0.05])
 
-def delta(t): return np.piecewise(t, [t >= 0], [0.05])
+def kappa(t): return np.piecewise(t, [t>=0], [0.01])
+def xi(t): return np.piecewise(t, [t>=0], [0.01])
+def sigma(t): return np.piecewise(t, [t>=0], [0.01])
 
-
-def gamma(t): return np.piecewise(t, [t >= 0], [0.2])
-
-
-def epsilon(t): return np.piecewise(t, [t >= 0], [0.1])
-
-
-def theta(t): return np.piecewise(t, [t >= 0], [0.1])
-
-
-def zeta(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def eta(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def mu(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def nu(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def lamb(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def rho(t): return np.piecewise(t, [t >= 0], [0.05])
-
-
-def kappa(t): return np.piecewise(t, [t >= 0], [0.01])
-
-
-def xi(t): return np.piecewise(t, [t >= 0], [0.01])
-
-
-def sigma(t): return np.piecewise(t, [t >= 0], [0.01])
-
-
-def tau(t): return np.piecewise(t, [t >= 0], [0.05])
-
+def tau(t): return np.piecewise(t, [t>=0], [0.05])
 
 N0 = 1e6
-I0, D0, A0, R0, T0, H0, E0 = 50 / N0, 50 / N0, 5 / N0, 1 / N0, 0, 0, 0
-S0 = 1 - I0 - D0 - A0 - R0 - T0 - H0 - E0
-y0 = S0, I0, D0, A0, R0, T0, H0, E0  # Initial conditions vector
+I0, D0, A0, R0, T0, H0, E0 = 50/N0, 50/N0, 5/N0, 1/N0, 0, 0, 0
+S0 = 1-I0-D0-A0-R0-T0-H0-E0
+y0 = S0, I0, D0, A0, R0, T0, H0, E0 # Initial conditions vector
 
 dt = 2
 tstart = 0
 tend = 40
-tvect = np.arange(tstart, tend, dt)
+tvect = np.arange(tstart, tend, dt) 
 
-sim = odeint(SIDARTHE_model, y0, tvect,
-						 args=(alpha, beta, gamma, delta, epsilon, mu, zeta, lamb, eta, rho, theta, kappa, nu, xi, sigma, tau))
+sim = odeint(SIDARTHE_model, y0, tvect, args=(alpha, beta, gamma, delta, epsilon, mu, zeta, lamb, eta, rho, theta, kappa, nu, xi, sigma, tau))
 S, I, D, A, R, T, H, E = sim.T
 
-f, ax = plt.subplots(1, 1, figsize=(10, 4))
+f, ax = plt.subplots(1,1,figsize=(10,4))
 ax.plot(tvect, S, 'b', alpha=0.7, linewidth=2, label='Susceptible')
 ax.plot(tvect, I, 'r', alpha=0.7, linewidth=2, label='Infected (Asymptomatic, Infected, Undetected)')
 ax.plot(tvect, D, 'r.', alpha=0.7, linewidth=2, label='Diagnosed (Asymptomatic, Infected, Detected)')

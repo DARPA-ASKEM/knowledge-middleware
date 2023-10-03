@@ -1,1049 +1,1049 @@
 {
-	"DESCRIPTION": "UNKNOWN",
-	"AUTHOR_NAME": "UNKNOWN",
-	"AUTHOR_EMAIL": "UNKNOWN",
-	"DATE": "UNKNOWN",
-	"PROVENANCE": "UNKNOWN",
-	"SENSITIVITY": "UNKNOWN",
-	"LICENSE": "UNKNOWN",
-	"SCHEMA": [
-		"date",
-		"I",
-		"R",
-		"D",
-		"V",
-		"H",
-		"I_0-9",
-		"I_10-19",
-		"I_20-29",
-		"I_30-39",
-		"I_40-49",
-		"I_50-59",
-		"I_60-69",
-		"I_70-79",
-		"N_0-9",
-		"N_10-19",
-		"N_20-29",
-		"N_30-39",
-		"N_40-49",
-		"N_50-59",
-		"N_60-69",
-		"N_70-79",
-		"N_80-89",
-		"N_90-99",
-		"N_100+"
-	],
-	"EXAMPLES": {
-		"date": "2021-12-15",
-		"I": 1805660.0,
-		"R": 47486969.0,
-		"D": 749829.0,
-		"V": 239082520.0,
-		"H": 133263.0,
-		"I_0-9": 253085.0,
-		"I_10-19": 399905.0,
-		"I_20-29": 524816.0,
-		"I_30-39": 514135.0,
-		"I_40-49": 428469.0,
-		"I_50-59": 421530.0,
-		"I_60-69": 312237.0,
-		"I_70-79": 166839.0,
-		"N_0-9": 40795692.0,
-		"N_10-19": 41765338.0,
-		"N_20-29": 45180252.0,
-		"N_30-39": 45598625.0,
-		"N_40-49": 40561654.0,
-		"N_50-59": 42008241.0,
-		"N_60-69": 39723180.0,
-		"N_70-79": 25830576.0,
-		"N_80-89": 10732464.0,
-		"N_90-99": 2704216.0,
-		"N_100+": 98160.0
-	},
-	"DATA_PROFILING_RESULT": {
-		"date": {
-			"col_name": "date",
-			"concept": "Date",
-			"unit": "YYYY-MM-DD",
-			"description": "The date when the data was collected",
-			"dkg_groundings": [
-				[
-					"dc:date",
-					"Date",
-					"property"
-				],
-				[
-					"oboinowl:date",
-					"date",
-					"property"
-				],
-				[
-					"opmi:0000529",
-					"condition end date",
-					"class"
-				],
-				[
-					"opmi:0000580",
-					"measurement date",
-					"class"
-				]
-			],
-			"column_stats": {
-				"type": "date",
-				"most_common_entries": {
-					"2020-12-13T00:00:00": 1,
-					"2022-02-09T00:00:00": 1,
-					"2022-02-02T00:00:00": 1,
-					"2022-02-03T00:00:00": 1,
-					"2022-02-04T00:00:00": 1,
-					"2022-02-05T00:00:00": 1,
-					"2022-02-06T00:00:00": 1,
-					"2022-02-07T00:00:00": 1,
-					"2022-02-08T00:00:00": 1,
-					"2022-02-10T00:00:00": 1
-				},
-				"num_unique_entries": 629,
-				"earliest": "2020-12-13T00:00:00",
-				"latest": "2022-09-02T00:00:00",
-				"num_null_entries": 0
-			}
-		},
-		"I": {
-			"col_name": "I",
-			"concept": "Total number of infections",
-			"unit": "Count",
-			"description": "The total number of infections on the given date",
-			"dkg_groundings": [
-				[
-					"oae:0001658",
-					"protein total increased AE",
-					"class"
-				],
-				[
-					"oae:0001659",
-					"protein total decreased AE",
-					"class"
-				],
-				[
-					"hp:0002719",
-					"Recurrent infections",
-					"class"
-				],
-				[
-					"cemo:total_number_of_cases_removed_from_isolation",
-					"total number of cases removed from isolation",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 1824147.9554848967,
-				"std": 1978525.3231355771,
-				"min": 179392.0,
-				"25%": 797312.0,
-				"50%": 1397172.0,
-				"75%": 1940458.0,
-				"max": 11294067.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"R": {
-			"col_name": "R",
-			"concept": "Total number of recoveries",
-			"unit": "Count",
-			"description": "The total number of recoveries on the given date",
-			"dkg_groundings": [
-				[
-					"oae:0001658",
-					"protein total increased AE",
-					"class"
-				],
-				[
-					"oae:0001659",
-					"protein total decreased AE",
-					"class"
-				],
-				[
-					"cemo:total_number_of_cases_removed_from_isolation",
-					"total number of cases removed from isolation",
-					"class"
-				],
-				[
-					"apollosv:00000569",
-					"total disease cases",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 50287257.50874404,
-				"std": 23442036.666719466,
-				"min": 13294197.0,
-				"25%": 31468000.0,
-				"50%": 43204421.0,
-				"75%": 77269699.0,
-				"max": 90583545.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"D": {
-			"col_name": "D",
-			"concept": "Total number of deaths",
-			"unit": "Count",
-			"description": "The total number of deaths on the given date",
-			"dkg_groundings": [
-				[
-					"cemo:number_of_deaths_new_this_week",
-					"number of deaths new this week",
-					"class"
-				],
-				[
-					"cemo:daily_deaths",
-					"daily deaths",
-					"class"
-				],
-				[
-					"oae:0001658",
-					"protein total increased AE",
-					"class"
-				],
-				[
-					"oae:0001659",
-					"protein total decreased AE",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 698484.7376788553,
-				"std": 209485.9743574343,
-				"min": 253207.0,
-				"25%": 548324.0,
-				"50%": 684485.0,
-				"75%": 930841.0,
-				"max": 995401.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"V": {
-			"col_name": "V",
-			"concept": "Total number of vaccinations",
-			"unit": "Count",
-			"description": "The total number of vaccinations on the given date",
-			"dkg_groundings": [
-				[
-					"apollosv:00000047",
-					"vaccination administration capacity",
-					"class"
-				],
-				[
-					"oae:0001658",
-					"protein total increased AE",
-					"class"
-				],
-				[
-					"oae:0001659",
-					"protein total decreased AE",
-					"class"
-				],
-				[
-					"cemo:total_number_of_cases_removed_from_isolation",
-					"total number of cases removed from isolation",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 192629410.19872814,
-				"std": 79406211.38052957,
-				"min": 30817.0,
-				"25%": 166591640.0,
-				"50%": 219965512.0,
-				"75%": 255777370.0,
-				"max": 263149382.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"H": {
-			"col_name": "H",
-			"concept": "Total number of hospitalizations",
-			"unit": "Count",
-			"description": "The total number of hospitalizations on the given date",
-			"dkg_groundings": [
-				[
-					"oae:0001658",
-					"protein total increased AE",
-					"class"
-				],
-				[
-					"oae:0001659",
-					"protein total decreased AE",
-					"class"
-				],
-				[
-					"cemo:total_number_of_cases_removed_from_isolation",
-					"total number of cases removed from isolation",
-					"class"
-				],
-				[
-					"apollosv:00000569",
-					"total disease cases",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 45946.52146263911,
-				"std": 33017.88051291638,
-				"min": 0.0,
-				"25%": 26372.0,
-				"50%": 37921.0,
-				"75%": 61421.0,
-				"max": 133263.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_0-9": {
-			"col_name": "I_0-9",
-			"concept": "Number of infections in age group 0-9",
-			"unit": "Count",
-			"description": "The number of infections in the age group 0-9 on the given date",
-			"dkg_groundings": [
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"ncit:C71550",
-					"Age Cohort",
-					"class"
-				],
-				[
-					"vo:0004921",
-					"human age",
-					"class"
-				],
-				[
-					"hp:0003674",
-					"Onset",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 134016.49920508743,
-				"std": 144782.8388013173,
-				"min": 16245.0,
-				"25%": 57118.0,
-				"50%": 97126.0,
-				"75%": 147339.0,
-				"max": 892161.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_10-19": {
-			"col_name": "I_10-19",
-			"concept": "Number of infections in age group 10-19",
-			"unit": "Count",
-			"description": "The number of infections in the age group 10-19 on the given date",
-			"dkg_groundings": [
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"ncit:C71550",
-					"Age Cohort",
-					"class"
-				],
-				[
-					"vo:0004942",
-					"human age 19 to 26 years at vaccination",
-					"class"
-				],
-				[
-					"pr:P08727",
-					"keratin, type I cytoskeletal 19 (human)",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 204412.8187599364,
-				"std": 212750.68581526406,
-				"min": 34660.0,
-				"25%": 98493.0,
-				"50%": 142968.0,
-				"75%": 218018.0,
-				"max": 1338296.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_20-29": {
-			"col_name": "I_20-29",
-			"concept": "Number of infections in age group 20-29",
-			"unit": "Count",
-			"description": "The number of infections in the age group 20-29 on the given date",
-			"dkg_groundings": [
-				[
-					"pr:O95721",
-					"synaptosomal-associated protein 29 (human)",
-					"class"
-				],
-				[
-					"pr:Q9HBJ7",
-					"ubiquitin carboxyl-terminal hydrolase 29 (human)",
-					"class"
-				],
-				[
-					"hp:0040283",
-					"Occasional",
-					"class"
-				],
-				[
-					"ncbitaxon:2042555",
-					"Coronavirus PREDICT CoV-29",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 281231.626391097,
-				"std": 291973.3905196338,
-				"min": 50422.0,
-				"25%": 138447.0,
-				"50%": 200648.0,
-				"75%": 293782.0,
-				"max": 1784822.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_30-39": {
-			"col_name": "I_30-39",
-			"concept": "Number of infections in age group 30-39",
-			"unit": "Count",
-			"description": "The number of infections in the age group 30-39 on the given date",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2042564",
-					"Coronavirus PREDICT CoV-39",
-					"class"
-				],
-				[
-					"pr:Q6A163",
-					"keratin, type I cytoskeletal 39 (human)",
-					"class"
-				],
-				[
-					"pr:O43194",
-					"G-protein coupled receptor 39 (human)",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 272181.6089030207,
-				"std": 272089.4840540674,
-				"min": 45137.0,
-				"25%": 133875.0,
-				"50%": 197842.0,
-				"75%": 289669.0,
-				"max": 1613565.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_40-49": {
-			"col_name": "I_40-49",
-			"concept": "Number of infections in age group 40-49",
-			"unit": "Count",
-			"description": "The number of infections in the age group 40-49 on the given date",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:1717204",
-					"Coronavirus PREDICT_CoV-49",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"pr:Q15427",
-					"splicing factor 3B subunit 4 (human)",
-					"class"
-				],
-				[
-					"doid:0110801",
-					"hereditary spastic paraplegia 49",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 229999.4546899841,
-				"std": 226577.5004791634,
-				"min": 38098.0,
-				"25%": 113717.0,
-				"50%": 166199.0,
-				"75%": 252230.0,
-				"max": 1354664.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_50-59": {
-			"col_name": "I_50-59",
-			"concept": "Number of infections in age group 50-59",
-			"unit": "Count",
-			"description": "The number of infections in the age group 50-59 on the given date",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2042583",
-					"Coronavirus PREDICT CoV-59",
-					"class"
-				],
-				[
-					"vo:0004943",
-					"human age 27 to 59 years at vaccination",
-					"class"
-				],
-				[
-					"pr:Q8IWR1",
-					"tripartite motif-containing protein 59 (human)",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 210402.55961844197,
-				"std": 195834.25306008226,
-				"min": 34446.0,
-				"25%": 102090.0,
-				"50%": 152728.0,
-				"75%": 243442.0,
-				"max": 1159532.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_60-69": {
-			"col_name": "I_60-69",
-			"concept": "Number of infections in age group 60-69",
-			"unit": "Count",
-			"description": "The number of infections in the age group 60-69 on the given date",
-			"dkg_groundings": [
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"hp:0033764",
-					"Death in middle age",
-					"class"
-				],
-				[
-					"ncit:C71550",
-					"Age Cohort",
-					"class"
-				],
-				[
-					"ncbitaxon:749423",
-					"Brent goose coronavirus KR-69",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 152906.00953895072,
-				"std": 131782.66321058967,
-				"min": 22987.0,
-				"25%": 71691.0,
-				"50%": 111362.0,
-				"75%": 188755.0,
-				"max": 785542.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"I_70-79": {
-			"col_name": "I_70-79",
-			"concept": "Number of infections in age group 70-79",
-			"unit": "Count",
-			"description": "The number of infections in the age group 70-79 on the given date",
-			"dkg_groundings": [
-				[
-					"hp:0040282",
-					"Frequent",
-					"class"
-				],
-				[
-					"vo:0012383",
-					"phpA-79",
-					"class"
-				],
-				[
-					"vo:0004063",
-					"S. pneumoniae PhpA-79 Protein Vaccine",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 84900.80604133545,
-				"std": 67341.91688464169,
-				"min": 11536.0,
-				"25%": 40879.0,
-				"50%": 63157.0,
-				"75%": 114605.0,
-				"max": 396854.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_0-9": {
-			"col_name": "N_0-9",
-			"concept": "Population in age group 0-9",
-			"unit": "Count",
-			"description": "The total population in the age group 0-9",
-			"dkg_groundings": [
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"ncit:C71550",
-					"Age Cohort",
-					"class"
-				],
-				[
-					"vo:0004921",
-					"human age",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 40795692.0,
-				"std": 0.0,
-				"min": 40795692.0,
-				"25%": 40795692.0,
-				"50%": 40795692.0,
-				"75%": 40795692.0,
-				"max": 40795692.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_10-19": {
-			"col_name": "N_10-19",
-			"concept": "Population in age group 10-19",
-			"unit": "Count",
-			"description": "The total population in the age group 10-19",
-			"dkg_groundings": [
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"vo:0004942",
-					"human age 19 to 26 years at vaccination",
-					"class"
-				],
-				[
-					"pr:P08727",
-					"keratin, type I cytoskeletal 19 (human)",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 41765338.0,
-				"std": 0.0,
-				"min": 41765338.0,
-				"25%": 41765338.0,
-				"50%": 41765338.0,
-				"75%": 41765338.0,
-				"max": 41765338.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_20-29": {
-			"col_name": "N_20-29",
-			"concept": "Population in age group 20-29",
-			"unit": "Count",
-			"description": "The total population in the age group 20-29",
-			"dkg_groundings": [
-				[
-					"pr:O95721",
-					"synaptosomal-associated protein 29 (human)",
-					"class"
-				],
-				[
-					"pr:Q9HBJ7",
-					"ubiquitin carboxyl-terminal hydrolase 29 (human)",
-					"class"
-				],
-				[
-					"hp:0040283",
-					"Occasional",
-					"class"
-				],
-				[
-					"ncbitaxon:2042555",
-					"Coronavirus PREDICT CoV-29",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 45180252.0,
-				"std": 0.0,
-				"min": 45180252.0,
-				"25%": 45180252.0,
-				"50%": 45180252.0,
-				"75%": 45180252.0,
-				"max": 45180252.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_30-39": {
-			"col_name": "N_30-39",
-			"concept": "Population in age group 30-39",
-			"unit": "Count",
-			"description": "The total population in the age group 30-39",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2042564",
-					"Coronavirus PREDICT CoV-39",
-					"class"
-				],
-				[
-					"pr:Q6A163",
-					"keratin, type I cytoskeletal 39 (human)",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"pr:O43194",
-					"G-protein coupled receptor 39 (human)",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 45598625.0,
-				"std": 0.0,
-				"min": 45598625.0,
-				"25%": 45598625.0,
-				"50%": 45598625.0,
-				"75%": 45598625.0,
-				"max": 45598625.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_40-49": {
-			"col_name": "N_40-49",
-			"concept": "Population in age group 40-49",
-			"unit": "Count",
-			"description": "The total population in the age group 40-49",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:1717204",
-					"Coronavirus PREDICT_CoV-49",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"pr:Q15427",
-					"splicing factor 3B subunit 4 (human)",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 40561654.0,
-				"std": 0.0,
-				"min": 40561654.0,
-				"25%": 40561654.0,
-				"50%": 40561654.0,
-				"75%": 40561654.0,
-				"max": 40561654.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_50-59": {
-			"col_name": "N_50-59",
-			"concept": "Population in age group 50-59",
-			"unit": "Count",
-			"description": "The total population in the age group 50-59",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2042583",
-					"Coronavirus PREDICT CoV-59",
-					"class"
-				],
-				[
-					"vo:0004943",
-					"human age 27 to 59 years at vaccination",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"pr:Q8IWR1",
-					"tripartite motif-containing protein 59 (human)",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 42008241.0,
-				"std": 0.0,
-				"min": 42008241.0,
-				"25%": 42008241.0,
-				"50%": 42008241.0,
-				"75%": 42008241.0,
-				"max": 42008241.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_60-69": {
-			"col_name": "N_60-69",
-			"concept": "Population in age group 60-69",
-			"unit": "Count",
-			"description": "The total population in the age group 60-69",
-			"dkg_groundings": [
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"ncbitaxon:749423",
-					"Brent goose coronavirus KR-69",
-					"class"
-				],
-				[
-					"hp:0033764",
-					"Death in middle age",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 39723180.0,
-				"std": 0.0,
-				"min": 39723180.0,
-				"25%": 39723180.0,
-				"50%": 39723180.0,
-				"75%": 39723180.0,
-				"max": 39723180.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_70-79": {
-			"col_name": "N_70-79",
-			"concept": "Population in age group 70-79",
-			"unit": "Count",
-			"description": "The total population in the age group 70-79",
-			"dkg_groundings": [
-				[
-					"hp:0040282",
-					"Frequent",
-					"class"
-				],
-				[
-					"vo:0012383",
-					"phpA-79",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"vo:0004063",
-					"S. pneumoniae PhpA-79 Protein Vaccine",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 25830576.0,
-				"std": 0.0,
-				"min": 25830576.0,
-				"25%": 25830576.0,
-				"50%": 25830576.0,
-				"75%": 25830576.0,
-				"max": 25830576.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_80-89": {
-			"col_name": "N_80-89",
-			"concept": "Population in age group 80-89",
-			"unit": "Count",
-			"description": "The total population in the age group 80-89",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2717667",
-					"Coronavirus PREDICT_CoV-89",
-					"class"
-				],
-				[
-					"vo:0004344",
-					"HIV DNA vaccine SHIV-89.6 DNA (DNA/89.6)",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 10732464.0,
-				"std": 0.0,
-				"min": 10732464.0,
-				"25%": 10732464.0,
-				"50%": 10732464.0,
-				"75%": 10732464.0,
-				"max": 10732464.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_90-99": {
-			"col_name": "N_90-99",
-			"concept": "Population in age group 90-99",
-			"unit": "Count",
-			"description": "The total population in the age group 90-99",
-			"dkg_groundings": [
-				[
-					"ncbitaxon:2717676",
-					"Coronavirus PREDICT_CoV-99",
-					"class"
-				],
-				[
-					"hp:0040281",
-					"Very frequent",
-					"class"
-				],
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncbitaxon:352849",
-					"Parrot coronavirus AV71/99",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 2704216.0,
-				"std": 0.0,
-				"min": 2704216.0,
-				"25%": 2704216.0,
-				"50%": 2704216.0,
-				"75%": 2704216.0,
-				"max": 2704216.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		},
-		"N_100+": {
-			"col_name": "N_100+",
-			"concept": "Population in age group 100+",
-			"unit": "Count",
-			"description": "The total population in the age group 100+",
-			"dkg_groundings": [
-				[
-					"ncit:C17005",
-					"Population Group",
-					"class"
-				],
-				[
-					"ncit:C20587",
-					"Age Group",
-					"class"
-				],
-				[
-					"ncit:C71550",
-					"Age Cohort",
-					"class"
-				],
-				[
-					"vo:0004921",
-					"human age",
-					"class"
-				]
-			],
-			"column_stats": {
-				"mean": 98160.0,
-				"std": 0.0,
-				"min": 98160.0,
-				"25%": 98160.0,
-				"50%": 98160.0,
-				"75%": 98160.0,
-				"max": 98160.0,
-				"type": "numeric",
-				"num_null_entries": 0
-			}
-		}
-	},
-	"DATASET_TYPE": "tabular"
-}
+    "DESCRIPTION":"UNKNOWN",
+    "AUTHOR_NAME":"UNKNOWN",
+    "AUTHOR_EMAIL":"UNKNOWN",
+    "DATE":"UNKNOWN",
+    "PROVENANCE":"UNKNOWN",
+    "SENSITIVITY":"UNKNOWN",
+    "LICENSE":"UNKNOWN",
+    "SCHEMA":[
+       "date",
+       "I",
+       "R",
+       "D",
+       "V",
+       "H",
+       "I_0-9",
+       "I_10-19",
+       "I_20-29",
+       "I_30-39",
+       "I_40-49",
+       "I_50-59",
+       "I_60-69",
+       "I_70-79",
+       "N_0-9",
+       "N_10-19",
+       "N_20-29",
+       "N_30-39",
+       "N_40-49",
+       "N_50-59",
+       "N_60-69",
+       "N_70-79",
+       "N_80-89",
+       "N_90-99",
+       "N_100+"
+    ],
+    "EXAMPLES":{
+       "date":"2021-12-15",
+       "I":1805660.0,
+       "R":47486969.0,
+       "D":749829.0,
+       "V":239082520.0,
+       "H":133263.0,
+       "I_0-9":253085.0,
+       "I_10-19":399905.0,
+       "I_20-29":524816.0,
+       "I_30-39":514135.0,
+       "I_40-49":428469.0,
+       "I_50-59":421530.0,
+       "I_60-69":312237.0,
+       "I_70-79":166839.0,
+       "N_0-9":40795692.0,
+       "N_10-19":41765338.0,
+       "N_20-29":45180252.0,
+       "N_30-39":45598625.0,
+       "N_40-49":40561654.0,
+       "N_50-59":42008241.0,
+       "N_60-69":39723180.0,
+       "N_70-79":25830576.0,
+       "N_80-89":10732464.0,
+       "N_90-99":2704216.0,
+       "N_100+":98160.0
+    },
+    "DATA_PROFILING_RESULT":{
+       "date":{
+          "col_name":"date",
+          "concept":"Date",
+          "unit":"YYYY-MM-DD",
+          "description":"The date when the data was collected",
+          "dkg_groundings":[
+             [
+                "dc:date",
+                "Date",
+                "property"
+             ],
+             [
+                "oboinowl:date",
+                "date",
+                "property"
+             ],
+             [
+                "opmi:0000529",
+                "condition end date",
+                "class"
+             ],
+             [
+                "opmi:0000580",
+                "measurement date",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "type":"date",
+             "most_common_entries":{
+                "2020-12-13T00:00:00":1,
+                "2022-02-09T00:00:00":1,
+                "2022-02-02T00:00:00":1,
+                "2022-02-03T00:00:00":1,
+                "2022-02-04T00:00:00":1,
+                "2022-02-05T00:00:00":1,
+                "2022-02-06T00:00:00":1,
+                "2022-02-07T00:00:00":1,
+                "2022-02-08T00:00:00":1,
+                "2022-02-10T00:00:00":1
+             },
+             "num_unique_entries":629,
+             "earliest":"2020-12-13T00:00:00",
+             "latest":"2022-09-02T00:00:00",
+             "num_null_entries":0
+          }
+       },
+       "I":{
+          "col_name":"I",
+          "concept":"Total number of infections",
+          "unit":"Count",
+          "description":"The total number of infections on the given date",
+          "dkg_groundings":[
+             [
+                "oae:0001658",
+                "protein total increased AE",
+                "class"
+             ],
+             [
+                "oae:0001659",
+                "protein total decreased AE",
+                "class"
+             ],
+             [
+                "hp:0002719",
+                "Recurrent infections",
+                "class"
+             ],
+             [
+                "cemo:total_number_of_cases_removed_from_isolation",
+                "total number of cases removed from isolation",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":1824147.9554848967,
+             "std":1978525.3231355771,
+             "min":179392.0,
+             "25%":797312.0,
+             "50%":1397172.0,
+             "75%":1940458.0,
+             "max":11294067.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "R":{
+          "col_name":"R",
+          "concept":"Total number of recoveries",
+          "unit":"Count",
+          "description":"The total number of recoveries on the given date",
+          "dkg_groundings":[
+             [
+                "oae:0001658",
+                "protein total increased AE",
+                "class"
+             ],
+             [
+                "oae:0001659",
+                "protein total decreased AE",
+                "class"
+             ],
+             [
+                "cemo:total_number_of_cases_removed_from_isolation",
+                "total number of cases removed from isolation",
+                "class"
+             ],
+             [
+                "apollosv:00000569",
+                "total disease cases",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":50287257.50874404,
+             "std":23442036.666719466,
+             "min":13294197.0,
+             "25%":31468000.0,
+             "50%":43204421.0,
+             "75%":77269699.0,
+             "max":90583545.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "D":{
+          "col_name":"D",
+          "concept":"Total number of deaths",
+          "unit":"Count",
+          "description":"The total number of deaths on the given date",
+          "dkg_groundings":[
+             [
+                "cemo:number_of_deaths_new_this_week",
+                "number of deaths new this week",
+                "class"
+             ],
+             [
+                "cemo:daily_deaths",
+                "daily deaths",
+                "class"
+             ],
+             [
+                "oae:0001658",
+                "protein total increased AE",
+                "class"
+             ],
+             [
+                "oae:0001659",
+                "protein total decreased AE",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":698484.7376788553,
+             "std":209485.9743574343,
+             "min":253207.0,
+             "25%":548324.0,
+             "50%":684485.0,
+             "75%":930841.0,
+             "max":995401.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "V":{
+          "col_name":"V",
+          "concept":"Total number of vaccinations",
+          "unit":"Count",
+          "description":"The total number of vaccinations on the given date",
+          "dkg_groundings":[
+             [
+                "apollosv:00000047",
+                "vaccination administration capacity",
+                "class"
+             ],
+             [
+                "oae:0001658",
+                "protein total increased AE",
+                "class"
+             ],
+             [
+                "oae:0001659",
+                "protein total decreased AE",
+                "class"
+             ],
+             [
+                "cemo:total_number_of_cases_removed_from_isolation",
+                "total number of cases removed from isolation",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":192629410.19872814,
+             "std":79406211.38052957,
+             "min":30817.0,
+             "25%":166591640.0,
+             "50%":219965512.0,
+             "75%":255777370.0,
+             "max":263149382.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "H":{
+          "col_name":"H",
+          "concept":"Total number of hospitalizations",
+          "unit":"Count",
+          "description":"The total number of hospitalizations on the given date",
+          "dkg_groundings":[
+             [
+                "oae:0001658",
+                "protein total increased AE",
+                "class"
+             ],
+             [
+                "oae:0001659",
+                "protein total decreased AE",
+                "class"
+             ],
+             [
+                "cemo:total_number_of_cases_removed_from_isolation",
+                "total number of cases removed from isolation",
+                "class"
+             ],
+             [
+                "apollosv:00000569",
+                "total disease cases",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":45946.52146263911,
+             "std":33017.88051291638,
+             "min":0.0,
+             "25%":26372.0,
+             "50%":37921.0,
+             "75%":61421.0,
+             "max":133263.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_0-9":{
+          "col_name":"I_0-9",
+          "concept":"Number of infections in age group 0-9",
+          "unit":"Count",
+          "description":"The number of infections in the age group 0-9 on the given date",
+          "dkg_groundings":[
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "ncit:C71550",
+                "Age Cohort",
+                "class"
+             ],
+             [
+                "vo:0004921",
+                "human age",
+                "class"
+             ],
+             [
+                "hp:0003674",
+                "Onset",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":134016.49920508743,
+             "std":144782.8388013173,
+             "min":16245.0,
+             "25%":57118.0,
+             "50%":97126.0,
+             "75%":147339.0,
+             "max":892161.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_10-19":{
+          "col_name":"I_10-19",
+          "concept":"Number of infections in age group 10-19",
+          "unit":"Count",
+          "description":"The number of infections in the age group 10-19 on the given date",
+          "dkg_groundings":[
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "ncit:C71550",
+                "Age Cohort",
+                "class"
+             ],
+             [
+                "vo:0004942",
+                "human age 19 to 26 years at vaccination",
+                "class"
+             ],
+             [
+                "pr:P08727",
+                "keratin, type I cytoskeletal 19 (human)",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":204412.8187599364,
+             "std":212750.68581526406,
+             "min":34660.0,
+             "25%":98493.0,
+             "50%":142968.0,
+             "75%":218018.0,
+             "max":1338296.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_20-29":{
+          "col_name":"I_20-29",
+          "concept":"Number of infections in age group 20-29",
+          "unit":"Count",
+          "description":"The number of infections in the age group 20-29 on the given date",
+          "dkg_groundings":[
+             [
+                "pr:O95721",
+                "synaptosomal-associated protein 29 (human)",
+                "class"
+             ],
+             [
+                "pr:Q9HBJ7",
+                "ubiquitin carboxyl-terminal hydrolase 29 (human)",
+                "class"
+             ],
+             [
+                "hp:0040283",
+                "Occasional",
+                "class"
+             ],
+             [
+                "ncbitaxon:2042555",
+                "Coronavirus PREDICT CoV-29",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":281231.626391097,
+             "std":291973.3905196338,
+             "min":50422.0,
+             "25%":138447.0,
+             "50%":200648.0,
+             "75%":293782.0,
+             "max":1784822.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_30-39":{
+          "col_name":"I_30-39",
+          "concept":"Number of infections in age group 30-39",
+          "unit":"Count",
+          "description":"The number of infections in the age group 30-39 on the given date",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2042564",
+                "Coronavirus PREDICT CoV-39",
+                "class"
+             ],
+             [
+                "pr:Q6A163",
+                "keratin, type I cytoskeletal 39 (human)",
+                "class"
+             ],
+             [
+                "pr:O43194",
+                "G-protein coupled receptor 39 (human)",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":272181.6089030207,
+             "std":272089.4840540674,
+             "min":45137.0,
+             "25%":133875.0,
+             "50%":197842.0,
+             "75%":289669.0,
+             "max":1613565.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_40-49":{
+          "col_name":"I_40-49",
+          "concept":"Number of infections in age group 40-49",
+          "unit":"Count",
+          "description":"The number of infections in the age group 40-49 on the given date",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:1717204",
+                "Coronavirus PREDICT_CoV-49",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "pr:Q15427",
+                "splicing factor 3B subunit 4 (human)",
+                "class"
+             ],
+             [
+                "doid:0110801",
+                "hereditary spastic paraplegia 49",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":229999.4546899841,
+             "std":226577.5004791634,
+             "min":38098.0,
+             "25%":113717.0,
+             "50%":166199.0,
+             "75%":252230.0,
+             "max":1354664.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_50-59":{
+          "col_name":"I_50-59",
+          "concept":"Number of infections in age group 50-59",
+          "unit":"Count",
+          "description":"The number of infections in the age group 50-59 on the given date",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2042583",
+                "Coronavirus PREDICT CoV-59",
+                "class"
+             ],
+             [
+                "vo:0004943",
+                "human age 27 to 59 years at vaccination",
+                "class"
+             ],
+             [
+                "pr:Q8IWR1",
+                "tripartite motif-containing protein 59 (human)",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":210402.55961844197,
+             "std":195834.25306008226,
+             "min":34446.0,
+             "25%":102090.0,
+             "50%":152728.0,
+             "75%":243442.0,
+             "max":1159532.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_60-69":{
+          "col_name":"I_60-69",
+          "concept":"Number of infections in age group 60-69",
+          "unit":"Count",
+          "description":"The number of infections in the age group 60-69 on the given date",
+          "dkg_groundings":[
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "hp:0033764",
+                "Death in middle age",
+                "class"
+             ],
+             [
+                "ncit:C71550",
+                "Age Cohort",
+                "class"
+             ],
+             [
+                "ncbitaxon:749423",
+                "Brent goose coronavirus KR-69",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":152906.00953895072,
+             "std":131782.66321058967,
+             "min":22987.0,
+             "25%":71691.0,
+             "50%":111362.0,
+             "75%":188755.0,
+             "max":785542.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "I_70-79":{
+          "col_name":"I_70-79",
+          "concept":"Number of infections in age group 70-79",
+          "unit":"Count",
+          "description":"The number of infections in the age group 70-79 on the given date",
+          "dkg_groundings":[
+             [
+                "hp:0040282",
+                "Frequent",
+                "class"
+             ],
+             [
+                "vo:0012383",
+                "phpA-79",
+                "class"
+             ],
+             [
+                "vo:0004063",
+                "S. pneumoniae PhpA-79 Protein Vaccine",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":84900.80604133545,
+             "std":67341.91688464169,
+             "min":11536.0,
+             "25%":40879.0,
+             "50%":63157.0,
+             "75%":114605.0,
+             "max":396854.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_0-9":{
+          "col_name":"N_0-9",
+          "concept":"Population in age group 0-9",
+          "unit":"Count",
+          "description":"The total population in the age group 0-9",
+          "dkg_groundings":[
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "ncit:C71550",
+                "Age Cohort",
+                "class"
+             ],
+             [
+                "vo:0004921",
+                "human age",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":40795692.0,
+             "std":0.0,
+             "min":40795692.0,
+             "25%":40795692.0,
+             "50%":40795692.0,
+             "75%":40795692.0,
+             "max":40795692.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_10-19":{
+          "col_name":"N_10-19",
+          "concept":"Population in age group 10-19",
+          "unit":"Count",
+          "description":"The total population in the age group 10-19",
+          "dkg_groundings":[
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "vo:0004942",
+                "human age 19 to 26 years at vaccination",
+                "class"
+             ],
+             [
+                "pr:P08727",
+                "keratin, type I cytoskeletal 19 (human)",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":41765338.0,
+             "std":0.0,
+             "min":41765338.0,
+             "25%":41765338.0,
+             "50%":41765338.0,
+             "75%":41765338.0,
+             "max":41765338.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_20-29":{
+          "col_name":"N_20-29",
+          "concept":"Population in age group 20-29",
+          "unit":"Count",
+          "description":"The total population in the age group 20-29",
+          "dkg_groundings":[
+             [
+                "pr:O95721",
+                "synaptosomal-associated protein 29 (human)",
+                "class"
+             ],
+             [
+                "pr:Q9HBJ7",
+                "ubiquitin carboxyl-terminal hydrolase 29 (human)",
+                "class"
+             ],
+             [
+                "hp:0040283",
+                "Occasional",
+                "class"
+             ],
+             [
+                "ncbitaxon:2042555",
+                "Coronavirus PREDICT CoV-29",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":45180252.0,
+             "std":0.0,
+             "min":45180252.0,
+             "25%":45180252.0,
+             "50%":45180252.0,
+             "75%":45180252.0,
+             "max":45180252.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_30-39":{
+          "col_name":"N_30-39",
+          "concept":"Population in age group 30-39",
+          "unit":"Count",
+          "description":"The total population in the age group 30-39",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2042564",
+                "Coronavirus PREDICT CoV-39",
+                "class"
+             ],
+             [
+                "pr:Q6A163",
+                "keratin, type I cytoskeletal 39 (human)",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "pr:O43194",
+                "G-protein coupled receptor 39 (human)",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":45598625.0,
+             "std":0.0,
+             "min":45598625.0,
+             "25%":45598625.0,
+             "50%":45598625.0,
+             "75%":45598625.0,
+             "max":45598625.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_40-49":{
+          "col_name":"N_40-49",
+          "concept":"Population in age group 40-49",
+          "unit":"Count",
+          "description":"The total population in the age group 40-49",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:1717204",
+                "Coronavirus PREDICT_CoV-49",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "pr:Q15427",
+                "splicing factor 3B subunit 4 (human)",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":40561654.0,
+             "std":0.0,
+             "min":40561654.0,
+             "25%":40561654.0,
+             "50%":40561654.0,
+             "75%":40561654.0,
+             "max":40561654.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_50-59":{
+          "col_name":"N_50-59",
+          "concept":"Population in age group 50-59",
+          "unit":"Count",
+          "description":"The total population in the age group 50-59",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2042583",
+                "Coronavirus PREDICT CoV-59",
+                "class"
+             ],
+             [
+                "vo:0004943",
+                "human age 27 to 59 years at vaccination",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "pr:Q8IWR1",
+                "tripartite motif-containing protein 59 (human)",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":42008241.0,
+             "std":0.0,
+             "min":42008241.0,
+             "25%":42008241.0,
+             "50%":42008241.0,
+             "75%":42008241.0,
+             "max":42008241.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_60-69":{
+          "col_name":"N_60-69",
+          "concept":"Population in age group 60-69",
+          "unit":"Count",
+          "description":"The total population in the age group 60-69",
+          "dkg_groundings":[
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "ncbitaxon:749423",
+                "Brent goose coronavirus KR-69",
+                "class"
+             ],
+             [
+                "hp:0033764",
+                "Death in middle age",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":39723180.0,
+             "std":0.0,
+             "min":39723180.0,
+             "25%":39723180.0,
+             "50%":39723180.0,
+             "75%":39723180.0,
+             "max":39723180.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_70-79":{
+          "col_name":"N_70-79",
+          "concept":"Population in age group 70-79",
+          "unit":"Count",
+          "description":"The total population in the age group 70-79",
+          "dkg_groundings":[
+             [
+                "hp:0040282",
+                "Frequent",
+                "class"
+             ],
+             [
+                "vo:0012383",
+                "phpA-79",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "vo:0004063",
+                "S. pneumoniae PhpA-79 Protein Vaccine",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":25830576.0,
+             "std":0.0,
+             "min":25830576.0,
+             "25%":25830576.0,
+             "50%":25830576.0,
+             "75%":25830576.0,
+             "max":25830576.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_80-89":{
+          "col_name":"N_80-89",
+          "concept":"Population in age group 80-89",
+          "unit":"Count",
+          "description":"The total population in the age group 80-89",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2717667",
+                "Coronavirus PREDICT_CoV-89",
+                "class"
+             ],
+             [
+                "vo:0004344",
+                "HIV DNA vaccine SHIV-89.6 DNA (DNA/89.6)",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":10732464.0,
+             "std":0.0,
+             "min":10732464.0,
+             "25%":10732464.0,
+             "50%":10732464.0,
+             "75%":10732464.0,
+             "max":10732464.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_90-99":{
+          "col_name":"N_90-99",
+          "concept":"Population in age group 90-99",
+          "unit":"Count",
+          "description":"The total population in the age group 90-99",
+          "dkg_groundings":[
+             [
+                "ncbitaxon:2717676",
+                "Coronavirus PREDICT_CoV-99",
+                "class"
+             ],
+             [
+                "hp:0040281",
+                "Very frequent",
+                "class"
+             ],
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncbitaxon:352849",
+                "Parrot coronavirus AV71/99",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":2704216.0,
+             "std":0.0,
+             "min":2704216.0,
+             "25%":2704216.0,
+             "50%":2704216.0,
+             "75%":2704216.0,
+             "max":2704216.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       },
+       "N_100+":{
+          "col_name":"N_100+",
+          "concept":"Population in age group 100+",
+          "unit":"Count",
+          "description":"The total population in the age group 100+",
+          "dkg_groundings":[
+             [
+                "ncit:C17005",
+                "Population Group",
+                "class"
+             ],
+             [
+                "ncit:C20587",
+                "Age Group",
+                "class"
+             ],
+             [
+                "ncit:C71550",
+                "Age Cohort",
+                "class"
+             ],
+             [
+                "vo:0004921",
+                "human age",
+                "class"
+             ]
+          ],
+          "column_stats":{
+             "mean":98160.0,
+             "std":0.0,
+             "min":98160.0,
+             "25%":98160.0,
+             "50%":98160.0,
+             "75%":98160.0,
+             "max":98160.0,
+             "type":"numeric",
+             "num_null_entries":0
+          }
+       }
+    },
+    "DATASET_TYPE":"tabular"
+ }
