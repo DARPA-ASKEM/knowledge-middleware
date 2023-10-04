@@ -60,6 +60,12 @@ Once the report has been generated, run `poetry run streamlit run tests/Home.py`
 
 > Note: if the tests fail, `poetry poe` will exit and not generate a report. To work around this, run `pytest --json-report --json-report-file=tests/output/tests.json` then `python tests/report.py` manually.
 
+### Adding Test Scenarios
+
+Test scenarious can be added to `tests/scenarios`. Each `scenario` should have it's own directory and must contain a `config.yaml` file which provides a name for the scenario and indicates which test(s) should be run. See `scenarios/basic` for a boilerplate that runs all test cases.
+
+The files required to run each scenario are defined in `tests/resources.yaml`. Note that some files are considered `optional`: e.g. `ground_truth_model_card`.
+
 ## License
 
 [Apache License 2.0](LICENSE)
