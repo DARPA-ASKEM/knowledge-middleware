@@ -8,9 +8,9 @@ export LANG
 # Initializes submodules and copies environment file sample to env file.
 .PHONY:init
 init:.env
-	@if ($(PYTHON) -m poetry -q > /dev/null); then \
-		$(PYTHON) -m poetry install; \
-		$(PYTHON) -m poetry run pre-commit install; \
+	@if (poetry -q > /dev/null); then \
+		poetry install; \
+		poetry run pre-commit install; \
 		git submodule update --init; \
 	else \
 		echo -en "This app requires the Poetry Python package manager.\nWould you like to try to install it automatically? [y/N] "; \
