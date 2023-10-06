@@ -66,7 +66,7 @@ def add_paper(scenario):
     "assets": []
   }
   
-  paper_response = requests.post(TDS_URL + "/code", json=payload, headers={
+  paper_response = requests.post(TDS_URL + "/documents", json=payload, headers={
     "Content-Type": "application/json"
   })
   if paper_response.status_code >= 300:
