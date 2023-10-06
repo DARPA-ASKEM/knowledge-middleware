@@ -375,6 +375,7 @@ def pdf_extractions(*args, **kwargs):
         filename=document_json.get("file_names")[0],
         extractions=extraction_json,
         text=document_json.get("text", None),
+        assets=document_json.get("assets", None),
     )
 
     if document_response.get("status") == 200:
