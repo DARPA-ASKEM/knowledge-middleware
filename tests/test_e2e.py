@@ -456,9 +456,9 @@ def test_profile_model(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
-
     #### POSTAMBLE ####
     if not settings.MOCK_TA1 and os.path.exists(f"{context_dir}/ground_truth_model_card.json"):
+        logger.debug(f"Evaluating model card: {generated_card}")
         files = {
             "test_json_file": json.dumps(generated_card),
             "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
@@ -468,6 +468,7 @@ def test_profile_model(
             params={"gpt_key": settings.OPENAI_API_KEY},
             files=files
         )
+        logger.info(f"Model profiling evaluation result: {eval.text}")
         if eval.status_code < 300:
             accuracy = eval.json()["accuracy"]
         else:
