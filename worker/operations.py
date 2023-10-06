@@ -362,23 +362,6 @@ def pdf_extractions(*args, **kwargs):
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {response.text}")
-        outputs = extraction_json["outputs"]
-
-        if isinstance(outputs, dict):
-            if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = extraction_json.get("outputs").get("data")
-        elif isinstance(outputs, list):
-            if extraction_json.get("outputs")[0].get("data") is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = [extraction_json.get("outputs")[0].get("data")]
-                logging.info("HERE!")
 
     except ValueError:
         raise ValueError(f"Extraction for document {document_id} failed.")
@@ -608,8 +591,9 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-    logger.info(f"Sending model {model_id} and document {document_id} for linking")
+    logger.info(f"Sending model {model_id} and document {document_id} for linking to: {skema_amr_linking_url}")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
+    logger.info(f"SKEMA response status code: {response.status_code}")
     logger.debug(f"TA 1 response object: {response.text}")
 
     if response.status_code == 200:
