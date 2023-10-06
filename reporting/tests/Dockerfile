@@ -6,6 +6,5 @@ RUN pip install -r requirements.txt
 
 COPY scenarios scenarios/
 COPY tests tests/
-COPY data data/
 
 CMD [ "bash", "tests/run_tests.sh" ]
