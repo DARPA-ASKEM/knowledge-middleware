@@ -112,93 +112,60 @@ def publish_report(report, upload):
 #     publish_report(gen_report(), upload)
 
 
-def pdf_to_cosmos(scenario):
-    payload = {"document_id": scenario}
-
-    logging.info(f"PDF to cosmos payload {payload}")
-    km_response = requests.post(KM_URL + f"/pdf_to_cosmos?document_id={scenario}")
+def run_km_job(url, scenario, task_name, kwargs=None):
+    if kwargs is None:
+        kwargs = {}
+    km_response = requests.post(url, **kwargs)
 
     if km_response.status_code != 200:
         raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'pdf to cosmos' on scenario: {scenario}"
+            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
         )
 
     response_json = km_response.json()
     logging.info(f" {response_json}")
     # Check if RQ job is successful, if not poll for completion of job
     if response_json["status"] == "queued":
-        job_id = response_json["job_id"]
+        job_id = response_json["id"]
         while True:
             sleep(1)
-            job_status = post_to_km_endpoint(f"/status/{job_id}").json()
-            if job_status["status"] == "FINISHED":
-                logging.info(f"PDF to Cosmos job: {job_id} - status: finished")
+            job_status = requests.get(f"{KM_URL}/status/{job_id}").json()
+            logging.info(job_status)
+            if job_status["status"] == "finished":
+                logging.info(f"{task_name} job: {job_id} - status: finished")
                 break
-            elif job_status["status"] == "FAILED":
-                raise Exception(f"Knowledge Middleware job {job_id} failed")
+            elif job_status["status"] == "failed":
+                raise Exception(
+                    f"Knowledge Middleware job {task_name} - {job_id} failed"
+                )
     elif response_json["status"] == "finished":
-        logging.info(f"PDF to Cosmos job: {job_id} - status: finished")
+        logging.info(f"{task_name} job: {job_id} - status: finished")
     else:
         raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'pdf to cosmos' on scenario: {scenario}"
+            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
         )
+
+
+def pdf_to_cosmos(scenario):
+    task_name = "pdf to cosmos"
+    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
+
+    run_km_job(url, scenario, task_name)
 
 
 def pdf_to_text(scenario):
-    km_response = post_to_km_endpoint(
-        "/pdf_extractions", json={"document_id": scenario}
-    )
+    task_name = "pdf to text"
+    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
 
-    if km_response.status_code != 200:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'pdf to text' on scenario: {scenario}"
-        )
-
-    response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["result"]["job_result"]["status"] == "QUEUED":
-        job_id = response_json["job_id"]
-        while True:
-            sleep(1)
-            job_status = post_to_km_endpoint(f"/status/{job_id}").json()
-            if job_status["status"] == "FINISHED":
-                break
-            elif job_status["status"] == "FAILED":
-                raise Exception(f"Knowledge Middleware job {job_id} failed")
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'pdf to text' on scenario: {scenario}"
-        )
+    run_km_job(url, scenario, task_name)
 
 
 def code_to_amr(scenario):
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    km_response = post_to_km_endpoint(
-        "/code_to_amr", json={"code_id": scenario, "dynamics_only": True}
-    )
+    task_name = "code to AMR"
+    url = f"{KM_URL}/code_to_amr?code_id={scenario}?dynamics_only=True"
 
-    if km_response.status_code != 200:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'code to amr' on scenario: {scenario}"
-        )
-
-    response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["result"]["job_result"]["status"] == "QUEUED":
-        job_id = response_json["job_id"]
-        while True:
-            sleep(1)
-            job_status = post_to_km_endpoint(f"/status/{job_id}").json()
-            if job_status["status"] == "FINISHED":
-                break
-            elif job_status["status"] == "FAILED":
-                raise Exception(f"Knowledge Middleware job {job_id} failed")
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'code to amr' on scenario: {scenario}"
-        )
+    run_km_job(url, scenario, task_name)
 
 
 def profile_model(scenario, model_id):
@@ -214,8 +181,8 @@ def profile_model(scenario, model_id):
     response_json = km_response.json()
     logging.info(f" {response_json}")
     # Check if RQ job is successful, if not poll for completion of job
-    if response_json["result"]["job_result"]["status"] == "QUEUED":
-        job_id = response_json["job_id"]
+    if response_json["status"] == "queued":
+        job_id = response_json["id"]
         while True:
             sleep(1)
             job_status = post_to_km_endpoint(f"/status/{job_id}").json()
@@ -242,8 +209,8 @@ def link_amr(scenario, model_id):
     response_json = km_response.json()
     logging.info(f" {response_json}")
     # Check if RQ job is successful, if not poll for completion of job
-    if response_json["result"]["job_result"]["status"] == "QUEUED":
-        job_id = response_json["job_id"]
+    if response_json["status"] == "queued":
+        job_id = response_json["id"]
         while True:
             sleep(1)
             job_status = post_to_km_endpoint(f"/status/{job_id}").json()
@@ -267,5 +234,5 @@ def pipeline(scenario):
 
 if __name__ == "__main__":
     for scenario in os.listdir("./scenarios"):
-        logging.info(f"Seeding {scenario}")
+        logging.info(f"Pipeline running on: {scenario}")
         pipeline(scenario)

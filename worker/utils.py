@@ -52,10 +52,14 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
 
         # Keep name and information from existing model
         fetched_amr = model_response.json()
-        amr_payload["header"]["name"] = fetched_amr.get("header",{}).get("name", None)
-        amr_payload["header"]["description"] = fetched_amr.get("header",{}).get("description", None)
+        amr_payload["header"]["name"] = fetched_amr.get("header", {}).get("name", None)
+        amr_payload["header"]["description"] = fetched_amr.get("header", {}).get(
+            "description", None
+        )
 
-        update_model_response = requests.put(tds_models, json=amr_payload, headers=headers)
+        update_model_response = requests.put(
+            tds_models, json=amr_payload, headers=headers
+        )
         if update_model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {amr_payload}"
@@ -206,6 +210,11 @@ def get_document_from_tds(document_id, code=False):
     downloaded_document = requests.get(document_download_url.json().get("url"))
 
     logger.info(f"DOCUMENT RETRIEVAL STATUS:{downloaded_document.status_code}")
+
+    if downloaded_document.status_code != 200:
+        raise Exception(
+            f"Cannot download document {document_id} from TDS: {downloaded_document.text}"
+        )
 
     return document_json, downloaded_document.content
 

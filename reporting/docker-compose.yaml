@@ -137,7 +137,7 @@ services:
       - TDS_URL=http://data-service:8000
       - MIT_TR_URL
       - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - OPENAI_API_KEY
     ports:
       - 8001:8000
@@ -158,7 +158,7 @@ services:
       - REDIS_PORT=6379
       - TDS_URL=http://data-service:8000
       - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL
       - MIT_TR_URL
       - OPENAI_API_KEY
@@ -179,7 +179,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL
       - MIT_TR_URL
       - OPENAI_API_KEY

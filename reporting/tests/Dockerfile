@@ -7,4 +7,5 @@ RUN pip install -r requirements.txt
 COPY scenarios scenarios/
 COPY tests tests/
 
+# CMD ["bash", "tests/run_tests.sh" , "&&", "while true; do sleep 1; done"]
 CMD [ "bash", "tests/run_tests.sh" ]

@@ -86,7 +86,7 @@ def add_paper(scenario):
         )
 
     url_response = requests.get(
-        TDS_URL + f"/code/{scenario}/upload-url", params={"filename": "paper.pdf"}
+        TDS_URL + f"/documents/{scenario}/upload-url", params={"filename": "paper.pdf"}
     )
     upload_url = url_response.json()["url"]
     with open(filepath, "rb") as file:
