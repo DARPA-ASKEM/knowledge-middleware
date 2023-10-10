@@ -461,10 +461,10 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
-		if dataset_json.get("metadata") is None:
+    if dataset_json.get("metadata") is None:
         dataset_json["metadata"] = {}
 			
-		if dataset_json["metadata"].get("data_card") is None:
+    if dataset_json["metadata"].get("data_card") is None:
         dataset_json["metadata"]["data_card"] = {}
 
     dataset_json["metadata"]["data_card"] = data_card
