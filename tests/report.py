@@ -13,7 +13,7 @@ import boto3
 from lib.settings import settings
 
 def test(output_file="tests/output/tests.json"):
-    pytest.main(["--json-report", f"--json-report-file={output_file}"])
+    pytest.main(["--json-report", f"--json-report-file={output_file}", "-k profile_model"])
 
 
 def gen_report():

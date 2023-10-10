@@ -463,6 +463,7 @@ def test_profile_model(
             "test_json_file": json.dumps(generated_card),
             "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
         }    
+        logging.error(files)
         eval = requests.post(
             f"{settings.MIT_TR_URL}/evaluation/eval_model_card", 
             params={"gpt_key": settings.OPENAI_API_KEY},
