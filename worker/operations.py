@@ -463,6 +463,9 @@ def data_card(*args, **kwargs):
 
     if "metadata" not in dataset_json:
         dataset_json["metadata"] = {}
+			
+		if "data_card" not in dataset_json["metadata"]:
+        dataset_json["metadata"]["data_card"] = {}
 
     dataset_json["metadata"]["data_card"] = data_card
 
