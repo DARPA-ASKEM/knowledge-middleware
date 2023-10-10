@@ -377,6 +377,7 @@ def test_profile_dataset(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+    logger.debug(status_response.json())
 
 
 @pytest.mark.parametrize("resource", params["profile_model"])

@@ -432,13 +432,14 @@ def data_card(*args, **kwargs):
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
-    mit_annotations = resp.json()["DATA_PROFILING_RESULT"]
+    data_card = resp.json()
+    data_profiling_result = data_card["DATA_PROFILING_RESULT"]
 
     sys.stdout.flush()
 
     columns = []
     for c in dataset_dataframe.columns:
-        annotation = mit_annotations.get(c, {})
+        annotation = data_profiling_result.get(c, {})
 
         # parse groundings
         groundings = {"identifiers": {}}
@@ -460,6 +461,11 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
+    if "metadata" not in dataset_json:
+        dataset_json["metadata"] = {}
+
+    dataset_json["metadata"]["data_card"] = data_card
+
     tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
@@ -468,6 +474,7 @@ def data_card(*args, **kwargs):
 
     return {
         "status": tds_resp.status_code,
+        "data_card": dataset_json["metadata"]["data_card"],
         "message": "Data card generated and updated in TDS",
     }
 
