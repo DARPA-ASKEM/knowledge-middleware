@@ -93,7 +93,8 @@ services:
       retries: 5
   data-service-migrations:
     image: ghcr.io/darpa-askem/data-service:latest
-    command: [ '/api/migrations/run_migrations.sh' ]
+    command: >
+      sh -c "chmod +x /api/migrations/run_migrations.sh && /api/migrations/run_migrations.sh"
     environment:
       - DATASET_STORAGE_BASE_URL=s3://datasets/
       - STORAGE_HOST=http://minio:9000
