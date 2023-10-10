@@ -370,14 +370,15 @@ def test_profile_dataset(
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
-
+    
     #### ASSERT ####
     assert results.get("status") == "queued"
     assert status_response.status_code == 200
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
-
+    logger.debug(status_response.json())
+    
 
 @pytest.mark.parametrize("resource", params["profile_model"])
 def test_profile_model(
