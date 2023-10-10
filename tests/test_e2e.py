@@ -65,6 +65,23 @@ def test_pdf_extraction(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
+    #### POSTAMBLE ####
+    scenario = context_dir.split("/")[-1]
+    if not settings.MOCK_TA1 and "sidarthe" in context_dir:
+        # Can only quality check for SIDARTHE
+        logger.debug(f"Evaluating PDF extractions from SKEMA")
+        eval = requests.get(
+            f"{settings.TA1_UNIFIED_URL}/text-reading/eval"
+        )
+        logger.info(f"PDF extraction evaluation result: {eval.text}")
+        if eval.status_code < 300:
+            accuracy = json.dumps(eval.json())
+        else:
+            accuracy = False
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
+
+
+
 
 @pytest.mark.parametrize("resource", params["pdf_to_cosmos"])
 def test_pdf_to_cosmos(
