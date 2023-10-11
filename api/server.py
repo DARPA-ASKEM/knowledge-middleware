@@ -116,6 +116,7 @@ def code_to_amr(
         code_id (str): the id of the code
         name (str, optional): the name to set on the newly created model
         description (str, optional): the description to set on the newly created model
+        dynamics_only (bool, optional): whether to only run the amr extraction over specified dynamics from the code object in TDS.
     ```
     """
     operation_name = "operations.code_to_amr"
@@ -179,7 +180,9 @@ async def pdf_extractions(
 
 @app.post("/profile_dataset/{dataset_id}")
 def profile_dataset(
-    dataset_id: str, document_id: Optional[str] = None, redis=Depends(get_redis)
+    dataset_id: str,
+    document_id: Optional[str] = None,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Profile dataset with MIT's profiling service. This optionally accepts an `document_id` which
     is expected to be some user uploaded document which has had its text extracted and stored as
@@ -205,7 +208,9 @@ def profile_dataset(
 
 @app.post("/profile_model/{model_id}")
 def profile_model(
-    model_id: str, document_id: str, redis=Depends(get_redis)
+    model_id: str,
+    document_id: str,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
@@ -229,7 +234,9 @@ def profile_model(
 
 @app.post("/link_amr")
 def link_amr(
-    document_id: str, model_id: str, redis=Depends(get_redis)
+    document_id: str,
+    model_id: str,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     operation_name = "operations.link_amr"
 
