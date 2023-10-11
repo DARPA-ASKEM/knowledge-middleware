@@ -27,6 +27,118 @@ BUCKET = os.environ.get("BUCKET", None)
 UPLOAD = os.environ.get("UPLOAD", "FALSE").lower() == "true"
 
 
+def run_km_job(url, scenario, task_name, kwargs=None):
+    if kwargs is None:
+        kwargs = {}
+    km_response = requests.post(url, **kwargs)
+
+    if km_response.status_code != 200:
+        raise Exception(
+            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
+        )
+
+    response_json = km_response.json()
+    logging.info(f" {response_json}")
+    # Check if RQ job is successful, if not poll for completion of job
+    if response_json["status"] == "queued":
+        job_id = response_json["id"]
+        while True:
+            sleep(3)
+            job_status = requests.get(f"{KM_URL}/status/{job_id}").json()
+            logging.info(job_status)
+            if job_status["status"] == "finished":
+                logging.info(f"{task_name} job: {job_id} - status: finished")
+                return job_status
+            elif job_status["status"] == "failed":
+                raise Exception(
+                    f"Knowledge Middleware job {task_name} - {job_id} failed"
+                )
+    elif response_json["status"] == "finished":
+        logging.info(f"{task_name} job: {job_id} - status: finished")
+        return response_json
+    else:
+        raise Exception(
+            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
+        )
+
+
+def pdf_to_cosmos(scenario):
+    task_name = "pdf to cosmos"
+    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
+
+    return run_km_job(url, scenario, task_name)
+
+
+def pdf_to_text(scenario):
+    task_name = "pdf to text"
+    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+
+    return run_km_job(url, scenario, task_name)
+
+
+def code_to_amr(scenario):
+    # Try dynamics only since code_to_amr fallsback to full if dynamics fails
+    task_name = "code to AMR"
+    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
+
+    return run_km_job(url, scenario, task_name)
+
+
+def profile_model(scenario, model_id, document_id):
+    task_name = "profile model"
+    url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
+
+    return run_km_job(url, scenario, task_name)
+
+
+def link_amr(scenario, model_id, document_id):
+    task_name = "link AMR"
+    url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
+
+    return run_km_job(url, scenario, task_name)
+
+
+def pipeline(scenario):
+    report = {}
+    try:
+        cosmos_response = pdf_to_cosmos(scenario=scenario)
+        document_id = scenario
+        cosmos_response["result"]["job_result"].pop("extraction")
+        # report_object = {"name": "pdf_to_cosmos", "result": cosmos_response"}
+        report["pdf_to_cosmos"] = cosmos_response
+
+        text_response = pdf_to_text(scenario=scenario)
+        text_response["result"]["job_result"].pop("extraction")
+        report["pdf_to_text"] = text_response
+
+        amr_response = code_to_amr(scenario=scenario)
+        model_id = amr_response["model_id"]
+        report["code_to_amr"] = amr_response
+
+        profile_response = profile_model(
+            scenario=scenario, model_id=model_id, document_id=document_id
+        )
+        report["profile_model"] = profile_response
+
+        link_response = link_amr(
+            scenario=scenario, model_id=model_id, document_id=document_id
+        )
+        report["link_amr"] = link_response
+
+        return report
+    except:
+        logging.error(f"Pipeline did not complete on scenario: {scenario}")
+        return report
+
+
+if __name__ == "__main__":
+    for scenario in os.listdir("./scenarios"):
+        logging.info(f"Pipeline running on: {scenario}")
+        report = pipeline(scenario)
+
+        logging.info(f"Pipeline report: {report}")
+
+
 # QUESTION: Are we running the whole workflow here?
 # def eval_integration():  # TODO: Specify more specific args
 #     start_time = time()
@@ -110,129 +222,3 @@ def publish_report(report, upload):
 
 # def report(upload=True):
 #     publish_report(gen_report(), upload)
-
-
-def run_km_job(url, scenario, task_name, kwargs=None):
-    if kwargs is None:
-        kwargs = {}
-    km_response = requests.post(url, **kwargs)
-
-    if km_response.status_code != 200:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
-        )
-
-    response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["status"] == "queued":
-        job_id = response_json["id"]
-        while True:
-            sleep(1)
-            job_status = requests.get(f"{KM_URL}/status/{job_id}").json()
-            logging.info(job_status)
-            if job_status["status"] == "finished":
-                logging.info(f"{task_name} job: {job_id} - status: finished")
-                break
-            elif job_status["status"] == "failed":
-                raise Exception(
-                    f"Knowledge Middleware job {task_name} - {job_id} failed"
-                )
-    elif response_json["status"] == "finished":
-        logging.info(f"{task_name} job: {job_id} - status: finished")
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
-        )
-
-
-def pdf_to_cosmos(scenario):
-    task_name = "pdf to cosmos"
-    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
-
-    run_km_job(url, scenario, task_name)
-
-
-def pdf_to_text(scenario):
-    task_name = "pdf to text"
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
-
-    run_km_job(url, scenario, task_name)
-
-
-def code_to_amr(scenario):
-    # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    task_name = "code to AMR"
-    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
-
-    run_km_job(url, scenario, task_name)
-
-
-def profile_model(scenario, model_id):
-    km_response = post_to_km_endpoint(
-        f"/profile_model/{model_id}", json={"document_id": scenario}
-    )
-
-    if km_response.status_code != 200:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'profile model' on scenario: {scenario}"
-        )
-
-    response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["status"] == "queued":
-        job_id = response_json["id"]
-        while True:
-            sleep(1)
-            job_status = post_to_km_endpoint(f"/status/{job_id}").json()
-            if job_status["status"] == "FINISHED":
-                break
-            elif job_status["status"] == "FAILED":
-                raise Exception(f"Knowledge Middleware job {job_id} failed")
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'profile model' on scenario: {scenario}"
-        )
-
-
-def link_amr(scenario, model_id):
-    km_response = post_to_km_endpoint(
-        "/link_amr", json={"document_id": scenario, "model_id": model_id}
-    )
-
-    if km_response.status_code != 200:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'link amr' on scenario: {scenario}"
-        )
-
-    response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["status"] == "queued":
-        job_id = response_json["id"]
-        while True:
-            sleep(1)
-            job_status = post_to_km_endpoint(f"/status/{job_id}").json()
-            if job_status["status"] == "FINISHED":
-                break
-            elif job_status["status"] == "FAILED":
-                raise Exception(f"Knowledge Middleware job {job_id} failed")
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for 'link amr' on scenario: {scenario}"
-        )
-
-
-def pipeline(scenario):
-    pdf_to_cosmos(scenario=scenario)
-    pdf_to_text(scenario=scenario)
-    model_id = code_to_amr(scenario=scenario)
-    profile_model(scenario=scenario, model_id=model_id)
-    link_amr(scenario=scenario, model_id=model_id)
-
-
-if __name__ == "__main__":
-    for scenario in os.listdir("./scenarios"):
-        logging.info(f"Pipeline running on: {scenario}")
-        pipeline(scenario)
