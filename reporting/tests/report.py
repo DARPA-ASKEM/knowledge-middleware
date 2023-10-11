@@ -163,7 +163,7 @@ def pdf_to_text(scenario):
 def code_to_amr(scenario):
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
     task_name = "code to AMR"
-    url = f"{KM_URL}/code_to_amr?code_id={scenario}?dynamics_only=True"
+    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
 
     run_km_job(url, scenario, task_name)
 
