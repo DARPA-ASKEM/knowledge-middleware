@@ -366,23 +366,6 @@ def pdf_extractions(*args, **kwargs):
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {response.text}")
-        outputs = extraction_json["outputs"]
-
-        if isinstance(outputs, dict):
-            if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = extraction_json.get("outputs").get("data")
-        elif isinstance(outputs, list):
-            if extraction_json.get("outputs")[0].get("data") is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = [extraction_json.get("outputs")[0].get("data")]
-                logging.info("HERE!")
 
     except ValueError:
         raise ValueError(f"Extraction for document {document_id} failed.")
@@ -453,13 +436,14 @@ def data_card(*args, **kwargs):
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
-    mit_annotations = resp.json()["DATA_PROFILING_RESULT"]
+    data_card = resp.json()
+    data_profiling_result = data_card["DATA_PROFILING_RESULT"]
 
     sys.stdout.flush()
 
     columns = []
     for c in dataset_dataframe.columns:
-        annotation = mit_annotations.get(c, {})
+        annotation = data_profiling_result.get(c, {})
 
         # parse groundings
         groundings = {"identifiers": {}}
@@ -481,6 +465,14 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
+    if dataset_json.get("metadata") is None:
+        dataset_json["metadata"] = {}
+			
+    if dataset_json["metadata"].get("data_card") is None:
+        dataset_json["metadata"]["data_card"] = {}
+
+    dataset_json["metadata"]["data_card"] = data_card
+
     tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
@@ -489,6 +481,7 @@ def data_card(*args, **kwargs):
 
     return {
         "status": tds_resp.status_code,
+        "data_card": dataset_json["metadata"]["data_card"],
         "message": "Data card generated and updated in TDS",
     }
 
@@ -518,13 +511,8 @@ def model_card(*args, **kwargs):
     paper_document_json, paper_downloaded_document = get_document_from_tds(
         document_id=paper_document_id
     )
-    text_file = paper_document_json.get(
-        "text", "There is no documentation for this model"
-    ).encode()
-    text_file = (
-        paper_document_json
-        .get("text", "There is no documentation for this model")
-    )
+
+    text_file = paper_document_json.get("text") or  "There is no documentation for this model"
 
     # TODO: Remove when no character limit exists for MIT
     text_file = text_file[:9000]
@@ -534,8 +522,8 @@ def model_card(*args, **kwargs):
     params = {"gpt_key": openai_key}
 
     files = {
-        "text_file": text_file,
-        "code_file": code_file,
+        "text_file": text_file.encode(),
+        "code_file": code_file.encode(),
     }
 
     url = f"{MIT_API}/cards/get_model_card"
@@ -573,7 +561,7 @@ def model_card(*args, **kwargs):
 
     else:
         raise Exception(
-            f"Bad response from TA1 service for {model_id}: {resp.status_code}"
+            f"Bad response from TA1 service for {model_id}: {resp.status_code} \n {resp.content}"
         )
 
 
@@ -612,8 +600,9 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-    logger.info(f"Sending model {model_id} and document {document_id} for linking")
+    logger.info(f"Sending model {model_id} and document {document_id} for linking to: {skema_amr_linking_url}")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
+    logger.info(f"SKEMA response status code: {response.status_code}")
     logger.debug(f"TA 1 response object: {response.text}")
 
     if response.status_code == 200:

@@ -113,10 +113,9 @@ def put_document_extraction_to_tds(
     Update an document or code object in TDS.
     """
     if extractions and text:
-        metadata = extractions[0]
-        # metadata["text"] = text
+        metadata = extractions
     elif extractions:
-        metadata = extractions[0]
+        metadata = extractions
     elif model_id:
         metadata = {"model_id": model_id}
     else:

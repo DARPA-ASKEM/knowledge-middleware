@@ -65,6 +65,23 @@ def test_pdf_extraction(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
+    #### POSTAMBLE ####
+    scenario = context_dir.split("/")[-1]
+    if not settings.MOCK_TA1 and "sidarthe" in context_dir:
+        # Can only quality check for SIDARTHE
+        logger.debug(f"Evaluating PDF extractions from SKEMA")
+        eval = requests.get(
+            f"{settings.TA1_UNIFIED_URL}/text-reading/eval"
+        )
+        logger.info(f"PDF extraction evaluation result: {eval.text}")
+        if eval.status_code < 300:
+            accuracy = json.dumps(eval.json())
+        else:
+            accuracy = False
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
+
+
+
 
 @pytest.mark.parametrize("resource", params["pdf_to_cosmos"])
 def test_pdf_to_cosmos(
@@ -476,6 +493,7 @@ def test_profile_dataset(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+    logger.debug(status_response.json())
 
 
 @pytest.mark.parametrize("resource", params["profile_model"])
@@ -555,9 +573,9 @@ def test_profile_model(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
-
     #### POSTAMBLE ####
     if not settings.MOCK_TA1 and os.path.exists(f"{context_dir}/ground_truth_model_card.json"):
+        logger.debug(f"Evaluating model card: {generated_card}")
         files = {
             "test_json_file": json.dumps(generated_card),
             "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
@@ -567,6 +585,7 @@ def test_profile_model(
             params={"gpt_key": settings.OPENAI_API_KEY},
             files=files
         )
+        logger.info(f"Model profiling evaluation result: {eval.text}")
         if eval.status_code < 300:
             accuracy = eval.json()["accuracy"]
         else:
