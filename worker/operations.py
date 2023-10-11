@@ -507,13 +507,8 @@ def model_card(*args, **kwargs):
     paper_document_json, paper_downloaded_document = get_document_from_tds(
         document_id=paper_document_id
     )
-    text_file = paper_document_json.get(
-        "text", "There is no documentation for this model"
-    ).encode()
-    text_file = (
-        paper_document_json
-        .get("text", "There is no documentation for this model")
-    )
+
+    text_file = paper_document_json.get("text") or  "There is no documentation for this model"
 
     # TODO: Remove when no character limit exists for MIT
     text_file = text_file[:9000]
@@ -523,8 +518,8 @@ def model_card(*args, **kwargs):
     params = {"gpt_key": openai_key}
 
     files = {
-        "text_file": text_file,
-        "code_file": code_file,
+        "text_file": text_file.encode(),
+        "code_file": code_file.encode(),
     }
 
     url = f"{MIT_API}/cards/get_model_card"
@@ -562,7 +557,7 @@ def model_card(*args, **kwargs):
 
     else:
         raise Exception(
-            f"Bad response from TA1 service for {model_id}: {resp.status_code}"
+            f"Bad response from TA1 service for {model_id}: {resp.status_code} \n {resp.content}"
         )
 
 
