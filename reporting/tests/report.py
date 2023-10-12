@@ -93,10 +93,6 @@ def publish_report(report, upload):
         logging.info(open(fullpath, "r").read())
 
 
-# def report(upload=True):
-#     publish_report(gen_report(), upload)
-
-
 # PIPELINE CODE
 def run_km_job(url, scenario, task_name, kwargs=None):
     if kwargs is None:
@@ -268,3 +264,5 @@ if __name__ == "__main__":
     final_report = gen_report(merged_report)
 
     logging.info(f"Final report: {final_report}")
+
+    publish_report(final_report, UPLOAD)
