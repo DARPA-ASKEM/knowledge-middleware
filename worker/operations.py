@@ -154,7 +154,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )        
+        )
         extraction_json = response.json()
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
@@ -186,7 +186,9 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         logger.info(f"Getting Cosmos extraction request from {result_endpoint_text}")
         text_extractions_result = requests.get(result_endpoint_text)
-        logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
+        logger.info(
+            f"Cosmos response status code: {text_extractions_result.status_code}"
+        )
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
@@ -200,10 +202,12 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             zip_ref.extractall(temp_dir)
 
         # Assets requests
-        logger.info(f"Fetching Cosmos assets from:\n" \
-                    f"\t - {equations_endpoint}\n" \
-                    f"\t - {figures_endpoint}\n" \
-                    f"\t - {tables_endpoint}\n")
+        logger.info(
+            f"Fetching Cosmos assets from:\n"
+            f"\t - {equations_endpoint}\n"
+            f"\t - {figures_endpoint}\n"
+            f"\t - {tables_endpoint}\n"
+        )
         equations_resp = requests.get(equations_endpoint)
         figures_resp = requests.get(figures_endpoint)
         tables_resp = requests.get(tables_endpoint)
@@ -629,24 +633,55 @@ def code_to_amr(*args, **kwargs):
     code_id = kwargs.get("code_id")
     name = kwargs.get("name")
     description = kwargs.get("description")
+    dynamics_only = kwargs.get("dynamics_only", False)
 
-    code_json, downloaded_code = get_code_from_tds(code_id, code=True)
+    code_json, downloaded_code_object, dynamics_off_flag = get_code_from_tds(
+        code_id, code=True, dynamics_only=dynamics_only
+    )
 
-    code_blob = downloaded_code.decode("utf-8")
-    logger.info(code_blob[:250])
-    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+    # Checks the return flag fromm the dynamics retrieval process
+    if dynamics_off_flag:
+        dynamics_only = False
 
-    request_payload = {
-        "files": [code_json.get("filename")],
-        "blobs": [code_blob],
-    }
+    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
+    if dynamics_only:
+        code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+
+    if dynamics_only:
+        blobs = []
+        names = []
+        for code_name, code_content in downloaded_code_object.items():
+            names.append(code_name)
+            blobs.extend(code_content)
+        request_payload = {
+            "files": names,
+            "blobs": blobs,
+        }
+
+    else:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            # Use io and zipfile to write the code_content to a zipfile in memory
+            for code_name, code_content in downloaded_code_object.items():
+                zipf.writestr(code_name, code_content.decode("utf-8"))
+
+        zip_buffer.seek(0)
+        request_payload = zip_buffer
 
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
-    amr_response = requests.post(
-        code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
-    )
+
+    logger.info(f"Request payload: {request_payload}")
+    if isinstance(request_payload, dict):
+        amr_response = requests.post(
+            code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
+        )
+    else:
+        files = {
+            "zip_file": ("zip_file.zip", request_payload.read(), "application/zip")
+        }
+        amr_response = requests.post(code_amr_workflow_url, files=files)
     logger.info(
         f"Response received from backend knowledge service with status code: {amr_response.status_code}"
     )
@@ -671,10 +706,9 @@ def code_to_amr(*args, **kwargs):
         put_code_extraction_to_tds(
             code_id=code_id,
             name=code_json.get("name", None),
-            filename=code_json.get("filename"),
+            files=code_json.get("files"),
             description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
-            code_language=code_json.get("language"),
         )
 
         try:
@@ -698,4 +732,5 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
+        logger.error(f"Content: {amr_response.content}")
         raise Exception(f"Code extraction failure: {amr_response.text}")
