@@ -22,3 +22,5 @@ link_amr:
   - paper.pdf
   - extractions.json
   - amr.json
+image_to_equations:
+  - equation_image.png
