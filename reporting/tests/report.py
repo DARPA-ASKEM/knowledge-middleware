@@ -151,8 +151,8 @@ def standard_flow(scenario, report):
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
     url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
     call_success =  run_km_job(url, scenario, "code_to_amr", report)
-    amr_response = report["code_to_amr"]
     if call_success and amr_response["result"]["job_result"]:
+        amr_response = report["code_to_amr"]
         model_id = amr_response["result"]["job_result"]["tds_model_id"]
         yield True
     else:
