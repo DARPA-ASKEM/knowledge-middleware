@@ -174,15 +174,15 @@ services:
       context: .
       dockerfile: tests/Dockerfile
     environment:
-      - UPLOAD=FALSE
-      - BUCKET=jataware-sim-service-test
+      - UPLOAD
+      - BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - OPENAI_API_KEY
       - SKEMA_RS_URL=http://skema-rs:4040
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
       - MIT_TR_URL=http://mit-tr:4046
-      - OPENAI_API_KEY
     depends_on:
       knowledge-middleware-api:
         condition: service_healthy
