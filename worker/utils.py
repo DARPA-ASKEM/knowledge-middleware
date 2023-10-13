@@ -80,7 +80,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     header = amr_payload.get("header", {})
     configuration_payload = {
         "model_id": model_id,
-        "name": header.get("name", amr_payload.get("name")),
+        "name": "Default config",
         "description": header.get("description", amr_payload.get("description")),
         "model_version": header.get("model_version", amr_payload.get("model_version")),
         "calibrated": False,
@@ -113,10 +113,9 @@ def put_document_extraction_to_tds(
     Update an document or code object in TDS.
     """
     if extractions and text:
-        metadata = extractions[0]
-        # metadata["text"] = text
+        metadata = extractions
     elif extractions:
-        metadata = extractions[0]
+        metadata = extractions
     elif model_id:
         metadata = {"model_id": model_id}
     else:
@@ -148,11 +147,10 @@ def put_code_extraction_to_tds(
     code_id,
     name,
     description,
-    filename,
+    files,
     extractions=None,
     text=None,
     model_id=None,
-    code_language=None,
 ):
     """
     Update a code object in TDS.
@@ -173,12 +171,9 @@ def put_code_extraction_to_tds(
         "username": "extraction_service",
         "name": name,
         "description": description,
-        "file_names": [filename],
+        "files": files,
         "metadata": metadata,
     }
-    if code_language:
-        code_payload["filename"] = code_payload.pop("file_names")[0]
-        code_payload["language"] = code_language
     logger.info(f"Storing extraction to TDS for code: {code_id}")
     # patch TDS code/code
     tds_code = f"{TDS_API}/code/{code_id}"
@@ -219,28 +214,75 @@ def get_document_from_tds(document_id, code=False):
     return document_json, downloaded_document.content
 
 
-def get_code_from_tds(code_id, code=False):
+def get_code_from_tds(code_id, code=False, dynamics_only=False):
+    dynamics_off = False
     tds_codes_url = f"{TDS_API}/code/{code_id}"
     logger.info(tds_codes_url)
     code = requests.get(tds_codes_url)
     code_json = code.json()
     logger.info(code_json)
-    filename = code_json.get("filename")
 
-    download_url = (
-        f"{TDS_API}/codes/{code_id}/download-url?code_id={code_id}&filename={filename}"
-    )
-    code_download_url = requests.get(download_url)
+    files = code_json.get("files")
+    logger.info(files)
+    file_names = {}
+    logger.info(files.items())
+    if dynamics_only:
+        for file_path, file_details in files.items():
+            dynamics = file_details.get("dynamics")
+            if dynamics and dynamics.get("block"):
+                file_names[file_path] = dynamics["block"]
 
-    presigned_download = code_download_url.json().get("url")
+        # Fail gracefully if no dynamics are found
+        if file_names == {}:
+            logger.warning(
+                "No dynamics found in TDS code object, turned dynamics_only off."
+            )
+            dynamics_only = False
+            file_names = files
+            dynamics_off = True
+    else:
+        file_names = files
 
-    logger.info(presigned_download)
+    content_object = {}
 
-    downloaded_code = requests.get(code_download_url.json().get("url"))
+    for name, blocks in file_names.items():
+        name = name.split("/")[-1]
+        download_url = f"{TDS_API}/code/{code_id}/download-url?filename={name}"
+        code_download_url = requests.get(download_url)
 
-    logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
+        presigned_download = code_download_url.json().get("url")
 
-    return code_json, downloaded_code.content
+        logger.info(presigned_download)
+
+        downloaded_code = requests.get(code_download_url.json().get("url"))
+
+        logger.info(f"code RETRIEVAL STATUS:{downloaded_code.status_code}")
+
+        if dynamics_only:
+            all_dynamic_blocks = []
+            for block in blocks:
+                start_line, end_line = block.split("-")
+
+                # Convert the extracted strings to integers, removing leading 'L'
+                start_line = int(start_line[1:])
+                end_line = int(end_line[1:])
+
+                # Get the lines from the code
+                code_lines = downloaded_code.content.splitlines()
+                target_lines = code_lines[start_line - 1 : end_line]
+                logger.info(target_lines)
+
+                # Join the lines into a single string
+                target_block = b"\n".join(target_lines)
+
+                # Add the block to the list of blocks
+                all_dynamic_blocks.append(target_block.decode("utf-8"))
+
+            content_object[name] = all_dynamic_blocks
+        else:
+            content_object[name] = downloaded_code.content
+
+    return code_json, content_object, dynamics_off
 
 
 def get_dataset_from_tds(dataset_id):

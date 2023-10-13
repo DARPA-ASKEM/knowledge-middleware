@@ -154,7 +154,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         )
         logger.info(
             f"Response received from backend knowledge service with status code: {response.status_code}"
-        )        
+        )
         extraction_json = response.json()
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
@@ -186,7 +186,9 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         logger.info(f"Getting Cosmos extraction request from {result_endpoint_text}")
         text_extractions_result = requests.get(result_endpoint_text)
-        logger.info(f"Cosmos response status code: {text_extractions_result.status_code}")
+        logger.info(
+            f"Cosmos response status code: {text_extractions_result.status_code}"
+        )
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
@@ -200,10 +202,12 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             zip_ref.extractall(temp_dir)
 
         # Assets requests
-        logger.info(f"Fetching Cosmos assets from:\n" \
-                    f"\t - {equations_endpoint}\n" \
-                    f"\t - {figures_endpoint}\n" \
-                    f"\t - {tables_endpoint}\n")
+        logger.info(
+            f"Fetching Cosmos assets from:\n"
+            f"\t - {equations_endpoint}\n"
+            f"\t - {figures_endpoint}\n"
+            f"\t - {tables_endpoint}\n"
+        )
         equations_resp = requests.get(equations_endpoint)
         figures_resp = requests.get(figures_endpoint)
         tables_resp = requests.get(tables_endpoint)
@@ -362,23 +366,6 @@ def pdf_extractions(*args, **kwargs):
         )
         extraction_json = response.json()
         logger.debug(f"TA 1 response object: {response.text}")
-        outputs = extraction_json["outputs"]
-
-        if isinstance(outputs, dict):
-            if extraction_json.get("outputs", {"data": None}).get("data", None) is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = extraction_json.get("outputs").get("data")
-        elif isinstance(outputs, list):
-            if extraction_json.get("outputs")[0].get("data") is None:
-                raise ValueError(
-                    f"Malformed or empty response from backend knowledge service: {extraction_json}"
-                )
-            else:
-                extraction_json = [extraction_json.get("outputs")[0].get("data")]
-                logging.info("HERE!")
 
     except ValueError:
         raise ValueError(f"Extraction for document {document_id} failed.")
@@ -392,6 +379,7 @@ def pdf_extractions(*args, **kwargs):
         filename=document_json.get("file_names")[0],
         extractions=extraction_json,
         text=document_json.get("text", None),
+        assets=document_json.get("assets", None),
     )
 
     if document_response.get("status") == 200:
@@ -449,13 +437,14 @@ def data_card(*args, **kwargs):
     logger.info(f"Response received from MIT with status: {resp.status_code}")
     logger.debug(f"TA 1 response object: {resp.json()}")
 
-    mit_annotations = resp.json()["DATA_PROFILING_RESULT"]
+    data_card = resp.json()
+    data_profiling_result = data_card["DATA_PROFILING_RESULT"]
 
     sys.stdout.flush()
 
     columns = []
     for c in dataset_dataframe.columns:
-        annotation = mit_annotations.get(c, {})
+        annotation = data_profiling_result.get(c, {})
 
         # parse groundings
         groundings = {"identifiers": {}}
@@ -477,6 +466,14 @@ def data_card(*args, **kwargs):
 
     dataset_json["columns"] = columns
 
+    if dataset_json.get("metadata") is None:
+        dataset_json["metadata"] = {}
+			
+    if dataset_json["metadata"].get("data_card") is None:
+        dataset_json["metadata"]["data_card"] = {}
+
+    dataset_json["metadata"]["data_card"] = data_card
+
     tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
@@ -485,6 +482,7 @@ def data_card(*args, **kwargs):
 
     return {
         "status": tds_resp.status_code,
+        "data_card": dataset_json["metadata"]["data_card"],
         "message": "Data card generated and updated in TDS",
     }
 
@@ -514,13 +512,8 @@ def model_card(*args, **kwargs):
     paper_document_json, paper_downloaded_document = get_document_from_tds(
         document_id=paper_document_id
     )
-    text_file = paper_document_json.get(
-        "text", "There is no documentation for this model"
-    ).encode()
-    text_file = (
-        paper_document_json
-        .get("text", "There is no documentation for this model")
-    )
+
+    text_file = paper_document_json.get("text") or  "There is no documentation for this model"
 
     # TODO: Remove when no character limit exists for MIT
     text_file = text_file[:9000]
@@ -530,8 +523,8 @@ def model_card(*args, **kwargs):
     params = {"gpt_key": openai_key}
 
     files = {
-        "text_file": text_file,
-        "code_file": code_file,
+        "text_file": text_file.encode(),
+        "code_file": code_file.encode(),
     }
 
     url = f"{MIT_API}/cards/get_model_card"
@@ -569,7 +562,7 @@ def model_card(*args, **kwargs):
 
     else:
         raise Exception(
-            f"Bad response from TA1 service for {model_id}: {resp.status_code}"
+            f"Bad response from TA1 service for {model_id}: {resp.status_code} \n {resp.content}"
         )
 
 
@@ -608,8 +601,9 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-    logger.info(f"Sending model {model_id} and document {document_id} for linking")
+    logger.info(f"Sending model {model_id} and document {document_id} for linking to: {skema_amr_linking_url}")
     response = requests.post(skema_amr_linking_url, files=files, params=params)
+    logger.info(f"SKEMA response status code: {response.status_code}")
     logger.debug(f"TA 1 response object: {response.text}")
 
     if response.status_code == 200:
@@ -640,24 +634,55 @@ def code_to_amr(*args, **kwargs):
     code_id = kwargs.get("code_id")
     name = kwargs.get("name")
     description = kwargs.get("description")
+    dynamics_only = kwargs.get("dynamics_only", False)
 
-    code_json, downloaded_code = get_code_from_tds(code_id, code=True)
+    code_json, downloaded_code_object, dynamics_off_flag = get_code_from_tds(
+        code_id, code=True, dynamics_only=dynamics_only
+    )
 
-    code_blob = downloaded_code.decode("utf-8")
-    logger.info(code_blob[:250])
-    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+    # Checks the return flag fromm the dynamics retrieval process
+    if dynamics_off_flag:
+        dynamics_only = False
 
-    request_payload = {
-        "files": [code_json.get("filename")],
-        "blobs": [code_blob],
-    }
+    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
+    if dynamics_only:
+        code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+
+    if dynamics_only:
+        blobs = []
+        names = []
+        for code_name, code_content in downloaded_code_object.items():
+            names.append(code_name)
+            blobs.extend(code_content)
+        request_payload = {
+            "files": names,
+            "blobs": blobs,
+        }
+
+    else:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+            # Use io and zipfile to write the code_content to a zipfile in memory
+            for code_name, code_content in downloaded_code_object.items():
+                zipf.writestr(code_name, code_content.decode("utf-8"))
+
+        zip_buffer.seek(0)
+        request_payload = zip_buffer
 
     logger.info(
         f"Sending code to knowledge service with code id: {code_id} at {code_amr_workflow_url}"
     )
-    amr_response = requests.post(
-        code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
-    )
+
+    logger.info(f"Request payload: {request_payload}")
+    if isinstance(request_payload, dict):
+        amr_response = requests.post(
+            code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
+        )
+    else:
+        files = {
+            "zip_file": ("zip_file.zip", request_payload.read(), "application/zip")
+        }
+        amr_response = requests.post(code_amr_workflow_url, files=files)
     logger.info(
         f"Response received from backend knowledge service with status code: {amr_response.status_code}"
     )
@@ -682,10 +707,9 @@ def code_to_amr(*args, **kwargs):
         put_code_extraction_to_tds(
             code_id=code_id,
             name=code_json.get("name", None),
-            filename=code_json.get("filename"),
+            files=code_json.get("files"),
             description=code_json.get("description", None),
             model_id=tds_responses.get("model_id"),
-            code_language=code_json.get("language"),
         )
 
         try:
@@ -709,4 +733,5 @@ def code_to_amr(*args, **kwargs):
 
         return response
     else:
+        logger.error(f"Content: {amr_response.content}")
         raise Exception(f"Code extraction failure: {amr_response.text}")

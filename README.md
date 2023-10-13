@@ -17,10 +17,23 @@ The Knowledge Middleware is designed to provide an intermediate job queue for ma
 
 1. Run `make init` which will create a stub `.env` file. 
 2. Ensure that `.env` contains the correct endpoint and other information 
-3. Run `make up`
+3. You can now run the tests or reports using the information below.
+
+
+## Running TA1 services locally
+
+Note: Starting the services are not required for running tests or generating reports
+
+You can start the local services by running:
+```
+make up
+```
+
+This should only be necessary if you are running the services locally to test before deploying. Otherwise it is generally better use the hosted versions of services or keep the responses mocked.
 
 
 ## Testing
+
 You can run the tests by initializing the environment:
 
 ```
