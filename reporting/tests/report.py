@@ -193,11 +193,15 @@ def pipeline(scenario):
         # cosmos_response["result"]["job_result"].pop("extraction")
         report["pdf_to_cosmos"] = cosmos_response
         report["pdf_to_cosmos"]["time"] = execution_time
+        report["pdf_to_cosmos"]["accuracy"] = {}
+        report["pdf_to_cosmos"]["success"] = cosmos_response["status"] == "finished"
 
         text_response, execution_time = pdf_to_text(scenario=scenario)
         # text_response["result"]["job_result"].pop("extraction")
         report["pdf_to_text"] = text_response
         report["pdf_to_text"]["time"] = execution_time
+        report["pdf_to_text"]["accuracy"] = {}
+        report["pdf_to_text"]["success"] = text_response["status"] == "finished"
 
         amr_response, execution_time = code_to_amr(scenario=scenario)
         if amr_response["result"]["job_result"]:
@@ -206,6 +210,8 @@ def pipeline(scenario):
             model_id = None
         report["code_to_amr"] = amr_response
         report["code_to_amr"]["time"] = execution_time
+        report["code_to_amr"]["accuracy"] = {}
+        report["code_to_amr"]["success"] = amr_response["status"] == "finished"
 
         if model_id is None:
             raise Exception(
@@ -216,12 +222,16 @@ def pipeline(scenario):
         )
         report["profile_model"] = profile_response
         report["profile_model"]["time"] = execution_time
+        report["profile_model"]["accuracy"] = {}
+        report["profile_model"]["success"] = profile_response["status"] == "finished"
 
         link_response, execution_time = link_amr(
             scenario=scenario, model_id=model_id, document_id=document_id
         )
         report["link_amr"] = link_response
         report["link_amr"]["time"] = execution_time
+        report["link_amr"]["accuracy"] = {}
+        report["link_amr"]["success"] = link_response["status"] == "finished"
 
         pipeline_report = {
             "success": True,
