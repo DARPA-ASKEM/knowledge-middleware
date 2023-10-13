@@ -96,7 +96,7 @@ def publish_report(report, upload):
 # PIPELINE CODE
 def run_km_job(url, scenario, task_name, report):
     start_time = time()
-    km_response = requests.post(url, **kwargs)
+    km_response = requests.post(url)
 
     if km_response.status_code != 200:
         raise Exception(
