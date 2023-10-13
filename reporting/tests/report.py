@@ -94,9 +94,7 @@ def publish_report(report, upload):
 
 
 # PIPELINE CODE
-def run_km_job(url, scenario, task_name, kwargs=None):
-    if kwargs is None:
-        kwargs = {}
+def run_km_job(url, scenario, task_name, report):
     start_time = time()
     km_response = requests.post(url, **kwargs)
 
@@ -122,52 +120,58 @@ def run_km_job(url, scenario, task_name, kwargs=None):
                 return job_status, time() - start_time
     elif response_json["status"] == "finished":
         logging.info(f"{task_name} job: {job_id} - status: finished")
-        return response_json, time() - start_time
+        success = True
     else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
+        success = False
+        logging.error(f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}")
+
+    execution_time = time() - start_time
+    report[task_name] = response_json
+    report[task_name]["time"] = execution_time
+    report[task_name]["accuracy"] = {}
+    report[task_name]["success"] = success
+
+    return success
+
+
+def standard_flow(scenario, report):
+    document_id = scenario
+
+    # STEP 1: PDF TO COSMOS
+    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
+    yield run_km_job(url, scenario, "pdf_to_cosmos", report)
+
+    
+    # STEP 2: PDF TO TEXT
+    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+    yield run_km_job(url, scenario, "pdf_to_text", report)
+
+
+    # STEP 3: CODE TO AMR
+    # Try dynamics only since code_to_amr fallsback to full if dynamics fails
+    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
+    call_success =  run_km_job(url, scenario, "code_to_amr", report)
+    amr_response = report["code_to_amr"]
+    if call_success and amr_response["result"]["job_result"]:
+        model_id = amr_response["result"]["job_result"]["tds_model_id"]
+        yield True
+    else:
+        yield False
+        logging.error(
+            f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
         )
 
-
-def pdf_to_cosmos(scenario):
-    task_name = "pdf to cosmos"
-    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
-
-    return run_km_job(url, scenario, task_name)
-
-
-def pdf_to_text(scenario):
-    task_name = "pdf to text"
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
-
-    return run_km_job(url, scenario, task_name)
-
-
-def code_to_amr(scenario):
-    # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    task_name = "code to AMR"
-    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
-
-    return run_km_job(url, scenario, task_name)
-
-
-def profile_model(scenario, model_id, document_id):
-    task_name = "profile model"
+        
+    # STEP 4: CODE TO AMR
     url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
+    yield run_km_job(url, scenario, "profile_model", report)
 
-    return run_km_job(url, scenario, task_name)
-
-
-def link_amr(scenario, model_id, document_id):
-    task_name = "link AMR"
+    
     url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
-
-    return run_km_job(url, scenario, task_name)
+    yield run_km_job(url, scenario, "link_amr", report)
 
 
 def pipeline(scenario):
-    report = {}
-
     # TODO: Hardcoded, generate shape from scenario files.
     shape = [
         {
@@ -187,73 +191,30 @@ def pipeline(scenario):
             "to": "link_amr",
         },
     ]
-    success = False
-    try:
-        cosmos_response, execution_time = pdf_to_cosmos(scenario=scenario)
-        document_id = scenario
-        # cosmos_response["result"]["job_result"].pop("extraction")
-        report["pdf_to_cosmos"] = cosmos_response
-        report["pdf_to_cosmos"]["time"] = execution_time
-        report["pdf_to_cosmos"]["accuracy"] = {}
-        report["pdf_to_cosmos"]["success"] = cosmos_response["status"] == "finished"
 
-        text_response, execution_time = pdf_to_text(scenario=scenario)
-        # text_response["result"]["job_result"].pop("extraction")
-        report["pdf_to_text"] = text_response
-        report["pdf_to_text"]["time"] = execution_time
-        report["pdf_to_text"]["accuracy"] = {}
-        report["pdf_to_text"]["success"] = text_response["status"] == "finished"
+    report = {}
+    success = True
+    for call_status in standard_flow(scenario, report):
+        if not task_status:
+            success = False
+            logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
+            break
 
-        amr_response, execution_time = code_to_amr(scenario=scenario)
-        if amr_response["result"]["job_result"]:
-            model_id = amr_response["result"]["job_result"]["tds_model_id"]
-        else:
-            model_id = None
-        report["code_to_amr"] = amr_response
-        report["code_to_amr"]["time"] = execution_time
-        report["code_to_amr"]["accuracy"] = {}
-        report["code_to_amr"]["success"] = amr_response["status"] == "finished"
-
-        if model_id is None:
-            raise Exception(
-                f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
-            )
-        profile_response, execution_time = profile_model(
-            scenario=scenario, model_id=model_id, document_id=document_id
-        )
-        report["profile_model"] = profile_response
-        report["profile_model"]["time"] = execution_time
-        report["profile_model"]["accuracy"] = {}
-        report["profile_model"]["success"] = profile_response["status"] == "finished"
-
-        link_response, execution_time = link_amr(
-            scenario=scenario, model_id=model_id, document_id=document_id
-        )
-        report["link_amr"] = link_response
-        report["link_amr"]["time"] = execution_time
-        report["link_amr"]["accuracy"] = {}
-        report["link_amr"]["success"] = link_response["status"] == "finished"
-
-        success = True
-    except Exception as e:
-        logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
-    finally:
-        description_path = f"./scenarios/{scenario}/description.txt"
-        if os.path.exists(description_path):
-            description = open(description_path).read()
-        else:
-            description = ""
-        pipeline_report = {
-            "success": True,
-            "description": description,
-            "steps": report,
-            "shape": shape,
-            "accuracy": {},
-        }
-        return {scenario: pipeline_report}
+    description_path = f"./scenarios/{scenario}/description.txt"
+    if os.path.exists(description_path):
+        description = open(description_path).read()
+    else:
+        description = ""
+    pipeline_report = {
+        "success": success,
+        "description": description,
+        "steps": report,
+        "shape": shape,
+        "accuracy": {},
+    }
+    return {scenario: pipeline_report}
 
 
-# MAIN DECLARATION
 if __name__ == "__main__":
     reports = []
     for scenario in os.listdir("./scenarios"):
