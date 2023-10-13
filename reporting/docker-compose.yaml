@@ -1,4 +1,3 @@
-
 ---
 # simulation integration docker compose adapted from https://github.com/DARPA-ASKEM/simulation-integration/blob/a26b146554686268db56bb51b5ccdd66e872b8fd/docker-compose.yaml
 
@@ -45,7 +44,7 @@ services:
       - 9000
       - 9001
     entrypoint: ""
-    command: ["minio", "server", "/data"]
+    command: [ "minio", "server", "/data" ]
     ports:
       - 9000
     depends_on:
@@ -74,7 +73,7 @@ services:
       - POSTGRES_USER=dev
       - POSTGRES_DB=askem
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d askem"]
+      test: [ "CMD-SHELL", "pg_isready -U dev -d askem" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +93,8 @@ services:
       retries: 5
   data-service-migrations:
     image: ghcr.io/darpa-askem/data-service:latest
-    command: ['/api/migrations/run_migrations.sh']
+    command: >
+      sh -c "chmod +x /api/migrations/run_migrations.sh && /api/migrations/run_migrations.sh"
     environment:
       - DATASET_STORAGE_BASE_URL=s3://datasets/
       - STORAGE_HOST=http://minio:9000
@@ -135,9 +135,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - TDS_URL=http://data-service:8000
-      - MIT_TR_URL 
+      - MIT_TR_URL
       - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - OPENAI_API_KEY
     ports:
       - 8001:8000
@@ -158,13 +158,15 @@ services:
       - REDIS_PORT=6379
       - TDS_URL=http://data-service:8000
       - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL
-      - MIT_TR_URL 
+      - MIT_TR_URL
       - OPENAI_API_KEY
     ports:
       - 8080
     depends_on:
+      redis:
+        condition: service_started
       knowledge-middleware-api:
         condition: service_started
   tests:
@@ -172,15 +174,15 @@ services:
       context: .
       dockerfile: tests/Dockerfile
     environment:
-      - UPLOAD=FALSE
+      - UPLOAD
       - BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
-      - SKEMA_RS_URL
-      - TA1_UNIFIED_URL
-      - COSMOS_URL
-      - MIT_TR_URL 
       - OPENAI_API_KEY
+      - SKEMA_RS_URL=http://skema-rs:4040
+      - TA1_UNIFIED_URL=https://api.askem.lum.ai
+      - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
+      - MIT_TR_URL=http://mit-tr:4046
     depends_on:
       knowledge-middleware-api:
         condition: service_healthy
