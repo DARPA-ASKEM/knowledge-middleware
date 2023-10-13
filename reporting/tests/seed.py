@@ -104,3 +104,4 @@ for scenario in os.listdir("./scenarios"):
     logging.info(f"Seeding {scenario}")
     add_code(scenario)
     add_paper(scenario)
+
