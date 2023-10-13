@@ -187,6 +187,7 @@ def pipeline(scenario):
             "to": "link_amr",
         },
     ]
+    success = False
     try:
         cosmos_response, execution_time = pdf_to_cosmos(scenario=scenario)
         document_id = scenario
@@ -233,18 +234,18 @@ def pipeline(scenario):
         report["link_amr"]["accuracy"] = {}
         report["link_amr"]["success"] = link_response["status"] == "finished"
 
-        pipeline_report = {
-            "success": True,
-            "steps": report,
-            "shape": shape,
-            "accuracy": {},
-        }
-
-        return {scenario: pipeline_report}
+        success = True
     except Exception as e:
         logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
+    finally:
+        description_path = f"./scenarios/{scenario}/description.txt"
+        if os.path.exists(description_path):
+            description = open(description_path).read()
+        else:
+            description = ""
         pipeline_report = {
-            "success": False,
+            "success": True,
+            "description": description,
             "steps": report,
             "shape": shape,
             "accuracy": {},
