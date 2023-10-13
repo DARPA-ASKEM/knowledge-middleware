@@ -80,7 +80,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     header = amr_payload.get("header", {})
     configuration_payload = {
         "model_id": model_id,
-        "name": header.get("name", amr_payload.get("name")),
+        "name": "Default config",
         "description": header.get("description", amr_payload.get("description")),
         "model_version": header.get("model_version", amr_payload.get("model_version")),
         "calibrated": False,
