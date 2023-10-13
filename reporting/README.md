@@ -20,4 +20,4 @@ See `env.sample` to see which environment variables are used by the test/report 
 You can create a `.env` envfile based on sample if you want to override the defaults.
 
 ## Adding Scenarios
-In the `scenarios` directory there are two example scenarios: `12 Month Eval Scenario 3` and `SIDARTHE`.
+In the `scenarios` directory, you'll find two example scenarios: `12 Month Eval Scenario 3` and `SIDARTHE`. To add a new scenario, start by creating a directory with the name of your scenario. Within this directory, include a file named description.txt containing a detailed scenario description. Additionally, each scenario must have at least one of the following assets: a `paper.pdf`, the code (which can be specified through a GitHub repository URL in a `repo_url.txt` or included as a `code.zip` file), or a `dataset.csv`. You can use the existing scenarios as examples while following these guidelines to prepare your new scenario for inclusion in the system.
