@@ -20,4 +20,4 @@ See `env.sample` to see which environment variables are used by the test/report 
 You can create a `.env` envfile based on sample if you want to override the defaults.
 
 ## Adding Scenarios
-In the `data` dir... **TODO: WE NEED TO FLESH THIS OUT**
+In the `scenarios` directory there are two example scenarios: `12 Month Eval Scenario 3` and `SIDARTHE`.
