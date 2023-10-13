@@ -194,7 +194,7 @@ def pipeline(scenario):
 
     report = {}
     success = True
-    for call_status in standard_flow(scenario, report):
+    for task_status in standard_flow(scenario, report):
         if not task_status:
             success = False
             logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
