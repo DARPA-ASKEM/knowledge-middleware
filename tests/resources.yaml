@@ -1,5 +1,5 @@
 ---
-variable_extraction:
+variable_extractions:
   - text.json
   - paper.pdf
 pdf_extraction:

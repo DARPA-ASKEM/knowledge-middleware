@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 params = get_parameterizations()
 
 
-@pytest.mark.parametrize("resource", params["variable_extraction"])
-def test_variable_extraction(
+@pytest.mark.parametrize("resource", params["variable_extractions"])
+def test_variable_extractions(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
