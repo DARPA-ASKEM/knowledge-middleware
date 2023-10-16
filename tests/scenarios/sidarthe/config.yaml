@@ -2,8 +2,8 @@
 name: "SIDARTHE"
 description: "Scenario to process SIDARTHE paper and code"
 enabled:
-  - pdf_extraction
+  - variable_extraction
   - profile_model
-  - pdf_to_cosmos
+  - pdf_extraction
   - code_to_amr
   - equations_to_amr  

@@ -132,24 +132,28 @@ def code_to_amr(
     return resp
 
 
-@app.post("/pdf_to_cosmos")
-def pdf_to_cosmos(document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+@app.post("/pdf_extraction")
+def pdf_extraction(document_id: str, 
+                   force_run: bool = False,
+                   redis=Depends(get_redis)) -> ExtractionJob:
     """Run Cosmos extractions over pdfs and stores the text/assets on the document
 
     Args:
         `document_id`: the id of the document to process
+        `force_run`: boolean whether to force a Cosmos run; if False and the PDF is in Cosmos's cache, 
+                     the cache will be used. If True, the cache will ignored and Cosmos will be force run.
     """
-    operation_name = "operations.pdf_to_cosmos"
+    operation_name = "operations.pdf_extraction"
 
-    options = {"document_id": document_id}
+    options = {"document_id": document_id, "force_run": force_run}
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
-@app.post("/pdf_extractions")
-async def pdf_extractions(
+@app.post("/variable_extractions")
+async def variable_extractions(
     document_id: str,
     annotate_skema: bool = True,
     annotate_mit: bool = True,
@@ -157,12 +161,12 @@ async def pdf_extractions(
     description: str = None,
     redis=Depends(get_redis),
 ) -> ExtractionJob:
-    """Run text extractions over pdfs
+    """Run variable extractions over document
 
     Args:
-        pdf (UploadFile, optional): The pdf to run extractions over. Defaults to File(...).
+        pdf (UploadFile, optional): The document to run extractions over. Defaults to File(...).
     """
-    operation_name = "operations.pdf_extractions"
+    operation_name = "operations.variable_extractions"
 
     # text_content = text_content[: len(text_content) // 2]
     options = {
@@ -214,7 +218,7 @@ def profile_model(
 ) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
-    has been extracted with `/pdf_to_cosmos` and the code has been converted to an AMR
+    has been extracted with `/pdf_extraction` and the code has been converted to an AMR
     with `/code_to_amr`
 
     > NOTE: if nothing the paper is not extracted and the model not created from code this WILL fail.

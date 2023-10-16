@@ -161,7 +161,6 @@ def standard_flow(scenario, report):
             f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
         )
 
-        
     # STEP 4: CODE TO AMR
     url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
     yield run_km_job(url, scenario, "profile_model", report)
@@ -175,11 +174,11 @@ def pipeline(scenario):
     # TODO: Hardcoded, generate shape from scenario files.
     shape = [
         {
-            "from": "pdf_to_cosmos",
-            "to": "pdf_to_text",
+            "from": "pdf_extraction",
+            "to": "variable_extraction",
         },
         {
-            "from": "pdf_to_text",
+            "from": "variable_extraction",
             "to": "profile_model",
         },
         {
@@ -191,7 +190,6 @@ def pipeline(scenario):
             "to": "link_amr",
         },
     ]
-
     report = {}
     success = True
     for task_status in standard_flow(scenario, report):
