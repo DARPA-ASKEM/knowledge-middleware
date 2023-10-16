@@ -37,55 +37,86 @@ def add_code(scenario):
             "commit": "seed",
             "branch": "seed",
         }
+
+        code_response = requests.post(
+            TDS_URL + "/code",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        if code_response.status_code >= 300:
+            raise Exception(
+                f"Failed to POST code ({code_response.status_code}): {scenario}"
+            )
+
+        url_response = requests.get(
+            TDS_URL + f"/code/{scenario}/upload-url", params={"filename": "code.py"}
+        )
+        upload_url = url_response.json()["url"]
+        with open(filepath, "rb") as file:
+            upload_response = requests.put(upload_url, file)
+
+            if upload_response.status_code >= 300:
+                raise Exception(
+                    f"Failed to upload code ({upload_response.status_code}): {scenario}"
+                )
+            else:
+                logging.info(f"Uploaded {scenario} code")
+
     elif existing_filepath.endswith(".zip"):
         with tempfile.TemporaryDirectory() as temp_dir:
             with zipfile.ZipFile(existing_filepath, "r") as zip_ref:
                 zip_ref.extractall(temp_dir)
 
             # Loop through the extracted files
-            extracted_files = os.listdir(temp_dir)
+            extracted_files = [
+                file for file in zip_ref.namelist() if not file.endswith("/")
+            ]
             files_object = {}
             for extracted_file in extracted_files:
                 extracted_filepath = os.path.join(temp_dir, extracted_file)
-                print(f"Extracted file: {extracted_filepath}")
                 # Process each extracted file as needed
                 files_object[extracted_file] = {}
 
-                payload = {
-                    "id": scenario,
-                    "name": scenario,
-                    "description": "",
-                    "files": files_object,
-                    "repo_url": "https://github.com/owner/repo.git",
-                    "commit": "seed",
-                    "branch": "seed",
-                }
+            payload = {
+                "id": scenario,
+                "name": scenario,
+                "description": "",
+                "files": files_object,
+                "repo_url": "https://github.com/owner/repo.git",
+                "commit": "seed",
+                "branch": "seed",
+            }
+
+            logging.info(f"Payload: s{payload}")
+
+            code_response = requests.post(
+                TDS_URL + "/code",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+            )
+            if code_response.status_code >= 300:
+                raise Exception(
+                    f"Failed to POST code ({code_response.status_code}): {scenario}"
+                )
+
+            for extracted_file in extracted_files:
+                filepath = os.path.join(temp_dir, extracted_file)
+                url_response = requests.get(
+                    TDS_URL + f"/code/{scenario}/upload-url",
+                    params={"filename": extracted_file},
+                )
+                upload_url = url_response.json()["url"]
+                with open(filepath, "rb") as file:
+                    upload_response = requests.put(upload_url, file)
+
+                    if upload_response.status_code >= 300:
+                        raise Exception(
+                            f"Failed to upload code ({upload_response.status_code}): {scenario}"
+                        )
+                    else:
+                        logging.info(f"Uploaded {scenario} code")
     else:
         return
-
-    logging.info(f"Pointing here: {TDS_URL}" + "/code")
-
-    code_response = requests.post(
-        TDS_URL + "/code", json=payload, headers={"Content-Type": "application/json"}
-    )
-    if code_response.status_code >= 300:
-        raise Exception(
-            f"Failed to POST code ({code_response.status_code}): {scenario}"
-        )
-
-    url_response = requests.get(
-        TDS_URL + f"/code/{scenario}/upload-url", params={"filename": "code.py"}
-    )
-    upload_url = url_response.json()["url"]
-    with open(filepath, "rb") as file:
-        upload_response = requests.put(upload_url, file)
-
-        if upload_response.status_code >= 300:
-            raise Exception(
-                f"Failed to upload code ({upload_response.status_code}): {scenario}"
-            )
-        else:
-            logging.info(f"Uploaded {scenario} code")
 
 
 def add_paper(scenario):

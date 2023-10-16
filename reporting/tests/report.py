@@ -129,16 +129,16 @@ def run_km_job(url, scenario, task_name, kwargs=None):
         )
 
 
-def pdf_to_cosmos(scenario):
-    task_name = "pdf to cosmos"
-    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
+def pdf_extractions(scenario):
+    task_name = "pdf extractions"
+    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
 
     return run_km_job(url, scenario, task_name)
 
 
-def pdf_to_text(scenario):
-    task_name = "pdf to text"
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+def variable_extractions(scenario):
+    task_name = "variable extractions"
+    url = f"{KM_URL}/variable_extractions?document_id={scenario}"
 
     return run_km_job(url, scenario, task_name)
 
@@ -189,7 +189,7 @@ def pipeline(scenario):
     ]
     success = False
     try:
-        cosmos_response, execution_time = pdf_to_cosmos(scenario=scenario)
+        cosmos_response, execution_time = pdf_extractions(scenario=scenario)
         document_id = scenario
         # cosmos_response["result"]["job_result"].pop("extraction")
         report["pdf_to_cosmos"] = cosmos_response
@@ -197,7 +197,7 @@ def pipeline(scenario):
         report["pdf_to_cosmos"]["accuracy"] = {}
         report["pdf_to_cosmos"]["success"] = cosmos_response["status"] == "finished"
 
-        text_response, execution_time = pdf_to_text(scenario=scenario)
+        text_response, execution_time = variable_extractions(scenario=scenario)
         # text_response["result"]["job_result"].pop("extraction")
         report["pdf_to_text"] = text_response
         report["pdf_to_text"]["time"] = execution_time
