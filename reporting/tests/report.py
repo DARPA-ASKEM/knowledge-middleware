@@ -104,41 +104,35 @@ def run_km_job(url, scenario, task_name):
         )
 
     response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["status"] == "queued":
-        job_id = response_json["id"]
-        while True:
-            sleep(3)
-            job_status = requests.get(f"{KM_URL}/status/{job_id}").json()
-            logging.info(job_status)
-            if job_status["status"] == "finished":
-                logging.info(f"{task_name} job: {job_id} - status: finished")
-                return job_status, time() - start_time
-            elif job_status["status"] == "failed":
-                logging.error(f"{task_name} job: {job_id} - status: failed")
-                return job_status, time() - start_time
-    elif response_json["status"] == "finished":
-        logging.info(f"{task_name} job: {job_id} - status: finished")
-        success = True
-    else:
-        success = False
-        logging.error(f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}")
+    job_id = response_json["id"]
+    result = None
+    while True:
+        sleep(1)
+        result = requests.get(f"{KM_URL}/status/{job_id}").json()
+        logging.info(result)
+        if result["status"] == "finished":
+            success = True
+            logging.info(f"{task_name} job: {job_id} - status: finished")
+            break
+        elif result["status"] == "failed":
+            success = False
+            logging.error(f"{task_name} job: {job_id} - status: failed")
+            break
+    
 
     execution_time = time() - start_time
-    response_json["time"] = execution_time
-    response_json["accuracy"] = {}
-    response_json["success"] = success
-
-    return response_json
+    result.update({
+        "time" : execution_time,
+        "accuracy" : {},
+        "success" : success
+    })
+    return result
 
 
 def standard_flow(scenario):
     document_id = scenario
-    url = ""
-    task = ""
     def do_task(url, task):
-        return task, run_km_job(url, scenario, task)
+        return (task, run_km_job(url, scenario, task))
 
     # STEP 1: PDF EXTRACTION
     yield do_task(
@@ -154,7 +148,7 @@ def standard_flow(scenario):
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    _, result = do_task(
+    (_, result) = do_task(
         url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
         task = "code_to_amr"
     )
@@ -201,7 +195,7 @@ def pipeline(scenario):
     ]
     report = {}
     success = True
-    for task, result in standard_flow(scenario):
+    for (task, result) in standard_flow(scenario):
         report[task] = result
         if not result["success"]:
             success = False
