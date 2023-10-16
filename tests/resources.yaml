@@ -1,8 +1,8 @@
 ---
-pdf_extraction:
+variable_extraction:
   - text.json
   - paper.pdf
-pdf_to_cosmos:
+pdf_extraction:
   - paper.pdf
 code_to_amr:
   - code.py

@@ -111,7 +111,7 @@ def skema_extraction(document_id, filename, downloaded_document):
 
     try:
         logger.info(
-            f"Sending PDF to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
+            f"Sending document to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, files=put_payload)
         logger.info(
@@ -147,7 +147,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
     try:
         logger.info(
-            f"Sending PDF to backend knowledge service with document id {document_id} at {cosmos_text_extraction_url}"
+            f"Sending document to backend knowledge service with document id {document_id} at {cosmos_text_extraction_url}"
         )
         response = requests.post(
             cosmos_text_extraction_url, files=put_payload, data=data_form
@@ -288,7 +288,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
     return text, response.status_code, extraction_json, assets
 
 
-def pdf_to_cosmos(*args, **kwargs):
+def pdf_extraction(*args, **kwargs):
     # Get options
     document_id = kwargs.get("document_id")
 
@@ -336,7 +336,7 @@ def pdf_to_cosmos(*args, **kwargs):
     return response
 
 
-def pdf_extractions(*args, **kwargs):
+def variable_extractions(*args, **kwargs):
     # Get options
     document_id = kwargs.get("document_id")
     annotate_skema = kwargs.get("annotate_skema")
@@ -349,7 +349,7 @@ def pdf_extractions(*args, **kwargs):
     text = document_json.get("text", None)
     if not text:
         raise Exception(
-            "No text found in paper document, please ensure to submit to /pdf_to_cosmos endpoint."
+            "No text found in paper document, please ensure to submit to /pdf_extraction endpoint."
         )
 
     # Try to feed text to the unified service
@@ -358,7 +358,7 @@ def pdf_extractions(*args, **kwargs):
 
     try:
         logger.info(
-            f"Sending PDF to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
+            f"Sending document to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
         )
         response = requests.post(unified_text_reading_url, json=payload)
         logger.info(
