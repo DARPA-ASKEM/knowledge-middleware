@@ -156,7 +156,7 @@ def standard_flow(scenario):
         model_id = result["result"]["job_result"]["tds_model_id"]
     else:
         logging.error(
-            f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
+            f"Model was not generated for scenario: {scenario}, amr creation response: {result}"
         )
     yield task, result
 
