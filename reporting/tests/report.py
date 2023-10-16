@@ -137,23 +137,27 @@ def standard_flow(scenario):
     document_id = scenario
     url = ""
     task = ""
-    do_task = lambda: task, run_km_job(url, scenario, task)
+    def do_task(url, task):
+        return task, run_km_job(url, scenario, task)
 
     # STEP 1: PDF EXTRACTION
-    url = f"{KM_URL}/pdf_extraction?document_id={scenario}"
-    task = "pdf_extractions"
-    yield do_task()
+    yield do_task(
+        url = f"{KM_URL}/pdf_extraction?document_id={scenario}",
+        task = "pdf_extractions"
+    )
     
     # STEP 2: VARIABLE EXTRACTION
-    url = f"{KM_URL}/variable_extractions?document_id={scenario}"
-    task = "variable_extractions"
-    yield do_task()
+    yield do_task(
+        url = f"{KM_URL}/variable_extractions?document_id={scenario}",
+        task = "variable_extractions"
+    )
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
-    task = "code_to_amr"
-    _, result = do_task()
+    _, result = do_task(
+        url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
+        task = "code_to_amr"
+    )
     if result["success"]:
         model_id = result["result"]["job_result"]["tds_model_id"]
     else:
@@ -163,14 +167,16 @@ def standard_flow(scenario):
     yield task, result
 
     # STEP 4: PROFILE AMR
-    url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
-    task = "profile_model"
-    yield do_task()
+    yield do_task(
+        url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+        task = "profile_model"
+    )
     
     # STEP 5: LINK AMR
-    url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
-    task = "link_amr"
-    yield do_task()
+    yield do_task(
+        url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
+        task = "link_amr"
+    )
 
 
 def pipeline(scenario):
