@@ -130,8 +130,8 @@ def run_km_job(url, scenario, task_name, kwargs=None):
 
 
 def pdf_extractions(scenario):
-    task_name = "pdf extractions"
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+    task_name = "pdf extraction"
+    url = f"{KM_URL}/pdf_extraction?document_id={scenario}"
 
     return run_km_job(url, scenario, task_name)
 
@@ -171,11 +171,11 @@ def pipeline(scenario):
     # TODO: Hardcoded, generate shape from scenario files.
     shape = [
         {
-            "from": "pdf_to_cosmos",
-            "to": "pdf_to_text",
+            "from": "pdf_extraction",
+            "to": "variable_extraction",
         },
         {
-            "from": "pdf_to_text",
+            "from": "variable_extraction",
             "to": "profile_model",
         },
         {
