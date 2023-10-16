@@ -234,7 +234,7 @@ def pipeline(scenario):
         report["link_amr"]["accuracy"] = {}
         report["link_amr"]["success"] = link_response["status"] == "finished"
 
-        success = True
+        success = "success"
     except Exception as e:
         logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
     finally:
@@ -244,7 +244,7 @@ def pipeline(scenario):
         else:
             description = ""
         pipeline_report = {
-            "success": True,
+            "success": success,
             "description": description,
             "steps": report,
             "shape": shape,
