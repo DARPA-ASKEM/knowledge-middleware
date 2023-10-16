@@ -140,7 +140,7 @@ def standard_flow(scenario):
     do_task = lambda: run_km_job(url, scenario, task)
 
     # STEP 1: PDF EXTRACTION
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+    url = f"{KM_URL}/pdf_extraction?document_id={scenario}"
     task = "pdf_extractions"
     yield task, do_task()
     
