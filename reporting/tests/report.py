@@ -94,7 +94,7 @@ def publish_report(report, upload):
 
 
 # PIPELINE CODE
-def run_km_job(url, scenario, task_name, report):
+def run_km_job(url, scenario, task_name):
     start_time = time()
     km_response = requests.post(url)
 
@@ -126,49 +126,50 @@ def run_km_job(url, scenario, task_name, report):
         logging.error(f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}")
 
     execution_time = time() - start_time
-    report[task_name] = response_json
-    report[task_name]["time"] = execution_time
-    report[task_name]["accuracy"] = {}
-    report[task_name]["success"] = success
+    response_json["time"] = execution_time
+    response_json["accuracy"] = {}
+    response_json["success"] = success
 
-    return success
+    return response_json
 
 
-def standard_flow(scenario, report):
+def standard_flow(scenario):
     document_id = scenario
+    url = ""
+    task = ""
+    do_task = lambda: run_km_job(url, scenario, task)
 
     # STEP 1: PDF EXTRACTION
     url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
-    yield run_km_job(url, scenario, "pdf_extractions", report)
-
+    task = "pdf_extractions"
+    yield task, do_task()
     
     # STEP 2: VARIABLE EXTRACTION
     url = f"{KM_URL}/variable_extractions?document_id={scenario}"
-    yield run_km_job(url, scenario, "variable_extractions", report)
-
+    task = "variable_extractions"
+    yield task, do_task()
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
     url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
-    call_success =  run_km_job(url, scenario, "code_to_amr", report)
-    if call_success:
-        amr_response = report["code_to_amr"]
-        model_id = amr_response["result"]["job_result"]["tds_model_id"]
-        yield True
+    task = "code_to_amr"
+    result = do_task()
+    if result["success"]:
+        model_id = result["result"]["job_result"]["tds_model_id"]
     else:
-        yield False
         logging.error(
             f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
         )
+    yield task, result
 
     # STEP 4: PROFILE AMR
     url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
-    yield run_km_job(url, scenario, "profile_model", report)
-
+    task = "profile_model"
+    yield task, result
     
     # STEP 5: LINK AMR
     url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
-    yield run_km_job(url, scenario, "link_amr", report)
+    yield task, result
 
 
 def pipeline(scenario):
@@ -193,8 +194,9 @@ def pipeline(scenario):
     ]
     report = {}
     success = True
-    for task_status in standard_flow(scenario, report):
-        if not task_status:
+    for task, result in standard_flow(scenario):
+        report[task] = result
+        if not result["success"]:
             success = False
             logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
             break
