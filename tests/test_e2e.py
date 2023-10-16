@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 params = get_parameterizations()
 
 
-@pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extraction(
+@pytest.mark.parametrize("resource", params["variable_extractions"])
+def test_variable_extractions(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
@@ -24,7 +24,7 @@ def test_pdf_extraction(
     for d in text_json:
         text += f"{d['content']}\n"
     tds_artifact = gen_tds_artifact(
-        id=f"test_pdf_extractions_{resource}",
+        id=f"test_variable_extractions_{resource}",
         file_names=["paper.pdf"],
         text=text,
     )
@@ -49,7 +49,7 @@ def test_pdf_extraction(
 
     #### ACT ####
     response = client.post(
-        "/pdf_extractions",
+        "/variable_extractions",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
@@ -69,11 +69,11 @@ def test_pdf_extraction(
     scenario = context_dir.split("/")[-1]
     if not settings.MOCK_TA1 and "sidarthe" in context_dir:
         # Can only quality check for SIDARTHE
-        logger.debug(f"Evaluating PDF extractions from SKEMA")
+        logger.debug(f"Evaluating variable extractions from SKEMA")
         eval = requests.get(
             f"{settings.TA1_UNIFIED_URL}/text-reading/eval"
         )
-        logger.info(f"PDF extraction evaluation result: {eval.text}")
+        logger.info(f"Variable extraction evaluation result: {eval.text}")
         if eval.status_code < 300:
             accuracy = json.dumps(eval.json())
         else:
@@ -83,7 +83,7 @@ def test_pdf_extraction(
 
 
 
-@pytest.mark.parametrize("resource", params["pdf_to_cosmos"])
+@pytest.mark.parametrize("resource", params["pdf_extraction"])
 def test_pdf_to_cosmos(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
@@ -154,7 +154,7 @@ def test_pdf_to_cosmos(
 
     #### ACT ####
     response = client.post(
-        "/pdf_to_cosmos",
+        "/pdf_extraction",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
