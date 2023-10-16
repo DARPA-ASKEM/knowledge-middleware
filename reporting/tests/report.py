@@ -137,14 +137,14 @@ def run_km_job(url, scenario, task_name, report):
 def standard_flow(scenario, report):
     document_id = scenario
 
-    # STEP 1: PDF TO COSMOS
-    url = f"{KM_URL}/pdf_to_cosmos?document_id={scenario}"
-    yield run_km_job(url, scenario, "pdf_to_cosmos", report)
+    # STEP 1: PDF EXTRACTION
+    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
+    yield run_km_job(url, scenario, "pdf_extractions", report)
 
     
-    # STEP 2: PDF TO TEXT
-    url = f"{KM_URL}/pdf_extractions?document_id={scenario}"
-    yield run_km_job(url, scenario, "pdf_to_text", report)
+    # STEP 2: VARIABLE EXTRACTION
+    url = f"{KM_URL}/variable_extractions?document_id={scenario}"
+    yield run_km_job(url, scenario, "variable_extractions", report)
 
 
     # STEP 3: CODE TO AMR
@@ -161,11 +161,12 @@ def standard_flow(scenario, report):
             f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
         )
 
-    # STEP 4: CODE TO AMR
+    # STEP 4: PROFILE AMR
     url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
     yield run_km_job(url, scenario, "profile_model", report)
 
     
+    # STEP 5: LINK AMR
     url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
     yield run_km_job(url, scenario, "link_amr", report)
 
