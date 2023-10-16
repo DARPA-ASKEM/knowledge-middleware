@@ -291,6 +291,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 def pdf_extraction(*args, **kwargs):
     # Get options
     document_id = kwargs.get("document_id")
+    force_run = kwargs.get("force_run")
 
     document_json, downloaded_document = get_document_from_tds(
         document_id=document_id
@@ -308,6 +309,7 @@ def pdf_extraction(*args, **kwargs):
         case ExtractionServices.COSMOS:
             text, status_code, extraction_json, assets = cosmos_extraction(
                 document_id=document_id,
+                force_run=force_run,
                 filename=filename,
                 downloaded_document=downloaded_document,
             )
