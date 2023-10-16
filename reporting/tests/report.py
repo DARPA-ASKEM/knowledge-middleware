@@ -192,17 +192,17 @@ def pipeline(scenario):
         cosmos_response, execution_time = pdf_extractions(scenario=scenario)
         document_id = scenario
         # cosmos_response["result"]["job_result"].pop("extraction")
-        report["pdf_to_cosmos"] = cosmos_response
-        report["pdf_to_cosmos"]["time"] = execution_time
-        report["pdf_to_cosmos"]["accuracy"] = {}
-        report["pdf_to_cosmos"]["success"] = cosmos_response["status"] == "finished"
+        report["pdf_extraction"] = cosmos_response
+        report["pdf_extraction"]["time"] = execution_time
+        report["pdf_extraction"]["accuracy"] = {}
+        report["pdf_extraction"]["success"] = cosmos_response["status"] == "finished"
 
         text_response, execution_time = variable_extractions(scenario=scenario)
         # text_response["result"]["job_result"].pop("extraction")
-        report["pdf_to_text"] = text_response
-        report["pdf_to_text"]["time"] = execution_time
-        report["pdf_to_text"]["accuracy"] = {}
-        report["pdf_to_text"]["success"] = text_response["status"] == "finished"
+        report["variable_extraction"] = text_response
+        report["variable_extraction"]["time"] = execution_time
+        report["variable_extraction"]["accuracy"] = {}
+        report["variable_extraction"]["success"] = text_response["status"] == "finished"
 
         amr_response, execution_time = code_to_amr(scenario=scenario)
         if amr_response["result"]["job_result"]:
