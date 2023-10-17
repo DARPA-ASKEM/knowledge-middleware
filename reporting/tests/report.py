@@ -232,9 +232,9 @@ def pipeline(scenario):
 
     for task in remaining_steps:
         report[task] = {
-            "success": None
-            "time": 0
-            "accuracy" = None
+            "success": None,
+            "time": 0,
+            "accuracy": None
         }
         
     success = len(remaining_steps) == 0
