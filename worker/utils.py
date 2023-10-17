@@ -206,6 +206,11 @@ def get_document_from_tds(document_id, code=False):
 
     logger.info(f"DOCUMENT RETRIEVAL STATUS:{downloaded_document.status_code}")
 
+    if downloaded_document.status_code != 200:
+        raise Exception(
+            f"Cannot download document {document_id} from TDS: {downloaded_document.text}"
+        )
+
     return document_json, downloaded_document.content
 
 

@@ -70,17 +70,13 @@ def test_variable_extractions(
     if not settings.MOCK_TA1 and "sidarthe" in context_dir:
         # Can only quality check for SIDARTHE
         logger.debug(f"Evaluating variable extractions from SKEMA")
-        eval = requests.get(
-            f"{settings.TA1_UNIFIED_URL}/text-reading/eval"
-        )
+        eval = requests.get(f"{settings.TA1_UNIFIED_URL}/text-reading/eval")
         logger.info(f"Variable extraction evaluation result: {eval.text}")
         if eval.status_code < 300:
             accuracy = json.dumps(eval.json())
         else:
             accuracy = False
         record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
-
-
 
 
 @pytest.mark.parametrize("resource", params["pdf_extraction"])
@@ -574,16 +570,19 @@ def test_profile_model(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
     #### POSTAMBLE ####
-    if not settings.MOCK_TA1 and os.path.exists(f"{context_dir}/ground_truth_model_card.json"):
+    if not settings.MOCK_TA1 and os.path.exists(
+        f"{context_dir}/ground_truth_model_card.json"
+    ):
         logger.debug(f"Evaluating model card: {generated_card}")
         files = {
             "test_json_file": json.dumps(generated_card),
-            "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json")
-        }    
+            "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json"),
+        }
+        logging.error(files)
         eval = requests.post(
-            f"{settings.MIT_TR_URL}/evaluation/eval_model_card", 
+            f"{settings.MIT_TR_URL}/evaluation/eval_model_card",
             params={"gpt_key": settings.OPENAI_API_KEY},
-            files=files
+            files=files,
         )
         logger.info(f"Model profiling evaluation result: {eval.text}")
         if eval.status_code < 300:
