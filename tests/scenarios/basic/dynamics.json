@@ -1,0 +1,7 @@
+{
+    "name": "SIR",
+    "description": "SIR model dynamics",
+    "block": [
+        "L2-L10"
+    ]
+}

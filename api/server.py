@@ -69,7 +69,7 @@ def equations_to_amr(
     model_id: Optional[str] = None,
     name: Optional[str] = None,
     description: Optional[str] = None,
-    redis = Depends(get_redis)
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Post equations and store an AMR to TDS
 
@@ -101,7 +101,11 @@ def equations_to_amr(
 
 @app.post("/code_to_amr")
 def code_to_amr(
-    code_id: str, name: Optional[str] = None, description: Optional[str] = None, redis=Depends(get_redis)
+    code_id: str,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    dynamics_only: Optional[bool] = False,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """
     Converts a code object to an AMR. Assumes that the code file is the first
@@ -112,47 +116,57 @@ def code_to_amr(
         code_id (str): the id of the code
         name (str, optional): the name to set on the newly created model
         description (str, optional): the description to set on the newly created model
+        dynamics_only (bool, optional): whether to only run the amr extraction over specified dynamics from the code object in TDS.
     ```
     """
     operation_name = "operations.code_to_amr"
-    options = {"code_id": code_id, "name": name, "description": description}
+    options = {
+        "code_id": code_id,
+        "name": name,
+        "description": description,
+        "dynamics_only": dynamics_only,
+    }
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
-@app.post("/pdf_to_cosmos")
-def pdf_to_cosmos(document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+@app.post("/pdf_extraction")
+def pdf_extraction(document_id: str, 
+                   force_run: bool = False,
+                   redis=Depends(get_redis)) -> ExtractionJob:
     """Run Cosmos extractions over pdfs and stores the text/assets on the document
 
     Args:
         `document_id`: the id of the document to process
+        `force_run`: boolean whether to force a Cosmos run; if False and the PDF is in Cosmos's cache, 
+                     the cache will be used. If True, the cache will ignored and Cosmos will be force run.
     """
-    operation_name = "operations.pdf_to_cosmos"
+    operation_name = "operations.pdf_extraction"
 
-    options = {"document_id": document_id}
+    options = {"document_id": document_id, "force_run": force_run}
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
 
     return resp
 
 
-@app.post("/pdf_extractions")
-async def pdf_extractions(
+@app.post("/variable_extractions")
+async def variable_extractions(
     document_id: str,
     annotate_skema: bool = True,
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
-    redis = Depends(get_redis)
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
-    """Run text extractions over pdfs
+    """Run variable extractions over document
 
     Args:
-        pdf (UploadFile, optional): The pdf to run extractions over. Defaults to File(...).
+        pdf (UploadFile, optional): The document to run extractions over. Defaults to File(...).
     """
-    operation_name = "operations.pdf_extractions"
+    operation_name = "operations.variable_extractions"
 
     # text_content = text_content[: len(text_content) // 2]
     options = {
@@ -170,7 +184,9 @@ async def pdf_extractions(
 
 @app.post("/profile_dataset/{dataset_id}")
 def profile_dataset(
-    dataset_id: str, document_id: Optional[str] = None, redis=Depends(get_redis)
+    dataset_id: str,
+    document_id: Optional[str] = None,
+    redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Profile dataset with MIT's profiling service. This optionally accepts an `document_id` which
     is expected to be some user uploaded document which has had its text extracted and stored as
@@ -195,10 +211,14 @@ def profile_dataset(
 
 
 @app.post("/profile_model/{model_id}")
-def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> ExtractionJob:
+def profile_model(
+    model_id: str,
+    document_id: str,
+    redis=Depends(get_redis),
+) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
     and updates a model (AMR) with the profiled metadata card. It requires that the paper
-    has been extracted with `/pdf_to_cosmos` and the code has been converted to an AMR
+    has been extracted with `/pdf_extraction` and the code has been converted to an AMR
     with `/code_to_amr`
 
     > NOTE: if nothing the paper is not extracted and the model not created from code this WILL fail.
@@ -217,8 +237,11 @@ def profile_model(model_id: str, document_id: str, redis=Depends(get_redis)) -> 
 
 
 @app.post("/link_amr")
-def link_amr(document_id: str, model_id: str, redis=Depends(get_redis)) -> ExtractionJob:
-
+def link_amr(
+    document_id: str,
+    model_id: str,
+    redis=Depends(get_redis),
+) -> ExtractionJob:
     operation_name = "operations.link_amr"
 
     options = {

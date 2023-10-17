@@ -2,7 +2,6 @@ import inspect
 import json
 import os
 import logging
-from shutil import rmtree
 
 import pytest
 import requests
@@ -17,8 +16,8 @@ logger = logging.getLogger(__name__)
 params = get_parameterizations()
 
 
-@pytest.mark.parametrize("resource", params["pdf_extraction"])
-def test_pdf_extraction(
+@pytest.mark.parametrize("resource", params["variable_extractions"])
+def test_variable_extractions(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
@@ -27,7 +26,7 @@ def test_pdf_extraction(
     for d in text_json:
         text += f"{d['content']}\n"
     tds_artifact = gen_tds_artifact(
-        id=f"test_pdf_extractions_{resource}",
+        id=f"test_variable_extractions_{resource}",
         file_names=["paper.pdf"],
         text=text,
     )
@@ -52,7 +51,7 @@ def test_pdf_extraction(
 
     #### ACT ####
     response = client.post(
-        "/pdf_extractions",
+        "/variable_extractions",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
@@ -68,8 +67,21 @@ def test_pdf_extraction(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
+    #### POSTAMBLE ####
+    scenario = context_dir.split("/")[-1]
+    if not settings.MOCK_TA1 and "sidarthe" in context_dir:
+        # Can only quality check for SIDARTHE
+        logger.debug(f"Evaluating variable extractions from SKEMA")
+        eval = requests.get(f"{settings.TA1_UNIFIED_URL}/text-reading/eval")
+        logger.info(f"Variable extraction evaluation result: {eval.text}")
+        if eval.status_code < 300:
+            accuracy = json.dumps(eval.json())
+        else:
+            accuracy = False
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
 
-@pytest.mark.parametrize("resource", params["pdf_to_cosmos"])
+
+@pytest.mark.parametrize("resource", params["pdf_extraction"])
 def test_pdf_to_cosmos(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
@@ -140,7 +152,7 @@ def test_pdf_to_cosmos(
 
     #### ACT ####
     response = client.post(
-        "/pdf_to_cosmos",
+        "/pdf_extraction",
         params=query_params,
         headers={"Content-Type": "application/json"},
     )
@@ -176,21 +188,33 @@ def test_pdf_to_cosmos(
 
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
-def test_code_to_amr(
+def test_code_dynamics_to_amr(
     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
 ):
     #### ARRANGE ####
-    code = open(f"{context_dir}/code.py").read()
+    code = open(f"{context_dir}/code/code.py").read()
+    readme = open(f"{context_dir}/code/README.md").read()
     tds_code = gen_tds_artifact(
-        code=True, id=f"test_code_to_amr_{resource}", filez_names=["code.py"]
+        code=True,
+        dynamics_only=True,
+        id=f"test_code_to_amr_{resource}",
+        file_names=["code.py"],
     )
-    tds_code["file_names"] = ["code.py"]
+    tds_readme = gen_tds_artifact(
+        code=True,
+        dynamics_only=True,
+        id=f"test_code_to_amr_{resource}",
+        file_names=["README.md"],
+    )
+    # tds_code["files"] = ["code.py"]
     file_storage.upload("code.py", code)
+    file_storage.upload("README.md", readme)
 
     query_params = {
         "code_id": tds_code["id"],
         "name": "test model",
         "description": "test description",
+        "dynamics_only": True,
     }
 
     if settings.MOCK_TDS:
@@ -201,6 +225,80 @@ def test_code_to_amr(
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
             f"{settings.TA1_UNIFIED_URL}/workflows/code/snippets-to-pn-amr", json=amr
+        )
+    elif os.path.exists(f"{context_dir}/amr.json"):
+        amr = json.load(open(f"{context_dir}/amr.json"))
+
+    #### ACT ####
+    response = client.post(
+        "/code_to_amr",
+        params=query_params,
+        headers={"Content-Type": "application/json"},
+    )
+    results = response.json()
+    job_id = results.get("id")
+    worker.work(burst=True)
+    status_response = client.get(f"/status/{job_id}")
+
+    job = Job.fetch(job_id, connection=worker.connection)
+    if job.result is not None:
+        amr_instance = AMR(job.result["amr"])
+
+    #### ASSERT ####
+    assert results.get("status") == "queued"
+    assert status_response.status_code == 200
+    assert (
+        status_response.json().get("status") == "finished"
+    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+
+    assert (
+        amr_instance.is_valid()
+    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
+
+    #### POSTAMBLE ####
+    # if 'amr' in locals():
+    #     record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
+
+
+@pytest.mark.parametrize("resource", params["code_to_amr"])
+def test_code_zip_to_amr(
+    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+):
+    #### ARRANGE ####
+    code = open(f"{context_dir}/code/code.py").read()
+    readme = open(f"{context_dir}/code/README.md").read()
+    tds_code = gen_tds_artifact(
+        code=True,
+        dynamics_only=True,
+        id=f"test_code_to_amr_{resource}",
+        file_names=["code.py"],
+    )
+    tds_readme = gen_tds_artifact(
+        code=True,
+        dynamics_only=True,
+        id=f"test_code_to_amr_{resource}",
+        file_names=["README.md"],
+    )
+    # tds_code["files"] = ["code.py"]
+    file_storage.upload("code.py", code)
+    file_storage.upload("README.md", readme)
+
+    query_params = {
+        "code_id": tds_code["id"],
+        "name": "test model",
+        "description": "test description",
+        "dynamics_only": False,
+    }
+
+    if settings.MOCK_TDS:
+        http_mock.post(f"{settings.TDS_URL}/provenance", json={})
+        http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+        http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+    if settings.MOCK_TA1:
+        amr = json.load(open(f"{context_dir}/amr.json"))
+        # TODO: Check actual response from this endpoint and mock it in a new file.
+        http_mock.post(
+            f"{settings.TA1_UNIFIED_URL}/workflows/code/codebase-to-pn-amr", json=amr
         )
     elif os.path.exists(f"{context_dir}/amr.json"):
         amr = json.load(open(f"{context_dir}/amr.json"))
@@ -411,6 +509,7 @@ def test_profile_dataset(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+    logger.debug(status_response.json())
 
 
 @pytest.mark.parametrize("resource", params["profile_model"])
@@ -438,7 +537,7 @@ def test_profile_model(
     file_storage.upload("code.py", code)
 
     model_id = "test_profile_model"
-    amr = json.load(open(f"{context_dir}/amr.json"))
+    amr = json.load(open(f"./tests/amr.json"))
     if settings.MOCK_TDS:
         http_mock.post(
             f"{settings.TDS_URL}/provenance/search?search_type=models_from_code",
@@ -482,6 +581,7 @@ def test_profile_model(
     job_id = results.get("id")
     worker.work(burst=True)
     status_response = client.get(f"/status/{job_id}")
+    generated_card = status_response.json()["result"]["job_result"]["card"]
 
     #### ASSERT ####
     assert results.get("status") == "queued"
@@ -489,6 +589,27 @@ def test_profile_model(
     assert (
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+    #### POSTAMBLE ####
+    if not settings.MOCK_TA1 and os.path.exists(
+        f"{context_dir}/ground_truth_model_card.json"
+    ):
+        logger.debug(f"Evaluating model card: {generated_card}")
+        files = {
+            "test_json_file": json.dumps(generated_card),
+            "ground_truth_file": open(f"{context_dir}/ground_truth_model_card.json"),
+        }
+        logging.error(files)
+        eval = requests.post(
+            f"{settings.MIT_TR_URL}/evaluation/eval_model_card",
+            params={"gpt_key": settings.OPENAI_API_KEY},
+            files=files,
+        )
+        logger.info(f"Model profiling evaluation result: {eval.text}")
+        if eval.status_code < 300:
+            accuracy = eval.json()["accuracy"]
+        else:
+            accuracy = False
+        record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
 
 
 @pytest.mark.parametrize("resource", params["link_amr"])

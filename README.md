@@ -17,10 +17,25 @@ The Knowledge Middleware is designed to provide an intermediate job queue for ma
 
 1. Run `make init` which will create a stub `.env` file. 
 2. Ensure that `.env` contains the correct endpoint and other information 
-3. Run `make up`
+3. You can now run the tests or reports using the information below.
 
+
+## Running TA1 services locally
+
+Note: Starting the services are not required for running tests or generating reports
+
+You can start the local services by running:
+```
+make up
+```
+
+This should only be necessary if you are running the services locally to test before deploying. Otherwise it is generally better use the hosted versions of services or keep the responses mocked.
 
 ## Testing
+See [reporting/README.md](./reporting/README.md)
+
+
+## KM-only Testing (TA4 0nly)
 You can run the tests by initializing the environment:
 
 ```
@@ -43,6 +58,7 @@ pytest --cov . tests
 > You can add the flag ` --cov-report html` to generate an HTML report
 
 ### Testing Configuration
+*note: the live option will be removed soon*
 
 Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
 
@@ -59,6 +75,12 @@ Run `poetry run poe report`, to generate `tests/output/report.json` which contai
 Once the report has been generated, run `poetry run streamlit run tests/Home.py` to run the web interface into the test suite, which will be available at `http://localhost:8501`.
 
 > Note: if the tests fail, `poetry poe` will exit and not generate a report. To work around this, run `pytest --json-report --json-report-file=tests/output/tests.json` then `python tests/report.py` manually.
+
+### Adding Test Scenarios
+
+Test scenarious can be added to `tests/scenarios`. Each `scenario` should have it's own directory and must contain a `config.yaml` file which provides a name for the scenario and indicates which test(s) should be run. See `scenarios/basic` for a boilerplate that runs all test cases.
+
+The files required to run each scenario are defined in `tests/resources.yaml`. Note that some files are considered `optional`: e.g. `ground_truth_model_card`.
 
 ## License
 
