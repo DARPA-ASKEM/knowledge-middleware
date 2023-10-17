@@ -137,18 +137,18 @@ def standard_flow(scenario):
     # STEP 1: PDF EXTRACTION
     yield do_task(
         url = f"{KM_URL}/pdf_extraction?document_id={scenario}",
-        task = "pdf_extractions"
+        task = "pdf_extraction"
     )
     
     # STEP 2: VARIABLE EXTRACTION
     yield do_task(
         url = f"{KM_URL}/variable_extractions?document_id={scenario}",
-        task = "variable_extractions"
+        task = "variable_extraction"
     )
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    (_, result) = do_task(
+    (task, result) = do_task(
         url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
         task = "code_to_amr"
     )
@@ -199,7 +199,7 @@ def pipeline(scenario):
         report[task] = result
         if not result["success"]:
             success = False
-            logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
+            logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}")
             break
 
     description_path = f"./scenarios/{scenario}/description.txt"
