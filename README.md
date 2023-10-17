@@ -31,9 +31,11 @@ make up
 
 This should only be necessary if you are running the services locally to test before deploying. Otherwise it is generally better use the hosted versions of services or keep the responses mocked.
 
-
 ## Testing
+See [reporting/README.md](./reporting/README.md)
 
+
+## KM-only Testing (TA4 0nly)
 You can run the tests by initializing the environment:
 
 ```
@@ -56,6 +58,7 @@ pytest --cov . tests
 > You can add the flag ` --cov-report html` to generate an HTML report
 
 ### Testing Configuration
+*note: the live option will be removed soon*
 
 Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
 
