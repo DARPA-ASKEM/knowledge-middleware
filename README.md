@@ -19,8 +19,11 @@ The Knowledge Middleware is designed to provide an intermediate job queue for ma
 2. Ensure that `.env` contains the correct endpoint and other information 
 3. Run `make up`
 
-
 ## Testing
+See [reporting/README.md](./reporting/README.md)
+
+
+## KM-only Testing (TA4 0nly)
 You can run the tests by initializing the environment:
 
 ```
@@ -43,6 +46,7 @@ pytest --cov . tests
 > You can add the flag ` --cov-report html` to generate an HTML report
 
 ### Testing Configuration
+*note: the live option will be removed soon*
 
 Set environment variable `MOCK_TA1` to `False` and adding the correct endpoints for TA1 will send real payloads to TA1 services and validate the results.
 
