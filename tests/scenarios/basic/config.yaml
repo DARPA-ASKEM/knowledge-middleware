@@ -2,7 +2,7 @@
 name: "Basic Integration"
 description: "A basic scenario for testing core integration."
 enabled:
-  - variable_extraction
+  - variable_extractions
   - pdf_extraction
   - code_to_amr
   - equations_to_amr
