@@ -94,11 +94,9 @@ def publish_report(report, upload):
 
 
 # PIPELINE CODE
-def run_km_job(url, scenario, task_name, kwargs=None):
-    if kwargs is None:
-        kwargs = {}
+def run_km_job(url, scenario, task_name):
     start_time = time()
-    km_response = requests.post(url, **kwargs)
+    km_response = requests.post(url)
 
     if km_response.status_code != 200:
         raise Exception(
@@ -106,68 +104,76 @@ def run_km_job(url, scenario, task_name, kwargs=None):
         )
 
     response_json = km_response.json()
-    logging.info(f" {response_json}")
-    # Check if RQ job is successful, if not poll for completion of job
-    if response_json["status"] == "queued":
-        job_id = response_json["id"]
-        while True:
-            sleep(3)
-            job_status = requests.get(f"{KM_URL}/status/{job_id}").json()
-            logging.info(job_status)
-            if job_status["status"] == "finished":
-                logging.info(f"{task_name} job: {job_id} - status: finished")
-                return job_status, time() - start_time
-            elif job_status["status"] == "failed":
-                logging.error(f"{task_name} job: {job_id} - status: failed")
-                return job_status, time() - start_time
-    elif response_json["status"] == "finished":
-        logging.info(f"{task_name} job: {job_id} - status: finished")
-        return response_json, time() - start_time
-    else:
-        raise Exception(
-            f"Knowledge Middleware returned {km_response.status_code} for '{task_name}' on scenario: {scenario}"
-        )
+    job_id = response_json["id"]
+    result = None
+    while True:
+        sleep(1)
+        result = requests.get(f"{KM_URL}/status/{job_id}").json()
+        logging.info(result)
+        if result["status"] == "finished":
+            success = True
+            logging.info(f"{task_name} job: {job_id} - status: finished")
+            break
+        elif result["status"] == "failed":
+            success = False
+            logging.error(f"{task_name} job: {job_id} - status: failed")
+            break
+    
+
+    execution_time = time() - start_time
+    result.update({
+        "time" : execution_time,
+        "accuracy" : {},
+        "success" : success
+    })
+    return result
 
 
-def pdf_extractions(scenario):
-    task_name = "pdf extraction"
-    url = f"{KM_URL}/pdf_extraction?document_id={scenario}"
+def standard_flow(scenario):
+    document_id = scenario
+    def do_task(url, task):
+        return (task, run_km_job(url, scenario, task))
 
-    return run_km_job(url, scenario, task_name)
+    # STEP 1: PDF EXTRACTION
+    yield do_task(
+        url = f"{KM_URL}/pdf_extraction?document_id={scenario}",
+        task = "pdf_extraction"
+    )
+    
+    # STEP 2: VARIABLE EXTRACTION
+    yield do_task(
+        url = f"{KM_URL}/variable_extractions?document_id={scenario}",
+        task = "variable_extraction"
+    )
 
-
-def variable_extractions(scenario):
-    task_name = "variable extractions"
-    url = f"{KM_URL}/variable_extractions?document_id={scenario}"
-
-    return run_km_job(url, scenario, task_name)
-
-
-def code_to_amr(scenario):
+    # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    task_name = "code to AMR"
-    url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True"
+    (task, result) = do_task(
+        url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
+        task = "code_to_amr"
+    )
+    if result["success"]:
+        model_id = result["result"]["job_result"]["tds_model_id"]
+    else:
+        logging.error(
+            f"Model was not generated for scenario: {scenario}, amr creation response: {result}"
+        )
+    yield task, result
 
-    return run_km_job(url, scenario, task_name)
-
-
-def profile_model(scenario, model_id, document_id):
-    task_name = "profile model"
-    url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}"
-
-    return run_km_job(url, scenario, task_name)
-
-
-def link_amr(scenario, model_id, document_id):
-    task_name = "link AMR"
-    url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}"
-
-    return run_km_job(url, scenario, task_name)
+    # STEP 4: PROFILE AMR
+    yield do_task(
+        url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+        task = "profile_model"
+    )
+    
+    # STEP 5: LINK AMR
+    yield do_task(
+        url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
+        task = "link_amr"
+    )
 
 
 def pipeline(scenario):
-    report = {}
-
     # TODO: Hardcoded, generate shape from scenario files.
     shape = [
         {
@@ -187,73 +193,30 @@ def pipeline(scenario):
             "to": "link_amr",
         },
     ]
-    success = False
-    try:
-        cosmos_response, execution_time = pdf_extractions(scenario=scenario)
-        document_id = scenario
-        # cosmos_response["result"]["job_result"].pop("extraction")
-        report["pdf_extraction"] = cosmos_response
-        report["pdf_extraction"]["time"] = execution_time
-        report["pdf_extraction"]["accuracy"] = {}
-        report["pdf_extraction"]["success"] = cosmos_response["status"] == "finished"
+    report = {}
+    success = True
+    for (task, result) in standard_flow(scenario):
+        report[task] = result
+        if not result["success"]:
+            success = False
+            logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}")
+            break
 
-        text_response, execution_time = variable_extractions(scenario=scenario)
-        # text_response["result"]["job_result"].pop("extraction")
-        report["variable_extraction"] = text_response
-        report["variable_extraction"]["time"] = execution_time
-        report["variable_extraction"]["accuracy"] = {}
-        report["variable_extraction"]["success"] = text_response["status"] == "finished"
-
-        amr_response, execution_time = code_to_amr(scenario=scenario)
-        if amr_response["result"]["job_result"]:
-            model_id = amr_response["result"]["job_result"]["tds_model_id"]
-        else:
-            model_id = None
-        report["code_to_amr"] = amr_response
-        report["code_to_amr"]["time"] = execution_time
-        report["code_to_amr"]["accuracy"] = {}
-        report["code_to_amr"]["success"] = amr_response["status"] == "finished"
-
-        if model_id is None:
-            raise Exception(
-                f"Model was not generated for scenario: {scenario}, amr creation response: {amr_response}"
-            )
-        profile_response, execution_time = profile_model(
-            scenario=scenario, model_id=model_id, document_id=document_id
-        )
-        report["profile_model"] = profile_response
-        report["profile_model"]["time"] = execution_time
-        report["profile_model"]["accuracy"] = {}
-        report["profile_model"]["success"] = profile_response["status"] == "finished"
-
-        link_response, execution_time = link_amr(
-            scenario=scenario, model_id=model_id, document_id=document_id
-        )
-        report["link_amr"] = link_response
-        report["link_amr"]["time"] = execution_time
-        report["link_amr"]["accuracy"] = {}
-        report["link_amr"]["success"] = link_response["status"] == "finished"
-
-        success = "success"
-    except Exception as e:
-        logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {e}")
-    finally:
-        description_path = f"./scenarios/{scenario}/description.txt"
-        if os.path.exists(description_path):
-            description = open(description_path).read()
-        else:
-            description = ""
-        pipeline_report = {
-            "success": success,
-            "description": description,
-            "steps": report,
-            "shape": shape,
-            "accuracy": {},
-        }
-        return {scenario: pipeline_report}
+    description_path = f"./scenarios/{scenario}/description.txt"
+    if os.path.exists(description_path):
+        description = open(description_path).read()
+    else:
+        description = ""
+    pipeline_report = {
+        "success": success,
+        "description": description,
+        "steps": report,
+        "shape": shape,
+        "accuracy": {},
+    }
+    return {scenario: pipeline_report}
 
 
-# MAIN DECLARATION
 if __name__ == "__main__":
     reports = []
     for scenario in os.listdir("./scenarios"):
