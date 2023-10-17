@@ -118,39 +118,55 @@ def run_km_job(url, scenario, task_name):
             success = False
             logging.error(f"{task_name} job: {job_id} - status: failed")
             break
-    
 
     execution_time = time() - start_time
-    result.update({
-        "time" : execution_time,
-        "accuracy" : {},
-        "success" : success
-    })
+    result.update({"time": execution_time, "accuracy": {}, "success": success})
     return result
 
 
 def standard_flow(scenario):
     document_id = scenario
+
     def do_task(url, task):
         return (task, run_km_job(url, scenario, task))
 
     # STEP 1: PDF EXTRACTION
-    yield do_task(
-        url = f"{KM_URL}/pdf_extraction?document_id={scenario}",
-        task = "pdf_extraction"
+    (task, result) = do_task(
+        url=f"{KM_URL}/pdf_extraction?document_id={scenario}", task="pdf_extraction"
     )
-    
+
+    # EVAL STEP 1
+    ground_truth_path = f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
+    if os.path.exists(ground_truth_path):
+        logging.info(f"Accuracy for {scenario}:{task}")
+        cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
+        with open(ground_truth_path) as file:
+            truth = file.read()
+            ground_truth_json = json.loads(truth)
+            eval = requests.post(
+                f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
+                json=ground_truth_json,
+            )
+            if eval.status_code < 300:
+                result["accuracy"] = eval.json()
+            else:
+                result["accuracy"] = {"status_code": eval.status_code}
+
+    logging.info(f"ACCURACT RESULT: {result['accuracy']}")
+
+    yield task, result
+
     # STEP 2: VARIABLE EXTRACTION
     yield do_task(
-        url = f"{KM_URL}/variable_extractions?document_id={scenario}",
-        task = "variable_extraction"
+        url=f"{KM_URL}/variable_extractions?document_id={scenario}",
+        task="variable_extraction",
     )
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full if dynamics fails
     (task, result) = do_task(
-        url = f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
-        task = "code_to_amr"
+        url=f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
+        task="code_to_amr",
     )
     if result["success"]:
         model_id = result["result"]["job_result"]["tds_model_id"]
@@ -162,14 +178,14 @@ def standard_flow(scenario):
 
     # STEP 4: PROFILE AMR
     yield do_task(
-        url = f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
-        task = "profile_model"
+        url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+        task="profile_model",
     )
-    
+
     # STEP 5: LINK AMR
     yield do_task(
-        url = f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
-        task = "link_amr"
+        url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
+        task="link_amr",
     )
 
 
@@ -195,11 +211,13 @@ def pipeline(scenario):
     ]
     report = {}
     success = True
-    for (task, result) in standard_flow(scenario):
+    for task, result in standard_flow(scenario):
         report[task] = result
         if not result["success"]:
             success = False
-            logging.error(f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}")
+            logging.error(
+                f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}"
+            )
             break
 
     description_path = f"./scenarios/{scenario}/description.txt"

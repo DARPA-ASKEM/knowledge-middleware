@@ -130,7 +130,8 @@ services:
     ports:
       - 6379
   knowledge-middleware-api:
-    image: ghcr.io/darpa-askem/knowledge-middleware-api:latest
+    # image: ghcr.io/darpa-askem/knowledge-middleware-api:latest
+    image: extraction-service-extraction-api:latest
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -152,7 +153,8 @@ services:
       timeout: 20s
       retries: 30
   knowledge-middleware-worker:
-    image: ghcr.io/darpa-askem/knowledge-middleware-worker:latest
+    # image: ghcr.io/darpa-askem/knowledge-middleware-worker:latest
+    image: extraction-service-rqworker
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
