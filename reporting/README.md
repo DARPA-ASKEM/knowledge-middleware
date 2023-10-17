@@ -4,6 +4,7 @@ standing up all of the relevant TA3 services with a Docker Compose
 and trying to use a few requests through the relevant parts of the stack.
 
 ## Usage
+- [Log in to GitHub Package Registry](https://github.com/DARPA-ASKEM/orchestration/blob/main/CONTRIBUTING.md#login-to-registry)
 - Ensure your current directory is `./reporting`.
 - Create `reporting/.env` based off `env.sample` and change variables as needed
   - Set `UPLOAD=TRUE`, `BUCKET`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` IF you want the report uploaded
