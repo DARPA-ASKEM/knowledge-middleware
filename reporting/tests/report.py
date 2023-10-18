@@ -134,7 +134,8 @@ def standard_flow(scenario):
 
     # STEP 1: PDF EXTRACTION
     (task, result) = do_task(
-        url=f"{KM_URL}/pdf_extraction?document_id={scenario}", task="pdf_extraction"
+        url=f"{KM_URL}/pdf_extraction?document_id={scenario}&force_run=true",
+        task="pdf_extraction",
     )
 
     # EVAL STEP 1
@@ -150,11 +151,16 @@ def standard_flow(scenario):
                 json=ground_truth_json,
             )
             if eval.status_code < 300:
-                result["accuracy"] = eval.json()
+                evaluation = eval.json()[0]
+                # Extract metrics that COSMOS team said were most important
+                evaluation_stats = {
+                    "document_overlap_percent": evaluation["document_overlap_percent"],
+                    "document_expected_count": evaluation["document_expected_count"],
+                    "document_cosmos_count": evaluation["document_cosmos_count"],
+                }
+                result["accuracy"] = evaluation_stats
             else:
                 result["accuracy"] = {"status_code": eval.status_code}
-
-    logging.info(f"ACCURACT RESULT: {result['accuracy']}")
 
     yield task, result
 
