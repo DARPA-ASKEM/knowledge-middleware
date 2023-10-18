@@ -1,4 +1,3 @@
-import inspect
 import json
 import os
 import logging
@@ -6,7 +5,6 @@ import logging
 import pytest
 import requests
 from rq.job import Job
-import yaml
 
 from lib.settings import settings, ExtractionServices
 from tests.utils import get_parameterizations, record_quality_check, AMR
