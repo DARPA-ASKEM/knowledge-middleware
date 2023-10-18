@@ -1,34 +1,52 @@
 ---
 name: Report
-on: workflow_dispatch
+
+on:
+  workflow_dispatch:
+
 jobs:
   test:
-    runs-on: ubuntu-latest
-    environment: "non-terarium ta1 deployments"
+    runs-on: ubuntu-latest #-4-cores
+    defaults:
+      runs:
+        working-directory: reporting
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-      - name: Install Poetry
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Clean up unused files
+        shell: bash
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-      - name: Configure Poetry
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-      - name: Install dependencies with Poetry
-        run: |
-          poetry install
-      - name: Run report
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/microsoft
+          sudo rm -rf /opt/mssql-tools
+          sudo rm -rf /usr/share/R
+          sudo rm -rf /usr/share/X11
+          sudo rm -rf /usr/share/apache-*
+          sudo rm -rf /usr/share/java
+          sudo rm -rf /usr/share/php*
+          sudo rm -rf /usr/share/postgresq*
+          sudo rm -rf /usr/share/sbt
+          sudo rm -rf /usr/share/vim
+          sudo rm -rf /usr/local/lib/lein
+          sudo rm -rf /usr/local/lib/R
+
+      - name: Log in to Github Package
+        run: echo $GH_TOKEN | docker login ghcr.io -u jatautomoton --password-stdin
         env:
+          GH_TOKEN: ${{secrets.GHP_ACCESS_TOKEN}}
+
+      - name: Pull images
+        run: docker compose pull
+
+      - name: Generate report
+        run: docker compose run -e UPLOAD -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e BUCKET --build tests
+        # continue-on-error: true
+        env:
+          UPLOAD: "TRUE"
           AWS_ACCESS_KEY_ID: ${{secrets.AWS_PROD_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_PROD_SECRET_ACCESS_KEY}}
           BUCKET: ${{secrets.AWS_PROD_BUCKET}}
-          SKEMA_RS_URL: ${{vars.SKEMA_RS_URL}}
-          TA1_UNIFIED_URL: ${{vars.TA1_UNIFIED_URL}}
-          MIT_TR_URL: ${{vars.MIT_TR_URL}}
-          MOCK_TA1: ${{vars.MOCK_TA1}}
-        run: >
-          poetry run poe report 
