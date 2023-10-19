@@ -77,7 +77,7 @@ def publish_report(report, upload):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"report_{timestamp}.json"
     fullpath = os.path.join("reports", filename)
-    os.makedirs("reports", exist_ok=True)
+    os.makedirs("/outputs", exist_ok=True)
     with open(fullpath, "w") as file:
         json.dump(report, file, indent=2)
 
