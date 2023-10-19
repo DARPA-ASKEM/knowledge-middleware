@@ -172,19 +172,16 @@ services:
   dashboard:
     image: ghcr.io/darpa-askem/integration-dashboard:latest
     environment:
-      USE_LOCAL=TRUE
-      AWS_ACCESS_KEY_ID=
-      AWS_SECRET_ACCESS_KEY=
-      BUCKET=
+      - AWS_ACCESS_KEY_ID=none
+      - AWS_SECRET_ACCESS_KEY=none
+      - BUCKET=none
+      - USE_LOCAL=TRUE
     expose:
       - 8501
     ports:
-      - 8501
+      - 8501:8501
     volumes:
-      - type: volume
-        source: report
-        target: /outputs
-        read_only: true
+      - report:/outputs
   tests:
     build:
       context: .
@@ -200,11 +197,11 @@ services:
       - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
       - MIT_TR_URL=http://mit-tr:4046
     volumes:
-      - type: volume
-        source: report
-        target: /outputs
+      - report:/outputs
     depends_on:
       knowledge-middleware-api:
         condition: service_healthy
       knowledge-middleware-worker:
         condition: service_started
+volumes:
+  report:
