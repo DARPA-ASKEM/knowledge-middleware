@@ -169,6 +169,19 @@ services:
         condition: service_started
       knowledge-middleware-api:
         condition: service_started
+  dashboard:
+    image: ghcr.io/darpa-askem/integration-dashboard:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=none
+      - AWS_SECRET_ACCESS_KEY=none
+      - BUCKET=none
+      - USE_LOCAL=TRUE
+    expose:
+      - 8501
+    ports:
+      - 8501:8501
+    volumes:
+      - report:/outputs
   tests:
     build:
       context: .
@@ -183,8 +196,12 @@ services:
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
       - MIT_TR_URL=http://mit-tr:4046
+    volumes:
+      - report:/outputs
     depends_on:
       knowledge-middleware-api:
         condition: service_healthy
       knowledge-middleware-worker:
         condition: service_started
+volumes:
+  report:
