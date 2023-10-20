@@ -192,10 +192,19 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
         # Download the Cosmos extractions zipfile to a temporary directory
         temp_dir = tempfile.mkdtemp()
-        zip_file = os.path.join(temp_dir, document_id + ".zip")
+        zip_file_name = f"{document_id}_cosmos.zip"
+        zip_file = os.path.join(temp_dir, zip_file_name)
         logger.info(f"Fetching Cosmos zipfile from: {result_endpoint}")
         with open(zip_file, "wb") as writer:
             writer.write(requests.get(result_endpoint).content)
+
+        presigned_response = requests.get(
+            f"{TDS_API}/documents/{document_id}/upload-url?filename={zip_file_name}"
+        )
+        upload_url = presigned_response.json().get("url")
+
+        with open(zip_file, "rb") as file:
+            asset_response = requests.put(upload_url, file)            
 
         # Extract zipfile to enable asset uploading
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
@@ -285,7 +294,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             "If worker is getting large, check if temporary files are being removed."
         )
 
-    return text, response.status_code, extraction_json, assets
+    return text, response.status_code, extraction_json, assets, zip_file_name
 
 
 def pdf_extraction(*args, **kwargs):
@@ -307,7 +316,7 @@ def pdf_extraction(*args, **kwargs):
             )
             assets = None
         case ExtractionServices.COSMOS:
-            text, status_code, extraction_json, assets = cosmos_extraction(
+            text, status_code, extraction_json, assets, zip_file_name = cosmos_extraction(
                 document_id=document_id,
                 force_run=force_run,
                 filename=filename,
@@ -321,6 +330,7 @@ def pdf_extraction(*args, **kwargs):
         filename=filename,
         text=text,
         assets=assets,
+        zip_file_name=zip_file_name
     )
 
     if document_response.get("status") == 200:
