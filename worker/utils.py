@@ -108,6 +108,7 @@ def put_document_extraction_to_tds(
     text=None,
     model_id=None,
     assets=None,
+    zip_file_name=None
 ):
     """
     Update an document or code object in TDS.
@@ -126,7 +127,7 @@ def put_document_extraction_to_tds(
         "username": "extraction_service",
         "name": name,
         "description": description,
-        "file_names": [filename],
+        "file_names": [filename, zip_file_name],
         "text": text,
         "metadata": metadata,
         "assets": assets,
