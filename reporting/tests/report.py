@@ -150,14 +150,15 @@ def standard_flow(scenario):
     document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
     if document_response.status_code > 300:
         yield non_applicable_run("variable_extraction")
-    document = document_response.json()
-    if document["text"] is None:
-        yield non_applicable_run("variable_extraction")
     else:
-        yield do_task(
-            url=f"{KM_URL}/variable_extractions?document_id={scenario}",
-            task="variable_extraction",
-        )
+        document = document_response.json()
+        if document["text"] is None:
+            yield non_applicable_run("variable_extraction")
+        else:
+            yield do_task(
+                url=f"{KM_URL}/variable_extractions?document_id={scenario}",
+                task="variable_extraction",
+            )
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
@@ -180,6 +181,8 @@ def standard_flow(scenario):
     # Step 3.5: EQUATIONS TO AMR
     latex_path = f"scenarios/{scenario}/equations.latex.txt"
     mathml_path = f"scenarios/{scenario}/equations.mathml.txt"
+    file_path = None
+    equation_type = None
     if os.path.exists(latex_path):
         file_path = latex_path
         equation_type = "latex"
@@ -188,25 +191,26 @@ def standard_flow(scenario):
         equation_type = "mathml"
     else:
         yield non_applicable_run("equations_to_amr")
-    with open(file_path) as file:
-        equations = [line.strip() for line in file.readlines()]
-        equations_payload = {
-            "payload": equations,
-            "equation_type": equation_type,
-        }
-        (task, result) = do_task(
-            url=f"{KM_URL}/equations_to_amr",
-            task="equations_to_amr",
-            kwargs={"json": equations_payload},
-        )
 
-        if result["success"]:
-            model_id = result["result"]["job_result"]["tds_model_id"]
-        else:
-            logging.error(
-                f"Model was not generated from equations for scenario: {scenario}, amr creation response: {result}"
+    if file_path and equation_type:
+        with open(file_path) as file:
+            equations = file.read()
+            parameters_payload = {
+                "equation_type": equation_type,
+            }
+            (task, result) = do_task(
+                url=f"{KM_URL}/equations_to_amr",
+                task="equations_to_amr",
+                kwargs={"params": parameters_payload, "data": equations},
             )
-        yield task, result
+
+            if result["success"]:
+                model_id = result["result"]["job_result"]["tds_model_id"]
+            else:
+                logging.error(
+                    f"Model was not generated from equations for scenario: {scenario}, amr creation response: {result}"
+                )
+            yield task, result
 
     # STEP 4: PROFILE AMR
     if model_id:
@@ -241,18 +245,26 @@ def standard_flow(scenario):
         yield non_applicable_run("profile_model")
 
     # STEP 5: LINK AMR
-    if model_id:
-        yield do_task(
-            url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
-            task="link_amr",
-        )
-    else:
+    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    if document_response.status_code > 300:
         yield non_applicable_run("link_amr")
+    else:
+        document = document_response.json()
+        if document["text"] is None:
+            yield non_applicable_run("link_amr")
+        else:
+            if model_id:
+                yield do_task(
+                    url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
+                    task="link_amr",
+                )
+            else:
+                yield non_applicable_run("link_amr")
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
         yield do_task(
-            url=f"{KM_URL}/profile_dataset?dataset_id={scenario}",
+            url=f"{KM_URL}/profile_dataset/{scenario}",
             task="profile_dataset",
         )
     else:
@@ -281,29 +293,25 @@ def pipeline(scenario):
             "from": "profile_model",
             "to": "link_amr",
         },
-        {
-            "from": "profile_dataset",
-            "to": "profile_dataset",
-        },
     ]
     report = {}
-    remaining_steps = {edge["to"] for edge in shape}.union(
-        {edge["from"] for edge in shape}
-    )
+    # remaining_steps = {edge["to"] for edge in shape}.union(
+    #     {edge["from"] for edge in shape}
+    # )
     success = True
     for task, result in standard_flow(scenario):
         report[task] = result
-        remaining_steps.remove(task)
-        if not result["success"]:
-            logging.error(
-                f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}"
-            )
-            break
+        if result["success"] is False:
+            success = False
+        # remaining_steps.remove(task)
+        # if not result["success"]:
+        #     logging.error(
+        #         f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}"
+        #     )
+        #     break
 
-    for task in remaining_steps:
-        report[task] = {"success": None, "time": 0, "accuracy": None}
-
-    success = len(remaining_steps) == 0
+    # for task in remaining_steps:
+    #     report[task] = {"success": None, "time": 0, "accuracy": None}
 
     description_path = f"./scenarios/{scenario}/description.txt"
     if os.path.exists(description_path):

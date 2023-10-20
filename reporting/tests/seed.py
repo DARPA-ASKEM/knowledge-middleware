@@ -22,6 +22,9 @@ def add_code(scenario):
             existing_filepath = filepath
             break  # Found a file, so stop looking
 
+    if existing_filepath is None:
+        return
+
     if existing_filepath.endswith(".py"):
         logging.info(f"Adding {scenario} code")
         payload = {
