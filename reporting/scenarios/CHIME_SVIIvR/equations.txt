@@ -1,7 +1,0 @@
-[
-  "\\frac{dS}{dt} = - \\beta S I - \\beta S I_v - v_r S",
-  "\\frac{dV}{dt} = v_r S - \\beta(1 - v_e) V I - \\beta(1 - v_e) V I_v",
-  "\\frac{dI}{dt} = \\beta S I + \\beta S I_v - \\gamma I",
-  "\\frac{dI_v}{dt} = \\beta (1 - v_e) V I + \\beta (1 - v_e) V I_v - \\gamma I_v",
-  "\\frac{dR}{dt} = \\gamma I_v + \\gamma I"
-]
