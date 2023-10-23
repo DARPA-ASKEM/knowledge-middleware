@@ -22,6 +22,9 @@ def add_code(scenario):
             existing_filepath = filepath
             break  # Found a file, so stop looking
 
+    if existing_filepath is None:
+        return
+
     if existing_filepath.endswith(".py"):
         logging.info(f"Adding {scenario} code")
         payload = {
@@ -164,7 +167,49 @@ def add_paper(scenario):
             logging.info(f"Uploaded {scenario} paper")
 
 
+def add_dataset(scenario):
+    filepath = f"./scenarios/{scenario}/dataset.csv"
+    if not os.path.exists(filepath):
+        return
+    logging.info(f"Adding {scenario} dataset")
+    payload = {
+        "id": scenario,
+        "name": scenario,
+        "username": "Adam Smith",
+        "description": "",
+        "file_names": ["dataset.csv"],
+        "metadata": {},
+    }
+
+    dataset_response = requests.post(
+        TDS_URL + "/datasets",
+        json=payload,
+        headers={"Content-Type": "application/json"},
+    )
+
+    if dataset_response.status_code >= 300:
+        raise Exception(
+            f"Failed to POST dataset ({dataset_response.status_code}): {scenario}"
+        )
+
+    url_response = requests.get(
+        TDS_URL + f"/datasets/{scenario}/upload-url", params={"filename": "dataset.csv"}
+    )
+
+    upload_url = url_response.json()["url"]
+    with open(filepath, "rb") as file:
+        upload_response = requests.put(upload_url, file)
+
+        if upload_response.status_code >= 300:
+            raise Exception(
+                f"Failed to upload dataset ({upload_response.status_code}): {scenario}"
+            )
+        else:
+            logging.info(f"Uploaded {scenario} dataset")
+
+
 for scenario in os.listdir("./scenarios"):
     logging.info(f"Seeding {scenario}")
     add_code(scenario)
     add_paper(scenario)
+    add_dataset(scenario)

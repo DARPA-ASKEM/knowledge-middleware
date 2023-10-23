@@ -9,8 +9,8 @@ and trying to use a few requests through the relevant parts of the stack.
 - Create `reporting/.env` based off `env.sample` and change variables as needed
   - Set `UPLOAD=TRUE`, `BUCKET`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` IF you want the report uploaded
 - Run `docker compose run --build tests`. Once the `tests` container completes, the report is done.
-  - View the `tests` container's logs to see the report IF you chose not to upload to S3
-    - Use command `docker compose logs -f tests` to view
+  - _Note:_ In order to run specific scenarios, you can specify them as follows: `docker compose run tests "<Scenario Directory>"` where the `<Scenario Directory>` the is full name of the directory containing all scenario files. You can specify as many as you would like in one run. _Example:_ `docker compose run tests "SIDARTHE Code" "SIDARTHE Equations" "SIR"`
+- View results using `docker compose run --build --service-ports dashboard` (Assuming you haven't deleted any volumes)
 
 Note: The services used in testing are not cleaned up following testing. When done with running tests,
 be sure to shut down the services by running `docker compose down` to conserve your resources.

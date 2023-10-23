@@ -4,6 +4,7 @@ import logging
 from time import sleep, time
 from datetime import datetime
 from collections import defaultdict
+import sys
 
 import boto3
 import requests
@@ -49,24 +50,23 @@ def gen_report(scenarios_reports):
                     lambda: requests.get(f"{TA1_UNIFIED_URL}/version").content.decode()
                 ),
             },
-            # Currently unneeded since the Unified service defines the other services used.
-            # "MIT_TR_URL": {
-            #     "source": MIT_TR_URL,
-            #     "version": handle_bad_versioning(
-            #         lambda: requests.get(f"{MIT_TR_URL}/debugging/get_sha").json()[
-            #             "mitaskem_commit_sha"
-            #         ]
-            #     ),
-            # },
-            # "COSMOS_URL": {
-            #     "source": COSMOS_URL,
-            #     "version": handle_bad_versioning(
-            #         lambda: requests.get(f"{COSMOS_URL}/version_info").json()[
-            #             "git_hash"
-            #         ]
-            #     ),
-            # },
-            # "SKEMA_RS_URL": {"source": SKEMA_RS_URL, "version": "UNAVAILABLE"},
+            "MIT_TR_URL": {
+                "source": MIT_TR_URL,
+                "version": handle_bad_versioning(
+                    lambda: requests.get(f"{MIT_TR_URL}/debugging/get_sha").json()[
+                        "mitaskem_commit_sha"
+                    ]
+                ),
+            },
+            "COSMOS_URL": {
+                "source": COSMOS_URL,
+                "version": handle_bad_versioning(
+                    lambda: requests.get(f"{COSMOS_URL}/version_info").json()[
+                        "git_hash"
+                    ]
+                ),
+            },
+            "SKEMA_RS_URL": {"source": SKEMA_RS_URL, "version": "UNAVAILABLE"},
         },
     }
     return report
@@ -76,8 +76,8 @@ def publish_report(report, upload):
     logging.info("Publishing report")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"report_{timestamp}.json"
-    fullpath = os.path.join("reports", filename)
-    os.makedirs("reports", exist_ok=True)
+    fullpath = os.path.join("/outputs/ta1/", filename)
+    os.makedirs("/outputs/ta1", exist_ok=True)
     with open(fullpath, "w") as file:
         json.dump(report, file, indent=2)
 
@@ -96,9 +96,9 @@ def publish_report(report, upload):
 
 
 # PIPELINE CODE
-def run_km_job(url, scenario, task_name):
+def run_km_job(url, scenario, task_name, kwargs={}):
     start_time = time()
-    km_response = requests.post(url)
+    km_response = requests.post(url, **kwargs)
 
     if km_response.status_code != 200:
         raise Exception(
@@ -126,102 +126,190 @@ def run_km_job(url, scenario, task_name):
     return result
 
 
+def non_applicable_run(task_name):
+    return (task_name, {"success": None, "time": None, "accuracy": None})
+
+
 def standard_flow(scenario):
     document_id = scenario
+    model_id = None
 
-    def do_task(url, task):
-        return (task, run_km_job(url, scenario, task))
+    def do_task(url, task, kwargs={}):
+        return (task, run_km_job(url, scenario, task, kwargs))
 
     # STEP 1: PDF EXTRACTION
-    (task, result) = do_task(
-        url=f"{KM_URL}/pdf_extraction?document_id={scenario}&force_run=true",
-        task="pdf_extraction",
-    )
+    if os.path.exists(f"scenarios/{scenario}/paper.pdf"):
+        logging.info(f"PDF exists for scenario {scenario}")
 
-    # EVAL STEP 1
-    ground_truth_path = f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
-    if os.path.exists(ground_truth_path):
-        logging.info(f"Accuracy for {scenario}:{task}")
-        cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
-        with open(ground_truth_path) as file:
-            truth = file.read()
-            ground_truth_json = json.loads(truth)
-            eval = requests.post(
-                f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
-                json=ground_truth_json,
-            )
-            if eval.status_code < 300:
-                evaluation = eval.json()[0]
-                # Extract metrics that COSMOS team said were most important
-                evaluation_stats = {
-                    "document_overlap_percent": evaluation["document_overlap_percent"],
-                    "document_expected_count": evaluation["document_expected_count"],
-                    "document_cosmos_count": evaluation["document_cosmos_count"],
-                }
-                result["accuracy"] = evaluation_stats
-            else:
-                result["accuracy"] = {"status_code": eval.status_code}
+        (task, result) = do_task(
+            url=f"{KM_URL}/pdf_extraction?document_id={scenario}&force_run=true",
+            task="pdf_extraction",
+        )
 
-    yield task, result
+        # EVAL STEP 1
+        ground_truth_path = (
+            f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
+        )
+        if os.path.exists(ground_truth_path):
+            logging.info(f"Accuracy for {scenario}:{task}")
+            cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
+            with open(ground_truth_path) as file:
+                truth = file.read()
+                ground_truth_json = json.loads(truth)
+                eval = requests.post(
+                    f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
+                    json=ground_truth_json,
+                )
+                if eval.status_code < 300:
+                    evaluation = eval.json()[0]
+                    # Extract metrics that COSMOS team said were most important
+                    evaluation_stats = {
+                        "document_overlap_percent": evaluation[
+                            "document_overlap_percent"
+                        ],
+                        "document_expected_count": evaluation[
+                            "document_expected_count"
+                        ],
+                        "document_cosmos_count": evaluation["document_cosmos_count"],
+                    }
+                    result["accuracy"] = evaluation_stats
+                else:
+                    result["accuracy"] = {"status_code": eval.status_code}
+
+        yield task, result
+    else:
+        yield non_applicable_run("pdf_extraction")
 
     # STEP 2: VARIABLE EXTRACTION
-    yield do_task(
-        url=f"{KM_URL}/variable_extractions?document_id={scenario}",
-        task="variable_extraction",
-    )
+    # Check TDS document to see if it has non null text
+    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    if document_response.status_code > 300:
+        yield non_applicable_run("variable_extraction")
+    else:
+        document = document_response.json()
+        if document["text"] is None:
+            yield non_applicable_run("variable_extraction")
+        else:
+            yield do_task(
+                url=f"{KM_URL}/variable_extractions?document_id={scenario}",
+                task="variable_extraction",
+            )
 
     # STEP 3: CODE TO AMR
-    # Try dynamics only since code_to_amr fallsback to full if dynamics fails
-    (task, result) = do_task(
-        url=f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
-        task="code_to_amr",
-    )
-    if result["success"]:
-        model_id = result["result"]["job_result"]["tds_model_id"]
+    # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
+    code_response = requests.get(f"{TDS_URL}/code/{scenario}")
+    if code_response.status_code > 300:
+        yield non_applicable_run("code_to_amr")
     else:
-        logging.error(
-            f"Model was not generated for scenario: {scenario}, amr creation response: {result}"
+        (task, result) = do_task(
+            url=f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
+            task="code_to_amr",
         )
-    yield task, result
+        if result["success"]:
+            model_id = result["result"]["job_result"]["tds_model_id"]
+        else:
+            logging.error(
+                f"Model was not generated from code for scenario: {scenario}, amr creation response: {result}"
+            )
+        yield task, result
+
+    # Step 3.5: EQUATIONS TO AMR
+    latex_path = f"scenarios/{scenario}/equations.latex.txt"
+    mathml_path = f"scenarios/{scenario}/equations.mathml.txt"
+    file_path = None
+    equation_type = None
+    if os.path.exists(latex_path):
+        file_path = latex_path
+        equation_type = "latex"
+    elif os.path.exists(mathml_path):
+        file_path = mathml_path
+        equation_type = "mathml"
+    else:
+        yield non_applicable_run("equations_to_amr")
+
+    if file_path and equation_type:
+        with open(file_path) as file:
+            equations = file.read()
+            parameters_payload = {
+                "equation_type": equation_type,
+            }
+            (task, result) = do_task(
+                url=f"{KM_URL}/equations_to_amr",
+                task="equations_to_amr",
+                kwargs={"params": parameters_payload, "data": equations},
+            )
+
+            if result["success"]:
+                model_id = result["result"]["job_result"]["tds_model_id"]
+            else:
+                logging.error(
+                    f"Model was not generated from equations for scenario: {scenario}, amr creation response: {result}"
+                )
+            yield task, result
 
     # STEP 4: PROFILE AMR
-    (task, result) = do_task(
-        url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
-        task="profile_model",
-    )
+    if model_id:
+        (task, result) = do_task(
+            url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+            task="profile_model",
+        )
 
-    ## EVAL STEP 4
-    ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
-    if os.path.exists(ground_truth_path):
-        logging.info(f"Accuracy for {scenario}:{task}")
-        generated_card = json.dumps(result["result"]["job_result"]["card"])
-        with open(ground_truth_path) as file:
-            truth = file.read()
-            files = {
-                "test_json_file": generated_card,
-                "ground_truth_file": truth,
-            }
-            eval = requests.post(
-                f"{MIT_TR_URL}/evaluation/eval_model_card",
-                params={"gpt_key": OPENAI_API_KEY},
-                files=files,
-            )
-            if eval.status_code < 300:
-                result["accuracy"] = eval.json()
-            else:
-                result["accuracy"] = {"status_code": eval.status_code}
+        ## EVAL STEP 4
+        if result["result"]["job_result"]:
+            ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
+            if os.path.exists(ground_truth_path):
+                logging.info(f"Accuracy for {scenario}:{task}")
+                generated_card = json.dumps(result["result"]["job_result"]["card"])
+                with open(ground_truth_path) as file:
+                    truth = file.read()
+                    files = {
+                        "test_json_file": generated_card,
+                        "ground_truth_file": truth,
+                    }
+                    eval = requests.post(
+                        f"{MIT_TR_URL}/evaluation/eval_model_card",
+                        params={"gpt_key": OPENAI_API_KEY},
+                        files=files,
+                    )
+                    if eval.status_code < 300:
+                        result["accuracy"] = eval.json()
+                    else:
+                        result["accuracy"] = {"status_code": eval.status_code}
+        else:
+            result["accuracy"] = None
 
-    yield task, result
+        yield task, result
+    else:
+        yield non_applicable_run("profile_model")
 
     # STEP 5: LINK AMR
-    yield do_task(
-        url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
-        task="link_amr",
-    )
+    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    if document_response.status_code > 300:
+        yield non_applicable_run("link_amr")
+    else:
+        document = document_response.json()
+        if document["text"] is None:
+            yield non_applicable_run("link_amr")
+        else:
+            if model_id:
+                yield do_task(
+                    url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
+                    task="link_amr",
+                )
+            else:
+                yield non_applicable_run("link_amr")
+
+    # STEP 6: PROFILE DATASET
+    if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
+        yield do_task(
+            url=f"{KM_URL}/profile_dataset/{scenario}",
+            task="profile_dataset",
+        )
+    else:
+        yield non_applicable_run("profile_dataset")
 
 
 def pipeline(scenario):
-    # TODO: Hardcoded, generate shape from scenario files.
     shape = [
         {
             "from": "pdf_extraction",
@@ -236,28 +324,32 @@ def pipeline(scenario):
             "to": "profile_model",
         },
         {
+            "from": "equations_to_amr",
+            "to": "profile_model",
+        },
+        {
             "from": "profile_model",
             "to": "link_amr",
         },
     ]
     report = {}
-    remaining_steps = {edge["to"] for edge in shape}.union(
-        {edge["from"] for edge in shape}
-    )
+    # remaining_steps = {edge["to"] for edge in shape}.union(
+    #     {edge["from"] for edge in shape}
+    # )
     success = True
     for task, result in standard_flow(scenario):
         report[task] = result
-        remaining_steps.remove(task)
-        if not result["success"]:
-            logging.error(
-                f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}"
-            )
-            break
+        if result["success"] is False:
+            success = False
+        # remaining_steps.remove(task)
+        # if not result["success"]:
+        #     logging.error(
+        #         f"Pipeline did not complete on scenario: {scenario}, error: {result['result']['job_error']}"
+        #     )
+        #     break
 
-    for task in remaining_steps:
-        report[task] = {"success": None, "time": 0, "accuracy": None}
-
-    success = len(remaining_steps) == 0
+    # for task in remaining_steps:
+    #     report[task] = {"success": None, "time": 0, "accuracy": None}
 
     description_path = f"./scenarios/{scenario}/description.txt"
     if os.path.exists(description_path):
@@ -275,8 +367,18 @@ def pipeline(scenario):
 
 
 if __name__ == "__main__":
+    # Try to get the first argument from CLI as a list
+
+    if len(sys.argv) > 1:
+        filepath = "./scenarios/"
+        scenarios = sys.argv[1:]
+        logging.info(f"Running pipeline on scenarios: {scenarios}")
+    else:
+        scenarios = os.listdir("./scenarios")
+        logging.info(f"Running pipeline on all scenarios")
+
     reports = []
-    for scenario in os.listdir("./scenarios"):
+    for scenario in scenarios:
         logging.info(f"Pipeline running on: {scenario}")
         report = pipeline(scenario)
 
