@@ -364,24 +364,51 @@ def variable_extractions(*args, **kwargs):
             "No text found in paper document, please ensure to submit to /pdf_extraction endpoint."
         )
 
-    # Try to feed text to the unified service
-    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
-    payload = {"texts": [text]}
+    # Send document to SKEMA
+    if annotate_skema:
+        unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit=False"
+        payload = {"texts": [text]}
 
-    try:
-        logger.info(
-            f"Sending document to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
-        )
-        response = requests.post(unified_text_reading_url, json=payload)
-        logger.info(
-            f"Response received from backend knowledge service with status code: {response.status_code}"
-        )
-        extraction_json = response.json()
-        logger.debug(f"TA 1 response object: {response.text}")
+        try:
+            logger.info(
+                f"Sending document to SKEMA service with document id {document_id} at {unified_text_reading_url}"
+            )
+            response = requests.post(unified_text_reading_url, json=payload)
+            logger.info(
+                f"Response received from SKEMA service with status code: {response.status_code}"
+            )
+            skema_extraction_json = response.json()
+            logger.debug(f"SKEMA variable response object: {response.text}")
 
-    except ValueError:
-        raise ValueError(f"Extraction for document {document_id} failed.")
+        except Exception as e:
+            logger.error(f"SKEMA variable extraction for document {document_id} failed.")
 
+    # Send document to MIT
+    if annotate_mit:
+        mit_text_reading_url = f"{MIT_API}/annotation/upload_file_extract"
+        files = {
+            "file": text.encode(),
+        }        
+        params = {"gpt_key": openai_key}
+
+        try:
+            logger.info(
+                f"Sending document to MIT service with document id {document_id} at {unified_text_reading_url}"
+            )
+            response = requests.post(mit_text_reading_url, params=params, files=files)
+            logger.info(
+                f"Response received from MIT service with status code: {response.status_code}"
+            )
+            mit_extraction_json = response.json()
+            logger.debug(f"MIT variable response object: {response.text}")
+
+        except Exception as e:
+            logger.error(f"MIT variable extraction for document {document_id} failed.")            
+    
+    # TODO: implement merging code here that generates
+    merged_extraction_json = skema_extraction_json
+
+    # TODO: update this function to separately accept SKEMA + MIT + Unified extractions
     document_response = put_document_extraction_to_tds(
         document_id=document_id,
         name=name if name is not None else document_json.get("name"),
@@ -389,7 +416,7 @@ def variable_extractions(*args, **kwargs):
         if description is not None
         else document_json.get("description"),
         filename=document_json.get("file_names")[0],
-        extractions=extraction_json,
+        extractions=merged_extraction_json,
         text=document_json.get("text", None),
         assets=document_json.get("assets", None),
     )
