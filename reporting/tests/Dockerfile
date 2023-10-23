@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 COPY scenarios scenarios/
 COPY tests tests/
 
-CMD [ "bash", "tests/run_tests.sh" ]
+ENTRYPOINT [ "bash", "tests/run_tests.sh" ]
