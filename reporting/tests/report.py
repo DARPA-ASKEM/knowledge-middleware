@@ -4,6 +4,7 @@ import logging
 from time import sleep, time
 from datetime import datetime
 from collections import defaultdict
+import sys
 
 import boto3
 import requests
@@ -220,25 +221,28 @@ def standard_flow(scenario):
         )
 
         ## EVAL STEP 4
-        ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
-        if os.path.exists(ground_truth_path):
-            logging.info(f"Accuracy for {scenario}:{task}")
-            generated_card = json.dumps(result["result"]["job_result"]["card"])
-            with open(ground_truth_path) as file:
-                truth = file.read()
-                files = {
-                    "test_json_file": generated_card,
-                    "ground_truth_file": truth,
-                }
-                eval = requests.post(
-                    f"{MIT_TR_URL}/evaluation/eval_model_card",
-                    params={"gpt_key": OPENAI_API_KEY},
-                    files=files,
-                )
-                if eval.status_code < 300:
-                    result["accuracy"] = eval.json()
-                else:
-                    result["accuracy"] = {"status_code": eval.status_code}
+        if result["result"]["job_result"]:
+            ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
+            if os.path.exists(ground_truth_path):
+                logging.info(f"Accuracy for {scenario}:{task}")
+                generated_card = json.dumps(result["result"]["job_result"]["card"])
+                with open(ground_truth_path) as file:
+                    truth = file.read()
+                    files = {
+                        "test_json_file": generated_card,
+                        "ground_truth_file": truth,
+                    }
+                    eval = requests.post(
+                        f"{MIT_TR_URL}/evaluation/eval_model_card",
+                        params={"gpt_key": OPENAI_API_KEY},
+                        files=files,
+                    )
+                    if eval.status_code < 300:
+                        result["accuracy"] = eval.json()
+                    else:
+                        result["accuracy"] = {"status_code": eval.status_code}
+        else:
+            result["accuracy"] = None
 
         yield task, result
     else:
@@ -329,8 +333,18 @@ def pipeline(scenario):
 
 
 if __name__ == "__main__":
+    # Try to get the first argument from CLI as a list
+
+    if len(sys.argv) > 1:
+        filepath = "./scenarios/"
+        scenarios = sys.argv[1:]
+        logging.info(f"Running pipeline on scenarios: {scenarios}")
+    else:
+        scenarios = os.listdir("./scenarios")
+        logging.info(f"Running pipeline on all scenarios")
+
     reports = []
-    for scenario in os.listdir("./scenarios"):
+    for scenario in scenarios:
         logging.info(f"Pipeline running on: {scenario}")
         report = pipeline(scenario)
 
