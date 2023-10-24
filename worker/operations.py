@@ -395,7 +395,7 @@ def variable_extractions(*args, **kwargs):
         if description is not None
         else document_json.get("description"),
         filename=document_json.get("file_names")[0],
-        zip_file_name=document_json.get("file_names")[1]
+        zip_file_name=document_json.get("file_names")[1],
         extractions=extraction_json,
         text=document_json.get("text", None),
         assets=document_json.get("assets", None),
@@ -536,7 +536,8 @@ def model_card(*args, **kwargs):
         )
 
         text_file = (
-            paper_document_json.get("text") or "There is no documentation for this model"
+            paper_document_json.get("text")
+            or "There is no documentation for this model"
         )
     else:
         text_file = "There is no documentation for this model"
