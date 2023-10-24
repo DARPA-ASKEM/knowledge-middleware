@@ -127,6 +127,7 @@ def run_km_job(url, scenario, task_name, kwargs={}):
 def non_applicable_run(task_name):
     return (task_name, {"success": "N/A", "time": None, "accuracy": None})
 
+
 def upstream_failure(task_name):
     return (task_name, {"success": None, "time": None, "accuracy": None})
 
@@ -152,30 +153,35 @@ def standard_flow(scenario):
             f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
         )
         if os.path.exists(ground_truth_path):
-            logging.info(f"Accuracy for {scenario}:{task}")
-            cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
-            with open(ground_truth_path) as file:
-                truth = file.read()
-                ground_truth_json = json.loads(truth)
-                eval = requests.post(
-                    f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
-                    json=ground_truth_json,
-                )
-                if eval.status_code < 300:
-                    evaluation = eval.json()[0]
-                    # Extract metrics that COSMOS team said were most important
-                    evaluation_stats = {
-                        "document_overlap_percent": evaluation[
-                            "document_overlap_percent"
-                        ],
-                        "document_expected_count": evaluation[
-                            "document_expected_count"
-                        ],
-                        "document_cosmos_count": evaluation["document_cosmos_count"],
-                    }
-                    result["accuracy"] = evaluation_stats
-                else:
-                    result["accuracy"] = {"status_code": eval.status_code}
+            try:
+                logging.info(f"Accuracy for {scenario}:{task}")
+                cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
+                with open(ground_truth_path) as file:
+                    truth = file.read()
+                    ground_truth_json = json.loads(truth)
+                    eval = requests.post(
+                        f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
+                        json=ground_truth_json,
+                    )
+                    if eval.status_code < 300:
+                        evaluation = eval.json()[0]
+                        # Extract metrics that COSMOS team said were most important
+                        evaluation_stats = {
+                            "document_overlap_percent": evaluation[
+                                "document_overlap_percent"
+                            ],
+                            "document_expected_count": evaluation[
+                                "document_expected_count"
+                            ],
+                            "document_cosmos_count": evaluation[
+                                "document_cosmos_count"
+                            ],
+                        }
+                        result["accuracy"] = evaluation_stats
+                    else:
+                        result["accuracy"] = {"status_code": eval.status_code}
+            except Exception as e:
+                logging.error(f"Cosmos Accuracy Error: {e}")
 
         yield task, result
     else:
@@ -255,7 +261,7 @@ def standard_flow(scenario):
 
     # STEP 4: PROFILE AMR
     if not code_exists and not equations_exists:
-        yield non_applicable_run("profile_model")    
+        yield non_applicable_run("profile_model")
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
     else:
@@ -267,7 +273,9 @@ def standard_flow(scenario):
         # Scrub OpenAI key from error logs as needed
         try:
             if "job_error" in result.get("result", {}):
-                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+                result["result"]["job_error"] = result["result"]["job_error"].replace(
+                    OPENAI_API_KEY, "OPENAI KEY REDACTED"
+                )
         except Exception as e:
             logging.error(e)
 
@@ -300,7 +308,7 @@ def standard_flow(scenario):
 
     # STEP 5: LINK AMR
     if not code_exists and not equations_exists:
-        yield non_applicable_run("link_amr")    
+        yield non_applicable_run("link_amr")
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
@@ -323,14 +331,16 @@ def standard_flow(scenario):
             url=f"{KM_URL}/profile_dataset/{scenario}",
             task="profile_dataset",
         )
-        
+
         # Scrub OpenAI key from error logs as needed
         try:
             if "job_error" in result.get("result", {}):
-                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+                result["result"]["job_error"] = result["result"]["job_error"].replace(
+                    OPENAI_API_KEY, "OPENAI KEY REDACTED"
+                )
         except Exception as e:
             logging.error(e)
-        
+
         yield task, result
 
     else:
@@ -339,30 +349,15 @@ def standard_flow(scenario):
 
 def pipeline(scenario):
     shape = [
-        {
-            "from": "pdf_extraction",
-            "to": "variable_extraction",
-        },
-        {
-            "from": "variable_extraction",
-            "to": "profile_model",
-        },
-        {
-            "from": "code_to_amr",
-            "to": "profile_model",
-        },
-        {
-            "from": "equations_to_amr",
-            "to": "profile_model",
-        },
-        {
-            "from": "profile_model",
-            "to": "link_amr",
-        },
-        {
-            "from": "pdf_extraction",
-            "to": "profile_dataset",
-        },
+        {"from": "pdf_extraction", "to": "variable_extraction", "link_type": "hard"},
+        {"from": "pdf_extraction", "to": "profile_dataset", "link_type": "soft"},
+        {"from": "pdf_extraction", "to": "profile_model", "link_type": "soft"},
+        {"from": "variable_extraction", "to": "link_amr", "link_type": "hard"},
+        {"from": "code_to_amr", "to": "profile_model", "link_type": "hard"},
+        {"from": "code_to_amr", "to": "link_amr", "link_type": "hard"},
+        {"from": "equations_to_amr", "to": "link_amr", "link_type": "hard"},
+        {"from": "equations_to_amr", "to": "profile_model", "link_type": "hard"},
+        {"from": "profile_model", "to": "link_amr", "link_type": "soft"},
     ]
     report = {}
     # remaining_steps = {edge["to"] for edge in shape}.union(
