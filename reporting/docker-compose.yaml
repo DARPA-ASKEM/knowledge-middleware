@@ -156,6 +156,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - TDS_URL=http://data-service:8000
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
       - MIT_TR_URL=http://54.227.237.7
