@@ -15,7 +15,6 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
 
-SKEMA_RS_URL = os.environ.get("SKEMA_RS_URL")
 TA1_UNIFIED_URL = os.environ.get("TA1_UNIFIED_URL")
 COSMOS_URL = os.environ.get("COSMOS_URL")
 MIT_TR_URL = os.environ.get("MIT_TR_URL")
@@ -44,13 +43,13 @@ def gen_report(scenarios_reports):
     report = {
         "scenarios": scenarios_reports,
         "services": {
-            "TA1_UNIFIED_URL": {
+            "SKEMA": {
                 "source": TA1_UNIFIED_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{TA1_UNIFIED_URL}/version").content.decode()
                 ),
             },
-            "MIT_TR_URL": {
+            "MIT": {
                 "source": MIT_TR_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{MIT_TR_URL}/debugging/get_sha").json()[
@@ -58,7 +57,7 @@ def gen_report(scenarios_reports):
                     ]
                 ),
             },
-            "COSMOS_URL": {
+            "COSMOS": {
                 "source": COSMOS_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{COSMOS_URL}/version_info").json()[
@@ -66,7 +65,6 @@ def gen_report(scenarios_reports):
                     ]
                 ),
             },
-            "SKEMA_RS_URL": {"source": SKEMA_RS_URL, "version": "UNAVAILABLE"},
         },
     }
     return report

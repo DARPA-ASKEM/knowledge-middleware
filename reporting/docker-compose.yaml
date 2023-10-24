@@ -136,7 +136,6 @@ services:
       - REDIS_PORT=6379
       - TDS_URL=http://data-service:8000
       - MIT_TR_URL
-      - SKEMA_RS_URL
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - OPENAI_API_KEY
     ports:
@@ -157,7 +156,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - TDS_URL=http://data-service:8000
-      - SKEMA_RS_URL
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL
       - MIT_TR_URL
@@ -192,10 +190,9 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - OPENAI_API_KEY
-      - SKEMA_RS_URL=http://skema-rs:4040
       - TA1_UNIFIED_URL=https://api.askem.lum.ai
       - COSMOS_URL=http://xdd.wisc.edu/cosmos_service
-      - MIT_TR_URL=http://mit-tr:4046
+      - MIT_TR_URL=http://54.227.237.7
     volumes:
       - report:/outputs
     depends_on:
