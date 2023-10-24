@@ -265,8 +265,15 @@ def standard_flow(scenario):
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
     else:
+        # Check if document exists in TDS and change URL based on that.
+        document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+        if document_response.status_code > 300:
+            model_suffix = f"{model_id}"
+        else:
+            model_suffix = f"{model_id}?document_id={document_id}"
+
         (task, result) = do_task(
-            url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+            url=f"{KM_URL}/profile_model/{model_suffix}",
             task="profile_model",
         )
 
