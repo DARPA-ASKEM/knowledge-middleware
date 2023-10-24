@@ -166,24 +166,6 @@ def test_pdf_to_cosmos(
         status_response.json().get("status") == "finished"
     ), f"The RQ job failed.\n{job.latest_result().exc_string}"
 
-    #### POSTAMBLE ####
-    # STUB
-    # if not settings.MOCK_TA1:
-    #     with open(f"{context_dir}/cosmos_ground_truth/ground_truth.yaml") as f:
-    #         ground_truth = yaml.load(f)
-
-    #         # Post ground truth to Cosmos Eval endpoint
-    #         response = requests.post(
-    #             f"{settings.COSMOS_URL}/eval", json=json.loads(json.dumps(ground_truth))
-    #         )
-
-    #         if eval.status_code < 300:
-    #             accuracy = eval.json()["accuracy"]
-    #         else:
-    #             accuracy = False
-
-    #     record_quality_check(context_dir, "profile_model", "Accuracy", accuracy)
-
 
 @pytest.mark.parametrize("resource", params["code_to_amr"])
 def test_code_dynamics_to_amr(
