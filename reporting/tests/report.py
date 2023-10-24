@@ -127,6 +127,7 @@ def run_km_job(url, scenario, task_name, kwargs={}):
 def non_applicable_run(task_name):
     return (task_name, {"success": "N/A", "time": None, "accuracy": None})
 
+
 def upstream_failure(task_name):
     return (task_name, {"success": None, "time": None, "accuracy": None})
 
@@ -255,19 +256,28 @@ def standard_flow(scenario):
 
     # STEP 4: PROFILE AMR
     if not code_exists and not equations_exists:
-        yield non_applicable_run("profile_model")    
+        yield non_applicable_run("profile_model")
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
     else:
+        # Check if document exists in TDS and change URL based on that.
+        document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+        if document_response.status_code > 300:
+            model_suffix = f"{model_id}"
+        else:
+            model_suffix = f"{model_id}?document_id={document_id}"
+
         (task, result) = do_task(
-            url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
+            url=f"{KM_URL}/profile_model/{model_suffix}",
             task="profile_model",
         )
 
         # Scrub OpenAI key from error logs as needed
         try:
             if "job_error" in result.get("result", {}):
-                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+                result["result"]["job_error"] = result["result"]["job_error"].replace(
+                    OPENAI_API_KEY, "OPENAI KEY REDACTED"
+                )
         except Exception as e:
             logging.error(e)
 
@@ -300,7 +310,7 @@ def standard_flow(scenario):
 
     # STEP 5: LINK AMR
     if not code_exists and not equations_exists:
-        yield non_applicable_run("link_amr")    
+        yield non_applicable_run("link_amr")
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
@@ -323,14 +333,16 @@ def standard_flow(scenario):
             url=f"{KM_URL}/profile_dataset/{scenario}",
             task="profile_dataset",
         )
-        
+
         # Scrub OpenAI key from error logs as needed
         try:
             if "job_error" in result.get("result", {}):
-                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+                result["result"]["job_error"] = result["result"]["job_error"].replace(
+                    OPENAI_API_KEY, "OPENAI KEY REDACTED"
+                )
         except Exception as e:
             logging.error(e)
-        
+
         yield task, result
 
     else:
