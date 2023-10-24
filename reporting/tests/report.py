@@ -141,9 +141,43 @@ def standard_flow(scenario):
     # STEP 1: PDF EXTRACTION
     if os.path.exists(f"scenarios/{scenario}/paper.pdf"):
         logging.info(f"PDF exists for scenario {scenario}")
-        yield do_task(
-            url=f"{KM_URL}/pdf_extraction?document_id={scenario}", task="pdf_extraction"
+
+        (task, result) = do_task(
+            url=f"{KM_URL}/pdf_extraction?document_id={scenario}&force_run=true",
+            task="pdf_extraction",
         )
+
+        # EVAL STEP 1
+        ground_truth_path = (
+            f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
+        )
+        if os.path.exists(ground_truth_path):
+            logging.info(f"Accuracy for {scenario}:{task}")
+            cosmos_job_id = result["result"]["job_result"]["cosmos_job_id"]
+            with open(ground_truth_path) as file:
+                truth = file.read()
+                ground_truth_json = json.loads(truth)
+                eval = requests.post(
+                    f"{COSMOS_URL}/healthcheck/evaluate/{cosmos_job_id}",
+                    json=ground_truth_json,
+                )
+                if eval.status_code < 300:
+                    evaluation = eval.json()[0]
+                    # Extract metrics that COSMOS team said were most important
+                    evaluation_stats = {
+                        "document_overlap_percent": evaluation[
+                            "document_overlap_percent"
+                        ],
+                        "document_expected_count": evaluation[
+                            "document_expected_count"
+                        ],
+                        "document_cosmos_count": evaluation["document_cosmos_count"],
+                    }
+                    result["accuracy"] = evaluation_stats
+                else:
+                    result["accuracy"] = {"status_code": eval.status_code}
+
+        yield task, result
     else:
         yield non_applicable_run("pdf_extraction")
 
@@ -324,6 +358,10 @@ def pipeline(scenario):
         {
             "from": "profile_model",
             "to": "link_amr",
+        },
+        {
+            "from": "pdf_extraction",
+            "to": "profile_dataset",
         },
     ]
     report = {}

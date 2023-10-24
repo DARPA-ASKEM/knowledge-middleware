@@ -156,6 +156,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             f"Response received from backend knowledge service with status code: {response.status_code}"
         )
         extraction_json = response.json()
+        cosmos_job_id = extraction_json["job_id"]
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
         result_endpoint = f"{extraction_json['result_endpoint']}"
@@ -294,7 +295,14 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             "If worker is getting large, check if temporary files are being removed."
         )
 
-    return text, response.status_code, extraction_json, assets, zip_file_name
+    return (
+        text,
+        response.status_code,
+        extraction_json,
+        assets,
+        zip_file_name,
+        cosmos_job_id,
+    )
 
 
 def pdf_extraction(*args, **kwargs):
@@ -322,6 +330,7 @@ def pdf_extraction(*args, **kwargs):
                 extraction_json,
                 assets,
                 zip_file_name,
+                cosmos_job_id,
             ) = cosmos_extraction(
                 document_id=document_id,
                 force_run=force_run,
@@ -344,6 +353,7 @@ def pdf_extraction(*args, **kwargs):
             "extraction_status_code": status_code,
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
+            "cosmos_job_id": cosmos_job_id,
         }
     else:
         raise Exception(
