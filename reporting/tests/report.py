@@ -127,6 +127,9 @@ def run_km_job(url, scenario, task_name, kwargs={}):
 def non_applicable_run(task_name):
     return (task_name, {"success": "N/A", "time": None, "accuracy": None})
 
+def upstream_failure(task_name):
+    return (task_name, {"success": None, "time": None, "accuracy": None})
+
 
 def standard_flow(scenario):
     document_id = scenario
@@ -151,8 +154,9 @@ def standard_flow(scenario):
         yield non_applicable_run("variable_extraction")
     else:
         document = document_response.json()
+        # PDF extraction failed, mark upstream failure
         if document["text"] is None:
-            yield non_applicable_run("variable_extraction")
+            yield upstream_failure("variable_extraction")
         else:
             yield do_task(
                 url=f"{KM_URL}/variable_extractions?document_id={scenario}",
@@ -161,8 +165,10 @@ def standard_flow(scenario):
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
+    code_exists = True
     code_response = requests.get(f"{TDS_URL}/code/{scenario}")
     if code_response.status_code > 300:
+        code_exists = False
         yield non_applicable_run("code_to_amr")
     else:
         (task, result) = do_task(
@@ -182,6 +188,7 @@ def standard_flow(scenario):
     mathml_path = f"scenarios/{scenario}/equations.mathml.txt"
     file_path = None
     equation_type = None
+    equations_exists = True
     if os.path.exists(latex_path):
         file_path = latex_path
         equation_type = "latex"
@@ -189,6 +196,7 @@ def standard_flow(scenario):
         file_path = mathml_path
         equation_type = "mathml"
     else:
+        equations_exists = False
         yield non_applicable_run("equations_to_amr")
 
     if file_path and equation_type:
@@ -212,7 +220,11 @@ def standard_flow(scenario):
             yield task, result
 
     # STEP 4: PROFILE AMR
-    if model_id:
+    if not code_exists and not equations_exists:
+        yield non_applicable_run("profile_model")    
+    elif not model_id and (code_exists or equations_exists):
+        yield upstream_failure("profile_model")
+    else:
         (task, result) = do_task(
             url=f"{KM_URL}/profile_model/{model_id}?document_id={document_id}",
             task="profile_model",
@@ -251,25 +263,25 @@ def standard_flow(scenario):
             result["accuracy"] = None
 
         yield task, result
-    else:
-        yield non_applicable_run("profile_model")
 
     # STEP 5: LINK AMR
-    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
-    if document_response.status_code > 300:
-        yield non_applicable_run("link_amr")
+    if not code_exists and not equations_exists:
+        yield non_applicable_run("profile_model")    
+    elif not model_id and (code_exists or equations_exists):
+        yield upstream_failure("profile_model")
     else:
-        document = document_response.json()
-        if document["text"] is None:
+        document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+        if document_response.status_code > 300:
             yield non_applicable_run("link_amr")
         else:
-            if model_id:
+            document = document_response.json()
+            if document["metadata"] is None:
+                yield upstream_failure("link_amr")
+            else:
                 yield do_task(
                     url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
                     task="link_amr",
                 )
-            else:
-                yield non_applicable_run("link_amr")
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
