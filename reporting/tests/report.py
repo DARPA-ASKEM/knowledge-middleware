@@ -15,7 +15,6 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
 
-SKEMA_RS_URL = os.environ.get("SKEMA_RS_URL")
 TA1_UNIFIED_URL = os.environ.get("TA1_UNIFIED_URL")
 COSMOS_URL = os.environ.get("COSMOS_URL")
 MIT_TR_URL = os.environ.get("MIT_TR_URL")
@@ -44,13 +43,13 @@ def gen_report(scenarios_reports):
     report = {
         "scenarios": scenarios_reports,
         "services": {
-            "TA1_UNIFIED_URL": {
+            "SKEMA": {
                 "source": TA1_UNIFIED_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{TA1_UNIFIED_URL}/version").content.decode()
                 ),
             },
-            "MIT_TR_URL": {
+            "MIT": {
                 "source": MIT_TR_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{MIT_TR_URL}/debugging/get_sha").json()[
@@ -58,7 +57,7 @@ def gen_report(scenarios_reports):
                     ]
                 ),
             },
-            "COSMOS_URL": {
+            "COSMOS": {
                 "source": COSMOS_URL,
                 "version": handle_bad_versioning(
                     lambda: requests.get(f"{COSMOS_URL}/version_info").json()[
@@ -66,7 +65,6 @@ def gen_report(scenarios_reports):
                     ]
                 ),
             },
-            "SKEMA_RS_URL": {"source": SKEMA_RS_URL, "version": "UNAVAILABLE"},
         },
     }
     return report
@@ -127,7 +125,7 @@ def run_km_job(url, scenario, task_name, kwargs={}):
 
 
 def non_applicable_run(task_name):
-    return (task_name, {"success": None, "time": None, "accuracy": None})
+    return (task_name, {"success": "N/A", "time": None, "accuracy": None})
 
 
 def standard_flow(scenario):
@@ -220,8 +218,16 @@ def standard_flow(scenario):
             task="profile_model",
         )
 
+        # Scrub OpenAI key from error logs as needed
+        try:
+            if "job_error" in result.get("result", {}):
+                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+        except Exception as e:
+            logging.error(e)
+
         ## EVAL STEP 4
         if result["result"]["job_result"]:
+            # Evaluate accuracy
             ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
             if os.path.exists(ground_truth_path):
                 logging.info(f"Accuracy for {scenario}:{task}")
@@ -267,10 +273,20 @@ def standard_flow(scenario):
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
-        yield do_task(
+        (task, result) = do_task(
             url=f"{KM_URL}/profile_dataset/{scenario}",
             task="profile_dataset",
         )
+        
+        # Scrub OpenAI key from error logs as needed
+        try:
+            if "job_error" in result.get("result", {}):
+                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+        except Exception as e:
+            logging.error(e)
+        
+        yield task, result
+
     else:
         yield non_applicable_run("profile_dataset")
 
