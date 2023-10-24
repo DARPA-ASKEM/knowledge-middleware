@@ -213,7 +213,7 @@ def profile_dataset(
 @app.post("/profile_model/{model_id}")
 def profile_model(
     model_id: str,
-    document_id: str,
+    document_id: Optional[str],
     redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document
