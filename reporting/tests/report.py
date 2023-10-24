@@ -220,7 +220,7 @@ def standard_flow(scenario):
             yield task, result
 
     # STEP 4: PROFILE AMR
-    if not (code_exists and equations_exists):
+    if not code_exists and not equations_exists:
         yield non_applicable_run("profile_model")    
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
@@ -265,7 +265,7 @@ def standard_flow(scenario):
         yield task, result
 
     # STEP 5: LINK AMR
-    if not (code_exists and equations_exists):
+    if not code_exists and not equations_exists:
         yield non_applicable_run("profile_model")    
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
