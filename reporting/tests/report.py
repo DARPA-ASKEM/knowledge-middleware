@@ -218,8 +218,16 @@ def standard_flow(scenario):
             task="profile_model",
         )
 
+        # Scrub OpenAI key from error logs as needed
+        try:
+            if "job_error" in result.get("result", {}):
+                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+        except Exception as e:
+            logging.error(e)
+
         ## EVAL STEP 4
         if result["result"]["job_result"]:
+            # Evaluate accuracy
             ground_truth_path = f"scenarios/{scenario}/ground_truth/model_card.json"
             if os.path.exists(ground_truth_path):
                 logging.info(f"Accuracy for {scenario}:{task}")
@@ -265,10 +273,20 @@ def standard_flow(scenario):
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
-        yield do_task(
+        (task, result) = do_task(
             url=f"{KM_URL}/profile_dataset/{scenario}",
             task="profile_dataset",
         )
+        
+        # Scrub OpenAI key from error logs as needed
+        try:
+            if "job_error" in result.get("result", {}):
+                result["result"]["job_error"] = result["result"]["job_error"].replace(OPENAI_API_KEY, "OPENAI KEY REDACTED")
+        except Exception as e:
+            logging.error(e)
+        
+        yield task, result
+
     else:
         yield non_applicable_run("profile_dataset")
 
