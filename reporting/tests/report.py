@@ -266,9 +266,9 @@ def standard_flow(scenario):
 
     # STEP 5: LINK AMR
     if not code_exists and not equations_exists:
-        yield non_applicable_run("profile_model")    
+        yield non_applicable_run("link_amr")    
     elif not model_id and (code_exists or equations_exists):
-        yield upstream_failure("profile_model")
+        yield upstream_failure("link_amr")
     else:
         document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
         if document_response.status_code > 300:
