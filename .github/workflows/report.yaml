@@ -2,10 +2,13 @@
 name: Report
 
 on:
-  workflow_dispatch:
   push:
     branches: ['main']
     tags: ['*']
+  schedule:
+    cron: "0 0 * * 1-5"
+  workflow_dispatch:
+
 
 jobs:
   test:
