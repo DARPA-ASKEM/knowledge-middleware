@@ -331,6 +331,10 @@ def pipeline(scenario):
             "from": "profile_model",
             "to": "link_amr",
         },
+        {
+            "from": "pdf_extraction",
+            "to": "profile_dataset",
+        },
     ]
     report = {}
     # remaining_steps = {edge["to"] for edge in shape}.union(
