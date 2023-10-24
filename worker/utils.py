@@ -122,12 +122,17 @@ def put_document_extraction_to_tds(
     else:
         metadata = {}
 
+    if zip_file_name:
+        file_names = [filename, zip_file_name]
+    else:
+        file_names = [filename]
+
     # TODO: mbp update document payload
     document_payload = {
         "username": "extraction_service",
         "name": name,
         "description": description,
-        "file_names": [filename, zip_file_name],
+        "file_names": file_names,
         "text": text,
         "metadata": metadata,
         "assets": assets,
