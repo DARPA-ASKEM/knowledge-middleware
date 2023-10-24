@@ -6,7 +6,7 @@ on:
     branches: ['main']
     tags: ['*']
   schedule:
-    cron: "0 0 * * 1-5"
+    - cron: "0 0 * * 1-5"
   workflow_dispatch:
 
 
