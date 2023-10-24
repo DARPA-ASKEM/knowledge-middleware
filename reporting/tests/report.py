@@ -125,7 +125,7 @@ def run_km_job(url, scenario, task_name, kwargs={}):
 
 
 def non_applicable_run(task_name):
-    return (task_name, {"success": None, "time": None, "accuracy": None})
+    return (task_name, {"success": "N/A", "time": None, "accuracy": None})
 
 
 def standard_flow(scenario):
