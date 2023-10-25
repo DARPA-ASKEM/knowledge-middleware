@@ -1,4 +1,5 @@
 import io
+import itertools as it
 import json
 import os
 import sys
@@ -8,6 +9,9 @@ import requests
 import zipfile
 
 import pandas
+
+from askem_extractions.data_model import AttributeCollection
+
 from worker.utils import (
     find_source_code,
     get_code_from_tds,
@@ -406,9 +410,49 @@ def variable_extractions(*args, **kwargs):
             logger.error(f"MIT variable extraction for document {document_id} failed.")            
     
     # TODO: implement merging code here that generates
-    merged_extraction_json = skema_extraction_json
+    collections = list()
 
-    # TODO: update this function to separately accept SKEMA + MIT + Unified extractions
+    try:
+        skema_collection = AttributeCollection.from_json(skema_extraction_json['outputs'][0]['data'])
+        collections.append(skema_collection)
+    except Exception as e:
+        logger.error(f"Error generating collection from SKEMA variable extractions: {e}")
+        skema_collection = None    
+    
+    try:
+        mit_collection = AttributeCollection.from_json(mit_extraction_json)
+        collections.append(mit_collection)
+    except Exception as e:
+        logger.error(f"Error generating collection from MIT variable extractions: {e}")
+        mit_collection = None        
+
+    if not bool(skema_collection and mit_collection):
+        logger.info("Falling back on single variable extraction since one system failed")
+        attributes = list(it.chain.from_iterable(c.attributes for c in collections))
+        variables = AttributeCollection(attributes=attributes)
+    else:
+        # Merge both with some de de-duplications
+        params = {"gpt_key": openai_key}
+        
+        data = {
+            "mit_file": json.dumps(mit_extraction_json),
+            "arizona_file": json.dumps(skema_extraction_json['outputs'][0]['data']),
+        }
+        logger.info("Sending variable merging request to MIT")
+        print('sending to MIT')
+        response = requests.post(
+            f"{MIT_API}/integration/get_mapping", params=params, files=data
+        )
+        
+        # MIT merges the collection for us
+        if response.status_code == 200:
+            variables = AttributeCollection.from_json(response.json())
+        else:
+            # Fallback to collection
+            logger.info(f"MIT merge failed: {response.text}")
+            attributes = list(it.chain.from_iterable(c.attributes for c in collections))
+            variables = AttributeCollection(attributes=attributes)  
+
     document_response = put_document_extraction_to_tds(
         document_id=document_id,
         name=name if name is not None else document_json.get("name"),
@@ -416,7 +460,7 @@ def variable_extractions(*args, **kwargs):
         if description is not None
         else document_json.get("description"),
         filename=document_json.get("file_names")[0],
-        extractions=merged_extraction_json,
+        extractions=json.loads(variables.json()),
         text=document_json.get("text", None),
         assets=document_json.get("assets", None),
     )
