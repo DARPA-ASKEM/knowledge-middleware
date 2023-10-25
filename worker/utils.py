@@ -108,7 +108,7 @@ def put_document_extraction_to_tds(
     text=None,
     model_id=None,
     assets=None,
-    zip_file_name=None
+    zip_file_name=None,
 ):
     """
     Update an document or code object in TDS.
@@ -252,7 +252,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
     content_object = {}
 
     for name, blocks in file_names.items():
-        name = name.split("/")[-1]
+        # name = name.split("/")[-1]
         download_url = f"{TDS_API}/code/{code_id}/download-url?filename={name}"
         code_download_url = requests.get(download_url)
 
