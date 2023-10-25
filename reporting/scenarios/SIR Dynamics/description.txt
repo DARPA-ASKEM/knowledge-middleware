@@ -1,0 +1,1 @@
+This is a simplified SIR scenario where the 'code_to_amr' functionality processes the dynamics of the codebase, resulting in a dynamics-only run.

@@ -16,4 +16,10 @@ Note: The services used in testing are not cleaned up following testing. When do
 be sure to shut down the services by running `docker compose down` to conserve your resources.
 
 ## Adding Scenarios
-In the `scenarios` directory, you'll find two example scenarios: `12 Month Eval Scenario 3` and `SIDARTHE`. To add a new scenario, start by creating a directory with the name of your scenario. Within this directory, include a file named description.txt containing a detailed scenario description. Additionally, each scenario must have at least one of the following assets: a `paper.pdf`, the code (which can be specified by providing a GitHub repository URL in a `repo_url.txt` file or included as a `code.zip` file), and/or a `dataset.csv`. You can use the existing scenarios as examples while following these guidelines to prepare your new scenario for inclusion in the system.
+In the `scenarios` directory, you'll find two example scenarios: `12 Month Eval Scenario 3` and `SIDARTHE`. To add a new scenario, start by creating a directory with the name of your scenario. Within this directory, include a file named description.txt containing a detailed scenario description. Additionally, each scenario must have at least one of the following assets: a `paper.pdf`, the code (which can be specified by providing as specified below), and/or a `dataset.csv`. You can use the existing scenarios as examples while following these guidelines to prepare your new scenario for inclusion in the system.
+
+#### Code
+There are a few ways to add code to a scenario:
+- a `code.zip` file containing all the code to be tested
+- a `dynamics.*` file that contains exclusively the dynamics of the code to be tested
+- a GitHub repository URL in a `repo_url.txt` file

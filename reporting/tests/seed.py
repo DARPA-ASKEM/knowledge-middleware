@@ -14,18 +14,76 @@ TDS_URL = os.environ.get("TDS_URL", "http://data-service:8000")
 
 
 def add_code(scenario):
-    file_paths = [f"./scenarios/{scenario}/code.py", f"./scenarios/{scenario}/code.zip"]
+    file_paths = [
+        f"./scenarios/{scenario}/code.py",
+        f"./scenarios/{scenario}/code.zip",
+        f"./scenarios/{scenario}/dynamics.*",
+    ]
     existing_filepath = None
 
     for filepath in file_paths:
         if os.path.exists(filepath):
             existing_filepath = filepath
             break  # Found a file, so stop looking
+        # Wildcard support for dynamics files.
+        matching_paths = glob(filepath)
+        logging.info(f"Matching paths: {matching_paths}")
+        if matching_paths:
+            existing_filepath = matching_paths[0]
+            break
 
     if existing_filepath is None:
         return
 
-    if existing_filepath.endswith(".py"):
+    if existing_filepath.split("/")[-1].startswith("dynamics."):
+        logging.info(f"Adding {scenario} dynamics code")
+
+        with open(existing_filepath) as file:
+            line_count = sum(1 for line in file)
+            dynamics_code = file.read()
+
+            block_start = "L1"
+            block_end = f"L{line_count}"
+            dynamics = {
+                "block": [f"{block_start}-{block_end}"],
+            }
+            payload = {
+                "id": scenario,
+                "name": scenario,
+                "description": "",
+                "files": {
+                    f"{existing_filepath.split('/')[-1]}": dynamics,
+                },
+                "repo_url": "",
+            }
+
+            code_response = requests.post(
+                TDS_URL + "/code",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+            )
+
+            if code_response.status_code >= 300:
+                raise Exception(
+                    f"Failed to POST code ({code_response.status_code}): {scenario}"
+                )
+
+            url_response = requests.get(
+                TDS_URL + f"/code/{scenario}/upload-url",
+                params={"filename": existing_filepath.split("/")[-1]},
+            )
+            upload_url = url_response.json()["url"]
+            with open(existing_filepath) as file:
+                upload_response = requests.put(upload_url, file)
+
+                if upload_response.status_code >= 300:
+                    raise Exception(
+                        f"Failed to upload code ({upload_response.status_code}): {scenario}"
+                    )
+                else:
+                    logging.info(f"Uploaded {scenario} code")
+
+    elif existing_filepath.endswith(".py"):
         logging.info(f"Adding {scenario} code")
         payload = {
             "id": scenario,
