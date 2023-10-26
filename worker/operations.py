@@ -161,6 +161,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             f"Response received from backend knowledge service with status code: {response.status_code}"
         )
         extraction_json = response.json()
+        cosmos_job_id = extraction_json["job_id"]
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
         result_endpoint = f"{extraction_json['result_endpoint']}"
@@ -209,7 +210,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         upload_url = presigned_response.json().get("url")
 
         with open(zip_file, "rb") as file:
-            asset_response = requests.put(upload_url, file)            
+            asset_response = requests.put(upload_url, file)
 
         # Extract zipfile to enable asset uploading
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
@@ -299,7 +300,14 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             "If worker is getting large, check if temporary files are being removed."
         )
 
-    return text, response.status_code, extraction_json, assets, zip_file_name
+    return (
+        text,
+        response.status_code,
+        extraction_json,
+        assets,
+        zip_file_name,
+        cosmos_job_id,
+    )
 
 
 def pdf_extraction(*args, **kwargs):
@@ -321,7 +329,14 @@ def pdf_extraction(*args, **kwargs):
             )
             assets = None
         case ExtractionServices.COSMOS:
-            text, status_code, extraction_json, assets, zip_file_name = cosmos_extraction(
+            (
+                text,
+                status_code,
+                extraction_json,
+                assets,
+                zip_file_name,
+                cosmos_job_id,
+            ) = cosmos_extraction(
                 document_id=document_id,
                 force_run=force_run,
                 filename=filename,
@@ -335,7 +350,7 @@ def pdf_extraction(*args, **kwargs):
         filename=filename,
         text=text,
         assets=assets,
-        zip_file_name=zip_file_name
+        zip_file_name=zip_file_name,
     )
 
     if document_response.get("status") == 200:
@@ -343,6 +358,7 @@ def pdf_extraction(*args, **kwargs):
             "extraction_status_code": status_code,
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
+            "cosmos_job_id": cosmos_job_id,
         }
     else:
         raise Exception(
@@ -461,6 +477,11 @@ def variable_extractions(*args, **kwargs):
 
     extraction_json = json.loads(variables.json())
 
+    if len(document_json.get("file_names")) > 1:
+        zip_file_name = document_json.get("file_names")[1]
+    else:
+        zip_file_name = None
+
     document_response = put_document_extraction_to_tds(
         document_id=document_id,
         name=name if name is not None else document_json.get("name"),
@@ -473,6 +494,8 @@ def variable_extractions(*args, **kwargs):
         text=document_json.get("text", None),
         assets=document_json.get("assets", None),
     )
+
+    logger.info(f"DOC RESPONSE VAR EXTRACTION: {document_response}")
 
     if document_response.get("status") == 200:
         response = {
@@ -558,7 +581,7 @@ def data_card(*args, **kwargs):
 
     if dataset_json.get("metadata") is None:
         dataset_json["metadata"] = {}
-			
+
     if dataset_json["metadata"].get("data_card") is None:
         dataset_json["metadata"]["data_card"] = {}
 
@@ -598,11 +621,17 @@ def model_card(*args, **kwargs):
 
     logger.debug(f"Code file head (250 chars): {code_file[:250]}")
 
-    paper_document_json, paper_downloaded_document = get_document_from_tds(
-        document_id=paper_document_id
-    )
+    if paper_document_id:
+        paper_document_json, paper_downloaded_document = get_document_from_tds(
+            document_id=paper_document_id
+        )
 
-    text_file = paper_document_json.get("text") or  "There is no documentation for this model"
+        text_file = (
+            paper_document_json.get("text")
+            or "There is no documentation for this model"
+        )
+    else:
+        text_file = "There is no documentation for this model"
 
     # TODO: Remove when no character limit exists for MIT
     text_file = text_file[:9000]
@@ -640,7 +669,7 @@ def model_card(*args, **kwargs):
                 return {
                     "status": tds_resp.status_code,
                     "message": "Model card generated and updated in TDS",
-                    "card": card
+                    "card": card,
                 }
             else:
                 raise Exception(
@@ -690,7 +719,9 @@ def link_amr(*args, **kwargs):
     params = {"amr_type": "petrinet"}
 
     skema_amr_linking_url = f"{UNIFIED_API}/metal/link_amr"
-    logger.info(f"Sending model {model_id} and document {document_id} for linking to: {skema_amr_linking_url}")
+    logger.info(
+        f"Sending model {model_id} and document {document_id} for linking to: {skema_amr_linking_url}"
+    )
     response = requests.post(skema_amr_linking_url, files=files, params=params)
     logger.info(f"SKEMA response status code: {response.status_code}")
     logger.debug(f"TA 1 response object: {response.text}")

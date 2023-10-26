@@ -133,14 +133,14 @@ def code_to_amr(
 
 
 @app.post("/pdf_extraction")
-def pdf_extraction(document_id: str, 
-                   force_run: bool = False,
-                   redis=Depends(get_redis)) -> ExtractionJob:
+def pdf_extraction(
+    document_id: str, force_run: bool = False, redis=Depends(get_redis)
+) -> ExtractionJob:
     """Run Cosmos extractions over pdfs and stores the text/assets on the document
 
     Args:
         `document_id`: the id of the document to process
-        `force_run`: boolean whether to force a Cosmos run; if False and the PDF is in Cosmos's cache, 
+        `force_run`: boolean whether to force a Cosmos run; if False and the PDF is in Cosmos's cache,
                      the cache will be used. If True, the cache will ignored and Cosmos will be force run.
     """
     operation_name = "operations.pdf_extraction"
@@ -213,7 +213,7 @@ def profile_dataset(
 @app.post("/profile_model/{model_id}")
 def profile_model(
     model_id: str,
-    document_id: str,
+    document_id: Optional[str] = None,
     redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Profile model with MIT's profiling service. This takes in a paper and code document

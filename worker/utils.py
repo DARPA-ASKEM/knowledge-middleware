@@ -126,7 +126,7 @@ def put_document_extraction_to_tds(
         file_names = [filename, zip_file_name]
     else:
         file_names = [filename]
-    
+
     document_payload = {
         "username": "extraction_service",
         "name": name,
