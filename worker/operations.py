@@ -29,6 +29,7 @@ TDS_API = settings.TDS_URL
 SKEMA_API = settings.SKEMA_RS_URL
 UNIFIED_API = settings.TA1_UNIFIED_URL
 MIT_API = settings.MIT_TR_URL
+OPENAI_API_KEY = settings.OPENAI_API_KEY
 LOG_LEVEL = settings.LOG_LEVEL.upper()
 
 import logging
@@ -393,11 +394,11 @@ def variable_extractions(*args, **kwargs):
         files = {
             "file": text.encode(),
         }        
-        params = {"gpt_key": openai_key}
+        params = {"gpt_key": OPENAI_API_KEY}
 
         try:
             logger.info(
-                f"Sending document to MIT service with document id {document_id} at {unified_text_reading_url}"
+                f"Sending document to MIT service with document id {document_id} at {mit_text_reading_url}"
             )
             response = requests.post(mit_text_reading_url, params=params, files=files)
             logger.info(
@@ -432,7 +433,7 @@ def variable_extractions(*args, **kwargs):
         variables = AttributeCollection(attributes=attributes)
     else:
         # Merge both with some de de-duplications
-        params = {"gpt_key": openai_key}
+        params = {"gpt_key": OPENAI_API_KEY}
         
         data = {
             "mit_file": json.dumps(mit_extraction_json),
@@ -482,8 +483,6 @@ def variable_extractions(*args, **kwargs):
 
 
 def data_card(*args, **kwargs):
-    openai_key = settings.OPENAI_API_KEY
-
     dataset_id = kwargs.get("dataset_id")
     artifact_id = kwargs.get("artifact_id")
 
@@ -504,7 +503,7 @@ def data_card(*args, **kwargs):
     )
     dataset_json = dataset_response.json()
 
-    params = {"gpt_key": openai_key}
+    params = {"gpt_key": OPENAI_API_KEY}
 
     files = {
         "csv_file": ("csv_file", dataset_csv_string.encode()),
@@ -571,7 +570,6 @@ def data_card(*args, **kwargs):
 
 
 def model_card(*args, **kwargs):
-    openai_key = settings.OPENAI_API_KEY
     model_id = kwargs.get("model_id")
     paper_document_id = kwargs.get("paper_document_id")
 
@@ -603,7 +601,7 @@ def model_card(*args, **kwargs):
 
     amr = get_model_from_tds(model_id).json()
 
-    params = {"gpt_key": openai_key}
+    params = {"gpt_key": OPENAI_API_KEY}
 
     files = {
         "text_file": text_file.encode(),
