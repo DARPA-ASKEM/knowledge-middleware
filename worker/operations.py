@@ -708,7 +708,12 @@ def code_to_amr(*args, **kwargs):
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
             # Use io and zipfile to write the code_content to a zipfile in memory
             for code_name, code_content in downloaded_code_object.items():
-                zipf.writestr(code_name, code_content.decode("utf-8"))
+                try:
+                    zipf.writestr(code_name, code_content.decode("utf-8"))
+                except UnicodeDecodeError as e:
+                    logging.error(
+                        f"File unable to be decoded with utf-8 and written to zip, skipping. {e}"
+                    )
 
         zip_buffer.seek(0)
         request_payload = zip_buffer

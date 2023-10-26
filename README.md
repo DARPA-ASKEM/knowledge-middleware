@@ -19,20 +19,13 @@ The Knowledge Middleware is designed to provide an intermediate job queue for ma
 2. Ensure that `.env` contains the correct endpoint and other information 
 3. You can now run the tests or reports using the information below.
 
+## Integration Testing
+Running the KM test harness requires docker compose. Please see [reporting/README.md](./reporting/README.md)
 
-## Running TA1 services locally
+### Adding Test Scenarios
+Scenarios should be added in the `reporting/scenarios` directory.
 
-Note: Starting the services are not required for running tests or generating reports
-
-You can start the local services by running:
-```
-make up
-```
-
-This should only be necessary if you are running the services locally to test before deploying. Otherwise it is generally better use the hosted versions of services or keep the responses mocked.
-
-## Testing
-See [reporting/README.md](./reporting/README.md)
+In the `scenarios` directory, you'll find multiple example scenarios. To add a new scenario, start by creating a directory with the name of your scenario. Within this directory, include a file named description.txt containing a detailed scenario description. Additionally, each scenario must have at least one of the following assets: a `paper.pdf`, the code (which can be specified by providing as specified below), and/or a `dataset.csv`. You can use the existing scenarios as examples while following these guidelines to prepare your new scenario for inclusion in the system.
 
 
 ## KM-only Testing (TA4 0nly)
@@ -81,6 +74,17 @@ Once the report has been generated, run `poetry run streamlit run tests/Home.py`
 Test scenarious can be added to `tests/scenarios`. Each `scenario` should have it's own directory and must contain a `config.yaml` file which provides a name for the scenario and indicates which test(s) should be run. See `scenarios/basic` for a boilerplate that runs all test cases.
 
 The files required to run each scenario are defined in `tests/resources.yaml`. Note that some files are considered `optional`: e.g. `ground_truth_model_card`.
+
+## Running TA1 services locally
+
+Note: Starting the services are not required for running tests or generating reports
+
+You can start the local services by running:
+```
+make up
+```
+
+This should only be necessary if you are running the services locally to test before deploying. Otherwise it is generally better use the hosted versions of services or keep the responses mocked.
 
 ## License
 
