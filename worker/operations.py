@@ -394,12 +394,12 @@ def variable_extractions(*args, **kwargs):
             logger.info(
                 f"Sending document to SKEMA service with document id {document_id} at {unified_text_reading_url}"
             )
-            response = requests.post(unified_text_reading_url, json=payload)
+            skema_response = requests.post(unified_text_reading_url, json=payload)
             logger.info(
-                f"Response received from SKEMA service with status code: {response.status_code}"
+                f"Response received from SKEMA service with status code: {skema_response.status_code}"
             )
-            skema_extraction_json = response.json()
-            logger.debug(f"SKEMA variable response object: {response.text}")
+            skema_extraction_json = skema_response.json()
+            logger.debug(f"SKEMA variable response object: {skema_response.text}")
 
         except Exception as e:
             logger.error(f"SKEMA variable extraction for document {document_id} failed.")
@@ -416,12 +416,12 @@ def variable_extractions(*args, **kwargs):
             logger.info(
                 f"Sending document to MIT service with document id {document_id} at {mit_text_reading_url}"
             )
-            response = requests.post(mit_text_reading_url, params=params, files=files)
+            mit_response = requests.post(mit_text_reading_url, params=params, files=files)
             logger.info(
-                f"Response received from MIT service with status code: {response.status_code}"
+                f"Response received from MIT service with status code: {mit_response.status_code}"
             )
-            mit_extraction_json = response.json()
-            logger.debug(f"MIT variable response object: {response.text}")
+            mit_extraction_json = mit_response.json()
+            logger.debug(f"MIT variable response object: {mit_response.text}")
 
         except Exception as e:
             logger.error(f"MIT variable extraction for document {document_id} failed.")            
@@ -499,7 +499,8 @@ def variable_extractions(*args, **kwargs):
 
     if document_response.get("status") == 200:
         response = {
-            "extraction_status_code": response.status_code,
+            "skema_extraction_status_code": skema_response.status_code,
+            "mit_extraction_status_code": mit_response.status_code,            
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
             "error": None,
