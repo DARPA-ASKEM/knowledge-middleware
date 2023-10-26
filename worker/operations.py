@@ -454,6 +454,13 @@ def variable_extractions(*args, **kwargs):
             attributes = list(it.chain.from_iterable(c.attributes for c in collections))
             variables = AttributeCollection(attributes=attributes)  
 
+    if len(document_json.get("file_names")) > 1:
+        zip_file_name = document_json.get("file_names")[1]
+    else:
+        zip_file_name = None
+
+    extraction_json = json.loads(variables.json())
+
     document_response = put_document_extraction_to_tds(
         document_id=document_id,
         name=name if name is not None else document_json.get("name"),
@@ -461,7 +468,8 @@ def variable_extractions(*args, **kwargs):
         if description is not None
         else document_json.get("description"),
         filename=document_json.get("file_names")[0],
-        extractions=json.loads(variables.json()),
+        zip_file_name=zip_file_name,
+        extractions=extraction_json,
         text=document_json.get("text", None),
         assets=document_json.get("assets", None),
     )
