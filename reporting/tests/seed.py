@@ -2,6 +2,7 @@ from glob import glob
 import logging
 import json
 import os
+import time
 
 import requests
 import zipfile
@@ -13,24 +14,28 @@ logging.getLogger().setLevel(logging.INFO)
 TDS_URL = os.environ.get("TDS_URL", "http://data-service:8000")
 
 
-def add_code(scenario):
+def add_code(scenario, file_path_override=None):
     file_paths = [
         f"./scenarios/{scenario}/code.py",
         f"./scenarios/{scenario}/code.zip",
         f"./scenarios/{scenario}/dynamics.*",
+        f"./scenarios/{scenario}/repo_url.txt",
     ]
     existing_filepath = None
 
-    for filepath in file_paths:
-        if os.path.exists(filepath):
-            existing_filepath = filepath
-            break  # Found a file, so stop looking
-        # Wildcard support for dynamics files.
-        matching_paths = glob(filepath)
-        logging.info(f"Matching paths: {matching_paths}")
-        if matching_paths:
-            existing_filepath = matching_paths[0]
-            break
+    if file_path_override:
+        existing_filepath = file_path_override
+    else:
+        for filepath in file_paths:
+            if os.path.exists(filepath):
+                existing_filepath = filepath
+                break  # Found a file, so stop looking
+            # Wildcard support for dynamics files.
+            matching_paths = glob(filepath)
+            logging.info(f"Matching paths: {matching_paths}")
+            if matching_paths:
+                existing_filepath = matching_paths[0]
+                break
 
     if existing_filepath is None:
         return
@@ -132,6 +137,7 @@ def add_code(scenario):
             extracted_files = [
                 file for file in zip_ref.namelist() if not file.endswith("/")
             ]
+            logging.info(f"Extracted files: {extracted_files}")
             files_object = {}
             for extracted_file in extracted_files:
                 extracted_filepath = os.path.join(temp_dir, extracted_file)
@@ -167,8 +173,14 @@ def add_code(scenario):
                     params={"filename": extracted_file},
                 )
                 upload_url = url_response.json()["url"]
+                file_size = os.path.getsize(filepath)
+                logging.info(f"{extracted_file} size: {file_size}")
+                if file_size == 0:
+                    continue
+
                 with open(filepath, "rb") as file:
-                    upload_response = requests.put(upload_url, file)
+                    headers = {"Content-Length": str(file_size)}
+                    upload_response = requests.put(upload_url, file, headers=headers)
 
                     if upload_response.status_code >= 300:
                         raise Exception(
@@ -176,6 +188,21 @@ def add_code(scenario):
                         )
                     else:
                         logging.info(f"Uploaded {scenario} code")
+
+    elif existing_filepath.endswith(".txt"):
+        logging.info(f"Adding {scenario} repo_url")
+        with open(existing_filepath) as file:
+            # This should already be a link to the archive zipfile on GitHub
+            # Example: https://github.com/username/repository/archive/main.zip
+            repo_archive_url = file.read()
+
+            response = requests.get(repo_archive_url)
+
+            if response.status_code == 200:
+                with open(f"./scenarios/{scenario}/code.zip", "wb") as file:
+                    file.write(response.content)
+
+            add_code(scenario, file_path_override=f"./scenarios/{scenario}/code.zip")
     else:
         return
 
