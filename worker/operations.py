@@ -1,4 +1,5 @@
 import io
+import itertools as it
 import json
 import os
 import sys
@@ -8,6 +9,9 @@ import requests
 import zipfile
 
 import pandas
+
+from askem_extractions.data_model import AttributeCollection
+
 from worker.utils import (
     find_source_code,
     get_code_from_tds,
@@ -25,6 +29,7 @@ TDS_API = settings.TDS_URL
 SKEMA_API = settings.SKEMA_RS_URL
 UNIFIED_API = settings.TA1_UNIFIED_URL
 MIT_API = settings.MIT_TR_URL
+OPENAI_API_KEY = settings.OPENAI_API_KEY
 LOG_LEVEL = settings.LOG_LEVEL.upper()
 
 import logging
@@ -380,23 +385,97 @@ def variable_extractions(*args, **kwargs):
             "No text found in paper document, please ensure to submit to /pdf_extraction endpoint."
         )
 
-    # Try to feed text to the unified service
-    unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit={annotate_mit}"
-    payload = {"texts": [text]}
+    # Send document to SKEMA
+    if annotate_skema:
+        unified_text_reading_url = f"{UNIFIED_API}/text-reading/integrated-text-extractions?annotate_skema={annotate_skema}&annotate_mit=False"
+        payload = {"texts": [text]}
+
+        try:
+            logger.info(
+                f"Sending document to SKEMA service with document id {document_id} at {unified_text_reading_url}"
+            )
+            skema_response = requests.post(unified_text_reading_url, json=payload)
+            logger.info(
+                f"Response received from SKEMA service with status code: {skema_response.status_code}"
+            )
+            skema_extraction_json = skema_response.json()
+            logger.debug(f"SKEMA variable response object: {skema_response.text}")
+
+        except Exception as e:
+            logger.error(f"SKEMA variable extraction for document {document_id} failed.")
+
+    # Send document to MIT
+    if annotate_mit:
+        mit_text_reading_url = f"{MIT_API}/annotation/upload_file_extract"
+        files = {
+            "file": text.encode(),
+        }        
+        params = {"gpt_key": OPENAI_API_KEY}
+
+        try:
+            logger.info(
+                f"Sending document to MIT service with document id {document_id} at {mit_text_reading_url}"
+            )
+            mit_response = requests.post(mit_text_reading_url, params=params, files=files)
+            logger.info(
+                f"Response received from MIT service with status code: {mit_response.status_code}"
+            )
+            mit_extraction_json = mit_response.json()
+            logger.debug(f"MIT variable response object: {mit_response.text}")
+
+        except Exception as e:
+            logger.error(f"MIT variable extraction for document {document_id} failed.")            
+    
+    # TODO: implement merging code here that generates
+    collections = list()
 
     try:
-        logger.info(
-            f"Sending document to backend knowledge service with document id {document_id} at {unified_text_reading_url}"
-        )
-        response = requests.post(unified_text_reading_url, json=payload)
-        logger.info(
-            f"Response received from backend knowledge service with status code: {response.status_code}"
-        )
-        extraction_json = response.json()
-        logger.debug(f"TA 1 response object: {response.text}")
+        skema_collection = AttributeCollection.from_json(skema_extraction_json['outputs'][0]['data'])
+        collections.append(skema_collection)
+    except Exception as e:
+        logger.error(f"Error generating collection from SKEMA variable extractions: {e}")
+        skema_collection = None    
+    
+    try:
+        mit_collection = AttributeCollection.from_json(mit_extraction_json)
+        collections.append(mit_collection)
+    except Exception as e:
+        logger.error(f"Error generating collection from MIT variable extractions: {e}")
+        mit_collection = None        
 
-    except ValueError:
-        raise ValueError(f"Extraction for document {document_id} failed.")
+    if not bool(skema_collection and mit_collection):
+        logger.info("Falling back on single variable extraction since one system failed")
+        attributes = list(it.chain.from_iterable(c.attributes for c in collections))
+        variables = AttributeCollection(attributes=attributes)
+    else:
+        # Merge both with some de de-duplications
+        params = {"gpt_key": OPENAI_API_KEY}
+        
+        data = {
+            "mit_file": json.dumps(mit_extraction_json),
+            "arizona_file": json.dumps(skema_extraction_json['outputs'][0]['data']),
+        }
+        logger.info("Sending variable merging request to MIT")
+        print('sending to MIT')
+        response = requests.post(
+            f"{MIT_API}/integration/get_mapping", params=params, files=data
+        )
+        
+        # MIT merges the collection for us
+        if response.status_code == 200:
+            variables = AttributeCollection.from_json(response.json())
+        else:
+            # Fallback to collection
+            logger.info(f"MIT merge failed: {response.text}")
+            attributes = list(it.chain.from_iterable(c.attributes for c in collections))
+            variables = AttributeCollection(attributes=attributes)  
+
+    if len(document_json.get("file_names")) > 1:
+        zip_file_name = document_json.get("file_names")[1]
+    else:
+        zip_file_name = None
+
+    extraction_json = json.loads(variables.json())
 
     if len(document_json.get("file_names")) > 1:
         zip_file_name = document_json.get("file_names")[1]
@@ -420,7 +499,8 @@ def variable_extractions(*args, **kwargs):
 
     if document_response.get("status") == 200:
         response = {
-            "extraction_status_code": response.status_code,
+            "skema_extraction_status_code": skema_response.status_code,
+            "mit_extraction_status_code": mit_response.status_code,            
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
             "error": None,
@@ -435,8 +515,6 @@ def variable_extractions(*args, **kwargs):
 
 
 def data_card(*args, **kwargs):
-    openai_key = settings.OPENAI_API_KEY
-
     dataset_id = kwargs.get("dataset_id")
     artifact_id = kwargs.get("artifact_id")
 
@@ -457,7 +535,7 @@ def data_card(*args, **kwargs):
     )
     dataset_json = dataset_response.json()
 
-    params = {"gpt_key": openai_key}
+    params = {"gpt_key": OPENAI_API_KEY}
 
     files = {
         "csv_file": ("csv_file", dataset_csv_string.encode()),
@@ -524,7 +602,6 @@ def data_card(*args, **kwargs):
 
 
 def model_card(*args, **kwargs):
-    openai_key = settings.OPENAI_API_KEY
     model_id = kwargs.get("model_id")
     paper_document_id = kwargs.get("paper_document_id")
 
@@ -562,7 +639,7 @@ def model_card(*args, **kwargs):
 
     amr = get_model_from_tds(model_id).json()
 
-    params = {"gpt_key": openai_key}
+    params = {"gpt_key": OPENAI_API_KEY}
 
     files = {
         "text_file": text_file.encode(),

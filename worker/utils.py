@@ -127,7 +127,6 @@ def put_document_extraction_to_tds(
     else:
         file_names = [filename]
 
-    # TODO: mbp update document payload
     document_payload = {
         "username": "extraction_service",
         "name": name,

@@ -35,7 +35,15 @@ def test_variable_extractions(
     if settings.MOCK_TA1:
         extractions = json.load(open(f"{context_dir}/extractions.json"))
         http_mock.post(
-            f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=True",
+            f"{settings.TA1_UNIFIED_URL}/text-reading/integrated-text-extractions?annotate_skema=True&annotate_mit=False",
+            json=extractions,
+        )
+        http_mock.post(
+            f"{settings.MIT_TR_URL}/annotation/upload_file_extract",
+            json=extractions,
+        )
+        http_mock.post(
+            f"{settings.MIT_TR_URL}/integration/get_mapping",
             json=extractions,
         )
 
