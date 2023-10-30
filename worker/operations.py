@@ -499,12 +499,19 @@ def variable_extractions(*args, **kwargs):
 
     if document_response.get("status") == 200:
         response = {
-            "skema_extraction_status_code": skema_response.status_code,
-            "mit_extraction_status_code": mit_response.status_code,            
             "extraction": extraction_json,
             "tds_status_code": document_response.get("status"),
             "error": None,
         }
+        if annotate_skema:
+            response["skema_extraction_status_code"] = skema_response.status_code
+        else:
+            response["skema_extraction_status_code"] = None
+
+        if annotate_mit:
+            response["mit_extraction_status_code"] = mit_response.status_code
+        else:
+            response["mit_extraction_status_code"] = None        
     else:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status"
