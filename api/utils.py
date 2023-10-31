@@ -47,7 +47,12 @@ def create_job(operation_name: str, options: Optional[Dict[Any, Any]] = None, *,
 
     random_id = str(uuid.uuid4())
 
-    job_id = f"extraction-{random_id}"
+    try:
+        task_name = operation_name.split('.')[1].replace('_','-')
+    except:
+        task_name = operation_name
+        
+    job_id = f"{task_name}-{random_id}"
     options["job_id"] = job_id
     job = q.fetch_job(job_id)
 
