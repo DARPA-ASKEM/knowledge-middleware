@@ -525,9 +525,9 @@ def data_card(*args, **kwargs):
     dataset_id = kwargs.get("dataset_id")
     document_id = kwargs.get("document_id")
 
-    if artifact_id:
-        document_json, downloaded_artifact = get_document_from_tds(
-            document_id=artifact_id
+    if document_id:
+        document_json, downloaded_document = get_document_from_tds(
+            document_id
         )
         doc_file = document_json.get(
             "text", "There is no documentation for this dataset"
@@ -550,7 +550,7 @@ def data_card(*args, **kwargs):
     }
 
     url = f"{MIT_API}/cards/get_data_card"
-    logger.info(f"Sending dataset {dataset_id} to MIT service at {url}")
+    logger.info(f"Sending dataset {dataset_id} and document {document_id} to MIT service at {url}")
     resp = requests.post(url, params=params, files=files)
     if resp.status_code != 200:
         raise Exception(f"Failed response from MIT: {resp.status_code}, {resp.text}")
