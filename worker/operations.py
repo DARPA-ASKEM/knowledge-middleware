@@ -523,7 +523,7 @@ def variable_extractions(*args, **kwargs):
 
 def data_card(*args, **kwargs):
     dataset_id = kwargs.get("dataset_id")
-    artifact_id = kwargs.get("artifact_id")
+    document_id = kwargs.get("document_id")
 
     if artifact_id:
         document_json, downloaded_artifact = get_document_from_tds(
