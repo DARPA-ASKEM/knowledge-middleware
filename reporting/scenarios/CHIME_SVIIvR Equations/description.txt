@@ -1,1 +1,1 @@
-"Scenario for CHIME SVIIvR model equations"
+Scenario for CHIME SVIIvR model based on curated equations.

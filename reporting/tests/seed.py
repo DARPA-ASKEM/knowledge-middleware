@@ -222,7 +222,7 @@ def add_paper(scenario):
         "metadata": {},
         "document_url": "https://github.com/owner/repo/blob/main/paper.pdf",
         "source": "Science Advances",
-        "text": "",
+        "text": None,
         "grounding": {"identifiers": {}, "context": {}},
         "assets": [],
     }

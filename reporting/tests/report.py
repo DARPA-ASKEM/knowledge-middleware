@@ -314,8 +314,16 @@ def standard_flow(scenario):
         yield task, result
 
     # STEP 5: LINK AMR
-    if not code_exists and not equations_exists:
+    # Check if document exists
+    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    if document_response.status_code > 300:
         yield non_applicable_run("link_amr")
+    elif not document_response.json().get('metadata'):
+        # no variables were extracted
+        yield upstream_failure("link_amr")
+    # Check if code ore equations exist        
+    elif not code_exists and not equations_exists:
+        yield non_applicable_run("link_amr")        
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
