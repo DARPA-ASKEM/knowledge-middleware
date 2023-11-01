@@ -31,7 +31,7 @@ services:
       minio:
         condition: service_started
     ports:
-      - 8000
+      - 8000:8000
   minio:
     image: ghcr.io/darpa-askem/data-service-storage:latest
     environment:
@@ -46,7 +46,8 @@ services:
     entrypoint: ""
     command: [ "minio", "server", "/data" ]
     ports:
-      - 9000
+      - 9000:9000
+      - 9001:9001
     depends_on:
       - neo4j
       - data-service-dev-db
