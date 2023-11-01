@@ -222,7 +222,7 @@ def standard_flow(scenario, _id):
         )
         if result["success"]:
             model_id = result["result"]["job_result"]["tds_model_id"]
-            add_asset(model_id, "model", project_id)
+            add_asset(model_id, "models", project_id)
         else:
             logging.error(
                 f"Model was not generated from code for scenario: {scenario}, amr creation response: {result}"
@@ -259,7 +259,7 @@ def standard_flow(scenario, _id):
 
             if result["success"]:
                 model_id = result["result"]["job_result"]["tds_model_id"]
-                add_asset(model_id, "model", project_id)
+                add_asset(model_id, "models", project_id)
             else:
                 logging.error(
                     f"Model was not generated from equations for scenario: {scenario}, amr creation response: {result}"

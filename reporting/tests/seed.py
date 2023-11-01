@@ -4,6 +4,7 @@ import json
 import os
 import time
 from datetime import datetime
+import sys
 
 import requests
 import zipfile
@@ -228,7 +229,7 @@ def add_paper(scenario, project_id):
             f"Failed to POST code ({paper_response.status_code}): {scenario}"
         )
     else:
-        add_asset(_id, "document", project_id)
+        add_asset(_id, "documents", project_id)
 
     url_response = requests.get(
         TDS_URL + f"/documents/{_id}/upload-url", params={"filename": "paper.pdf"}
@@ -272,7 +273,7 @@ def add_dataset(scenario, project_id):
             f"Failed to POST dataset ({dataset_response.status_code}): {scenario}"
         )
     else:
-        add_asset(_id, "dataset", project_id)
+        add_asset(_id, "datasets", project_id)
 
     url_response = requests.get(
         TDS_URL + f"/datasets/{_id}/upload-url", params={"filename": "dataset.csv"}
@@ -289,13 +290,23 @@ def add_dataset(scenario, project_id):
         else:
             logging.info(f"Uploaded {scenario} dataset")
 
+if __name__ == "__main__":
+    # Try to get the first argument from CLI as a list
 
-project_id = create_project()
-for scenario in os.listdir("./scenarios"):
-    logging.info(f"Seeding {scenario} to project {project_id}")
-    add_code(scenario, project_id)
-    add_paper(scenario, project_id)
-    add_dataset(scenario, project_id)
+    if len(sys.argv) > 1:
+        filepath = "./scenarios/"
+        scenarios = sys.argv[1:]
+        logging.info(f"Running pipeline on scenarios: {scenarios}")
+    else:
+        scenarios = os.listdir("./scenarios")
+        logging.info(f"Running pipeline on all scenarios")
 
-    with open('project_id.txt', 'w') as f:
-        f.write(f"{project_id}")
+    project_id = create_project()
+    for scenario in scenarios:
+        logging.info(f"Seeding {scenario} to project {project_id}")
+        add_code(scenario, project_id)
+        add_paper(scenario, project_id)
+        add_dataset(scenario, project_id)
+
+        with open('project_id.txt', 'w') as f:
+            f.write(f"{project_id}")
