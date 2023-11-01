@@ -217,7 +217,7 @@ def standard_flow(scenario, _id):
         yield non_applicable_run("code_to_amr")
     else:
         (task, result) = do_task(
-            url=f"{KM_URL}/code_to_amr?code_id={code_id}&dynamics_only=True",
+            url=f"{KM_URL}/code_to_amr?code_id={code_id}&dynamics_only=True&name={scenario}",
             task="code_to_amr",
         )
         if result["success"]:
@@ -252,7 +252,7 @@ def standard_flow(scenario, _id):
                 "equation_type": equation_type,
             }
             (task, result) = do_task(
-                url=f"{KM_URL}/equations_to_amr",
+                url=f"{KM_URL}/equations_to_amr&name={scenario}",
                 task="equations_to_amr",
                 kwargs={"params": parameters_payload, "data": equations},
             )
