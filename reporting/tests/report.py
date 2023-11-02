@@ -418,7 +418,11 @@ def pipeline(scenario, _id):
 
 if __name__ == "__main__":
     # Try to get the first argument from CLI as a list
-
+    if not os.path.exists('project_id.txt'):
+        raise Exception("No project ID found")
+    else:
+        project_id = open('project_id.txt','r').read()
+        
     if len(sys.argv) > 1:
         filepath = "./scenarios/"
         scenarios = sys.argv[1:]
@@ -426,8 +430,6 @@ if __name__ == "__main__":
     else:
         scenarios = os.listdir("./scenarios")
         logging.info(f"Running pipeline on all scenarios")
-
-    project_id = open('project_id.txt','r').read()
 
     reports = []
     for scenario in scenarios:

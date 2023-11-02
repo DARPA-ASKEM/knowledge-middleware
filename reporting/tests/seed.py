@@ -301,7 +301,18 @@ if __name__ == "__main__":
         scenarios = os.listdir("./scenarios")
         logging.info(f"Running pipeline on all scenarios")
 
-    project_id = create_project()
+    # Get project ID from environment
+    project_id = os.environ.get("PROJECT_ID")
+    if project_id:
+        logging.info(f"Project ID found in environment: {project_id}")
+        proj_resp = requests.get(f"{TDS_URL}/projects/{project_id}")
+        if proj_resp.status_code == 404:
+            raise Exception(f"Project ID {project_id} does not exist in TDS at {TDS_URL}")
+    # if it does not exist, create it 
+    else:
+        project_id = create_project()
+        logging.info(f"No project ID found in environment. Created project with ID: {project_id}")
+
     for scenario in scenarios:
         logging.info(f"Seeding {scenario} to project {project_id}")
         add_code(scenario, project_id)
