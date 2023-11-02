@@ -268,7 +268,7 @@ def standard_flow(scenario, _id):
                 "equation_type": equation_type,
             }
             (task, result) = do_task(
-                url=f"{KM_URL}/equations_to_amr&name={scenario}",
+                url=f"{KM_URL}/equations_to_amr?name={scenario}",
                 task="equations_to_amr",
                 kwargs={"params": parameters_payload, "data": equations},
             )
