@@ -463,7 +463,7 @@ if __name__ == "__main__":
 
     reports = []
     for scenario in scenarios:
-        _id = f"{project_id}-{scenario}"
+        _id = f"{project_id}-{scenario.replace(' ','-')}"
 
         logging.info(f"Pipeline running on: {scenario} with _id {_id}")
         report = pipeline(scenario, _id)

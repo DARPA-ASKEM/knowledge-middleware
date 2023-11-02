@@ -46,7 +46,7 @@ def add_code(scenario, project_id, file_path_override=None):
     ]
     existing_filepath = None
 
-    _id = f"{project_id}-{scenario}"
+    _id = f"{project_id}-{scenario.replace(' ','-')}"
 
     if file_path_override:
         existing_filepath = file_path_override
@@ -202,7 +202,7 @@ def add_paper(scenario, project_id):
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} paper")
-    _id = f"{project_id}-{scenario}"
+    _id = f"{project_id}-{scenario.replace(' ','-')}"
     
     payload = {
         "id": _id,
@@ -251,7 +251,7 @@ def add_dataset(scenario, project_id):
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} dataset")
-    _id = f"{project_id}-{scenario}"
+    _id = f"{project_id}-{scenario.replace(' ','-')}"
 
     payload = {
         "id": _id,
