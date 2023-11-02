@@ -32,6 +32,17 @@ def add_asset(resource_id, resource_type, project_id):
     resp = requests.post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
     return resp.json()
 
+def add_provenance(left_id, left_type, right_id, right_type, relation_type):
+    payload = {"left": left_id,
+               "left_type": left_type,
+               "right": right_id,
+               "right_type": right_type,
+               "relation_type": relation_type}
+    resp = requests.post(f"{TDS_URL}/provenance", json=payload)
+    logging.info(f"Created provenance for {left_type} extracted from {right_type}")
+    logging.info(f"Created provenance ID: {resp.json()['id']}")
+    return resp.json()
+
 # REPORT GENERATION
 def handle_bad_versioning(func):
     try:
@@ -223,6 +234,11 @@ def standard_flow(scenario, _id):
         if result["success"]:
             model_id = result["result"]["job_result"]["tds_model_id"]
             add_asset(model_id, "models", project_id)
+            add_provenance(left_id=model_id,
+                           left_type="Model",
+                           right_id=code_id,
+                           right_type="Code",
+                           relation_type="EXCTRACTED_FROM")
         else:
             logging.error(
                 f"Model was not generated from code for scenario: {scenario}, amr creation response: {result}"
@@ -342,6 +358,11 @@ def standard_flow(scenario, _id):
             if document["metadata"] is None:
                 yield upstream_failure("link_amr")
             else:
+                add_provenance(left_id=model_id,
+                               left_type="Model",
+                               right_id=document_id,
+                               right_type="Document",
+                               relation_type="EXCTRACTED_FROM")
                 yield do_task(
                     url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
                     task="link_amr",
@@ -349,8 +370,17 @@ def standard_flow(scenario, _id):
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
+        if document_id:
+            dataset_url = f"{KM_URL}/profile_dataset/{dataset_id}?document_id={document_id}"
+            add_provenance(left_id=dataset_id,
+                            left_type="Dataset",
+                            right_id=document_id,
+                            right_type="Document",
+                            relation_type="EXCTRACTED_FROM")            
+        else:
+            dataset_url = f"{KM_URL}/profile_dataset/{dataset_id}"
         (task, result) = do_task(
-            url=f"{KM_URL}/profile_dataset/{dataset_id}",
+            url=dataset_url,
             task="profile_dataset",
         )
 
