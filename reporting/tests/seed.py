@@ -3,6 +3,8 @@ import logging
 import json
 import os
 import time
+from datetime import datetime
+import sys
 
 import requests
 import zipfile
@@ -13,15 +15,38 @@ logging.getLogger().setLevel(logging.INFO)
 
 TDS_URL = os.environ.get("TDS_URL", "http://data-service:8000")
 
+def create_project():
+    '''
+    Generate test project in TDS
+    '''
+    current_timestamp = datetime.now()
+    ts = current_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
-def add_code(scenario, file_path_override=None):
+    project = {
+        "name": "Integration Test Suite Project",
+        "description": f"Test generated at {ts}",
+        "assets": [],
+        "active": True,
+        }    
+
+    resp = requests.post(f"{TDS_URL}/projects", json=project)
+    project_id = resp.json()['id']
+
+    return project_id
+
+def add_asset(resource_id, resource_type, project_id):
+    resp = requests.post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
+    return resp.json()
+
+def add_code(scenario, project_id, file_path_override=None):
     file_paths = [
-        f"./scenarios/{scenario}/code.py",
         f"./scenarios/{scenario}/code.zip",
         f"./scenarios/{scenario}/dynamics.*",
         f"./scenarios/{scenario}/repo_url.txt",
     ]
     existing_filepath = None
+
+    _id = f"{project_id}-{scenario}"
 
     if file_path_override:
         existing_filepath = file_path_override
@@ -53,7 +78,7 @@ def add_code(scenario, file_path_override=None):
                 "block": [f"{block_start}-{block_end}"],
             }
             payload = {
-                "id": scenario,
+                "id": _id,
                 "name": scenario,
                 "description": "",
                 "files": {
@@ -72,9 +97,11 @@ def add_code(scenario, file_path_override=None):
                 raise Exception(
                     f"Failed to POST code ({code_response.status_code}): {scenario}"
                 )
+            else:
+                add_asset(_id, "code", project_id)
 
             url_response = requests.get(
-                TDS_URL + f"/code/{scenario}/upload-url",
+                TDS_URL + f"/code/{_id}/upload-url",
                 params={"filename": existing_filepath.split("/")[-1]},
             )
             upload_url = url_response.json()["url"]
@@ -88,45 +115,6 @@ def add_code(scenario, file_path_override=None):
                 else:
                     logging.info(f"Uploaded {scenario} code")
 
-    elif existing_filepath.endswith(".py"):
-        logging.info(f"Adding {scenario} code")
-        payload = {
-            "id": scenario,
-            "name": scenario,
-            "description": "",
-            "files": {
-                "code.py": {
-                    "language": "python",
-                },
-            },
-            "repo_url": "https://github.com/owner/repo.git",
-            "commit": "seed",
-            "branch": "seed",
-        }
-
-        code_response = requests.post(
-            TDS_URL + "/code",
-            json=payload,
-            headers={"Content-Type": "application/json"},
-        )
-        if code_response.status_code >= 300:
-            raise Exception(
-                f"Failed to POST code ({code_response.status_code}): {scenario}"
-            )
-
-        url_response = requests.get(
-            TDS_URL + f"/code/{scenario}/upload-url", params={"filename": "code.py"}
-        )
-        upload_url = url_response.json()["url"]
-        with open(filepath, "rb") as file:
-            upload_response = requests.put(upload_url, file)
-
-            if upload_response.status_code >= 300:
-                raise Exception(
-                    f"Failed to upload code ({upload_response.status_code}): {scenario}"
-                )
-            else:
-                logging.info(f"Uploaded {scenario} code")
 
     elif existing_filepath.endswith(".zip"):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -145,7 +133,7 @@ def add_code(scenario, file_path_override=None):
                 files_object[extracted_file] = {}
 
             payload = {
-                "id": scenario,
+                "id": _id,
                 "name": scenario,
                 "description": "",
                 "files": files_object,
@@ -154,7 +142,7 @@ def add_code(scenario, file_path_override=None):
                 "branch": "seed",
             }
 
-            logging.info(f"Payload: s{payload}")
+            logging.info(f"Payload: {payload}")
 
             code_response = requests.post(
                 TDS_URL + "/code",
@@ -165,11 +153,13 @@ def add_code(scenario, file_path_override=None):
                 raise Exception(
                     f"Failed to POST code ({code_response.status_code}): {scenario}"
                 )
+            else:
+                add_asset(_id, "code", project_id)
 
             for extracted_file in extracted_files:
                 filepath = os.path.join(temp_dir, extracted_file)
                 url_response = requests.get(
-                    TDS_URL + f"/code/{scenario}/upload-url",
+                    TDS_URL + f"/code/{_id}/upload-url",
                     params={"filename": extracted_file},
                 )
                 upload_url = url_response.json()["url"]
@@ -202,18 +192,20 @@ def add_code(scenario, file_path_override=None):
                 with open(f"./scenarios/{scenario}/code.zip", "wb") as file:
                     file.write(response.content)
 
-            add_code(scenario, file_path_override=f"./scenarios/{scenario}/code.zip")
+            add_code(scenario, project_id, file_path_override=f"./scenarios/{scenario}/code.zip")
     else:
         return
 
 
-def add_paper(scenario):
+def add_paper(scenario, project_id):
     filepath = f"./scenarios/{scenario}/paper.pdf"
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} paper")
+    _id = f"{project_id}-{scenario}"
+    
     payload = {
-        "id": scenario,
+        "id": _id,
         "name": scenario,
         "username": "Adam Smith",
         "description": "",
@@ -236,9 +228,11 @@ def add_paper(scenario):
         raise Exception(
             f"Failed to POST code ({paper_response.status_code}): {scenario}"
         )
+    else:
+        add_asset(_id, "documents", project_id)
 
     url_response = requests.get(
-        TDS_URL + f"/documents/{scenario}/upload-url", params={"filename": "paper.pdf"}
+        TDS_URL + f"/documents/{_id}/upload-url", params={"filename": "paper.pdf"}
     )
     upload_url = url_response.json()["url"]
     with open(filepath, "rb") as file:
@@ -252,13 +246,15 @@ def add_paper(scenario):
             logging.info(f"Uploaded {scenario} paper")
 
 
-def add_dataset(scenario):
+def add_dataset(scenario, project_id):
     filepath = f"./scenarios/{scenario}/dataset.csv"
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} dataset")
+    _id = f"{project_id}-{scenario}"
+
     payload = {
-        "id": scenario,
+        "id": _id,
         "name": scenario,
         "username": "Adam Smith",
         "description": "",
@@ -276,9 +272,11 @@ def add_dataset(scenario):
         raise Exception(
             f"Failed to POST dataset ({dataset_response.status_code}): {scenario}"
         )
+    else:
+        add_asset(_id, "datasets", project_id)
 
     url_response = requests.get(
-        TDS_URL + f"/datasets/{scenario}/upload-url", params={"filename": "dataset.csv"}
+        TDS_URL + f"/datasets/{_id}/upload-url", params={"filename": "dataset.csv"}
     )
 
     upload_url = url_response.json()["url"]
@@ -292,9 +290,34 @@ def add_dataset(scenario):
         else:
             logging.info(f"Uploaded {scenario} dataset")
 
+if __name__ == "__main__":
+    # Try to get the first argument from CLI as a list
 
-for scenario in os.listdir("./scenarios"):
-    logging.info(f"Seeding {scenario}")
-    add_code(scenario)
-    add_paper(scenario)
-    add_dataset(scenario)
+    if len(sys.argv) > 1:
+        filepath = "./scenarios/"
+        scenarios = sys.argv[1:]
+        logging.info(f"Running pipeline on scenarios: {scenarios}")
+    else:
+        scenarios = os.listdir("./scenarios")
+        logging.info(f"Running pipeline on all scenarios")
+
+    # Get project ID from environment
+    project_id = os.environ.get("PROJECT_ID")
+    if project_id:
+        logging.info(f"Project ID found in environment: {project_id}")
+        proj_resp = requests.get(f"{TDS_URL}/projects/{project_id}")
+        if proj_resp.status_code == 404:
+            raise Exception(f"Project ID {project_id} does not exist in TDS at {TDS_URL}")
+    # if it does not exist, create it 
+    else:
+        project_id = create_project()
+        logging.info(f"No project ID found in environment. Created project with ID: {project_id}")
+
+    for scenario in scenarios:
+        logging.info(f"Seeding {scenario} to project {project_id}")
+        add_code(scenario, project_id)
+        add_paper(scenario, project_id)
+        add_dataset(scenario, project_id)
+
+        with open('project_id.txt', 'w') as f:
+            f.write(f"{project_id}")

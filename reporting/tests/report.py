@@ -28,6 +28,20 @@ UPLOAD = os.environ.get("UPLOAD", "FALSE").lower() == "true"
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
+def add_asset(resource_id, resource_type, project_id):
+    resp = requests.post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
+    return resp.json()
+
+def add_provenance(left_id, left_type, right_id, right_type, relation_type):
+    payload = {"left": left_id,
+               "left_type": left_type,
+               "right": right_id,
+               "right_type": right_type,
+               "relation_type": relation_type}
+    resp = requests.post(f"{TDS_URL}/provenance", json=payload)
+    logging.info(f"Created provenance for {left_type} extracted from {right_type}")
+    logging.info(f"Created provenance ID: {resp.json()['id']}")
+    return resp.json()
 
 # REPORT GENERATION
 def handle_bad_versioning(func):
@@ -132,8 +146,10 @@ def upstream_failure(task_name):
     return (task_name, {"success": None, "time": None, "accuracy": None})
 
 
-def standard_flow(scenario):
-    document_id = scenario
+def standard_flow(scenario, _id):
+    document_id = _id
+    code_id = _id
+    dataset_id = _id
     model_id = None
 
     def do_task(url, task, kwargs={}):
@@ -144,7 +160,7 @@ def standard_flow(scenario):
         logging.info(f"PDF exists for scenario {scenario}")
 
         (task, result) = do_task(
-            url=f"{KM_URL}/pdf_extraction?document_id={scenario}&force_run=true",
+            url=f"{KM_URL}/pdf_extraction?document_id={document_id}&force_run=true",
             task="pdf_extraction",
         )
 
@@ -189,7 +205,7 @@ def standard_flow(scenario):
 
     # STEP 2: VARIABLE EXTRACTION
     # Check TDS document to see if it has non null text
-    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    document_response = requests.get(f"{TDS_URL}/documents/{document_id}")
     if document_response.status_code > 300:
         yield non_applicable_run("variable_extraction")
     else:
@@ -199,24 +215,30 @@ def standard_flow(scenario):
             yield upstream_failure("variable_extraction")
         else:
             yield do_task(
-                url=f"{KM_URL}/variable_extractions?document_id={scenario}",
+                url=f"{KM_URL}/variable_extractions?document_id={document_id}",
                 task="variable_extraction",
             )
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
     code_exists = True
-    code_response = requests.get(f"{TDS_URL}/code/{scenario}")
+    code_response = requests.get(f"{TDS_URL}/code/{code_id}")
     if code_response.status_code > 300:
         code_exists = False
         yield non_applicable_run("code_to_amr")
     else:
         (task, result) = do_task(
-            url=f"{KM_URL}/code_to_amr?code_id={scenario}&dynamics_only=True",
+            url=f"{KM_URL}/code_to_amr?code_id={code_id}&dynamics_only=True&name={scenario}",
             task="code_to_amr",
         )
         if result["success"]:
             model_id = result["result"]["job_result"]["tds_model_id"]
+            add_asset(model_id, "models", project_id)
+            add_provenance(left_id=model_id,
+                           left_type="Model",
+                           right_id=code_id,
+                           right_type="Code",
+                           relation_type="EXTRACTED_FROM")
         else:
             logging.error(
                 f"Model was not generated from code for scenario: {scenario}, amr creation response: {result}"
@@ -246,13 +268,14 @@ def standard_flow(scenario):
                 "equation_type": equation_type,
             }
             (task, result) = do_task(
-                url=f"{KM_URL}/equations_to_amr",
+                url=f"{KM_URL}/equations_to_amr&name={scenario}",
                 task="equations_to_amr",
                 kwargs={"params": parameters_payload, "data": equations},
             )
 
             if result["success"]:
                 model_id = result["result"]["job_result"]["tds_model_id"]
+                add_asset(model_id, "models", project_id)
             else:
                 logging.error(
                     f"Model was not generated from equations for scenario: {scenario}, amr creation response: {result}"
@@ -315,7 +338,7 @@ def standard_flow(scenario):
 
     # STEP 5: LINK AMR
     # Check if document exists
-    document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+    document_response = requests.get(f"{TDS_URL}/documents/{document_id}")
     if document_response.status_code > 300:
         yield non_applicable_run("link_amr")
     elif not document_response.json().get('metadata'):
@@ -327,7 +350,7 @@ def standard_flow(scenario):
     elif not model_id and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
-        document_response = requests.get(f"{TDS_URL}/documents/{scenario}")
+        document_response = requests.get(f"{TDS_URL}/documents/{document_id}")
         if document_response.status_code > 300:
             yield non_applicable_run("link_amr")
         else:
@@ -335,6 +358,11 @@ def standard_flow(scenario):
             if document["metadata"] is None:
                 yield upstream_failure("link_amr")
             else:
+                add_provenance(left_id=model_id,
+                               left_type="Model",
+                               right_id=document_id,
+                               right_type="Document",
+                               relation_type="EXTRACTED_FROM")
                 yield do_task(
                     url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
                     task="link_amr",
@@ -342,8 +370,17 @@ def standard_flow(scenario):
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
+        if document_id:
+            dataset_url = f"{KM_URL}/profile_dataset/{dataset_id}?document_id={document_id}"
+            add_provenance(left_id=dataset_id,
+                            left_type="Dataset",
+                            right_id=document_id,
+                            right_type="Document",
+                            relation_type="EXTRACTED_FROM")            
+        else:
+            dataset_url = f"{KM_URL}/profile_dataset/{dataset_id}"
         (task, result) = do_task(
-            url=f"{KM_URL}/profile_dataset/{scenario}",
+            url=dataset_url,
             task="profile_dataset",
         )
 
@@ -362,7 +399,7 @@ def standard_flow(scenario):
         yield non_applicable_run("profile_dataset")
 
 
-def pipeline(scenario):
+def pipeline(scenario, _id):
     shape = [
         {"from": "pdf_extraction", "to": "variable_extraction", "link_type": "hard"},
         {"from": "pdf_extraction", "to": "profile_dataset", "link_type": "soft"},
@@ -379,7 +416,7 @@ def pipeline(scenario):
     #     {edge["from"] for edge in shape}
     # )
     success = True
-    for task, result in standard_flow(scenario):
+    for task, result in standard_flow(scenario, _id):
         report[task] = result
         if result["success"] is False:
             success = False
@@ -404,13 +441,18 @@ def pipeline(scenario):
         "steps": report,
         "shape": shape,
         "accuracy": {},
+        "project_id": project_id
     }
     return {scenario: pipeline_report}
 
 
 if __name__ == "__main__":
     # Try to get the first argument from CLI as a list
-
+    if not os.path.exists('project_id.txt'):
+        raise Exception("No project ID found")
+    else:
+        project_id = open('project_id.txt','r').read()
+        
     if len(sys.argv) > 1:
         filepath = "./scenarios/"
         scenarios = sys.argv[1:]
@@ -421,8 +463,10 @@ if __name__ == "__main__":
 
     reports = []
     for scenario in scenarios:
-        logging.info(f"Pipeline running on: {scenario}")
-        report = pipeline(scenario)
+        _id = f"{project_id}-{scenario}"
+
+        logging.info(f"Pipeline running on: {scenario} with _id {_id}")
+        report = pipeline(scenario, _id)
 
         logging.info(f"{scenario} Pipeline report: {report}")
 
