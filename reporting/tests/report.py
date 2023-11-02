@@ -238,7 +238,7 @@ def standard_flow(scenario, _id):
                            left_type="Model",
                            right_id=code_id,
                            right_type="Code",
-                           relation_type="EXCTRACTED_FROM")
+                           relation_type="EXTRACTED_FROM")
         else:
             logging.error(
                 f"Model was not generated from code for scenario: {scenario}, amr creation response: {result}"
@@ -362,7 +362,7 @@ def standard_flow(scenario, _id):
                                left_type="Model",
                                right_id=document_id,
                                right_type="Document",
-                               relation_type="EXCTRACTED_FROM")
+                               relation_type="EXTRACTED_FROM")
                 yield do_task(
                     url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
                     task="link_amr",
@@ -376,7 +376,7 @@ def standard_flow(scenario, _id):
                             left_type="Dataset",
                             right_id=document_id,
                             right_type="Document",
-                            relation_type="EXCTRACTED_FROM")            
+                            relation_type="EXTRACTED_FROM")            
         else:
             dataset_url = f"{KM_URL}/profile_dataset/{dataset_id}"
         (task, result) = do_task(
