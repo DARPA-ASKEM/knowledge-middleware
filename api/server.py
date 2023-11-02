@@ -78,7 +78,7 @@ def equations_to_amr(
         payload (List[str]): A list of LaTeX or MathML strings representing the functions that are used to convert to AMR
         equation_type (str): [latex, mathml]
         model (str, optional): AMR model return type. Defaults to "petrinet". Options: "regnet", "petrinet".
-        model_id (str, optional): the id of the model (to update) based on the set of equations
+        model_id (str, optional): the id of the model (to update/create) based on the set of equations
         name (str, optional): the name to set on the newly created model
         description (str, optional): the description to set on the newly created model
     ```
@@ -103,6 +103,7 @@ def equations_to_amr(
 def code_to_amr(
     code_id: str,
     name: Optional[str] = None,
+    model_id: Optional[str] = None,
     description: Optional[str] = None,
     dynamics_only: Optional[bool] = False,
     redis=Depends(get_redis),
@@ -115,6 +116,7 @@ def code_to_amr(
     ```
         code_id (str): the id of the code
         name (str, optional): the name to set on the newly created model
+        model_id (str, optional): the id of the model (to create) based on the code
         description (str, optional): the description to set on the newly created model
         dynamics_only (bool, optional): whether to only run the amr extraction over specified dynamics from the code object in TDS.
     ```
@@ -123,6 +125,7 @@ def code_to_amr(
     options = {
         "code_id": code_id,
         "name": name,
+        "model_id": model_id,
         "description": description,
         "dynamics_only": dynamics_only,
     }

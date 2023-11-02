@@ -150,7 +150,7 @@ def standard_flow(scenario, _id):
     document_id = _id
     code_id = _id
     dataset_id = _id
-    model_id = None
+    model_id = _id
 
     def do_task(url, task, kwargs={}):
         return (task, run_km_job(url, scenario, task, kwargs))
@@ -228,11 +228,10 @@ def standard_flow(scenario, _id):
         yield non_applicable_run("code_to_amr")
     else:
         (task, result) = do_task(
-            url=f"{KM_URL}/code_to_amr?code_id={code_id}&dynamics_only=True&name={scenario}",
+            url=f"{KM_URL}/code_to_amr?code_id={code_id}&model_id={model_id}&dynamics_only=True&name={scenario}",
             task="code_to_amr",
         )
         if result["success"]:
-            model_id = result["result"]["job_result"]["tds_model_id"]
             add_asset(model_id, "models", project_id)
             add_provenance(left_id=model_id,
                            left_type="Model",
@@ -268,13 +267,12 @@ def standard_flow(scenario, _id):
                 "equation_type": equation_type,
             }
             (task, result) = do_task(
-                url=f"{KM_URL}/equations_to_amr?name={scenario}",
+                url=f"{KM_URL}/equations_to_amr?name={scenario}&model_id={model_id}",
                 task="equations_to_amr",
                 kwargs={"params": parameters_payload, "data": equations},
             )
 
             if result["success"]:
-                model_id = result["result"]["job_result"]["tds_model_id"]
                 add_asset(model_id, "models", project_id)
             else:
                 logging.error(
