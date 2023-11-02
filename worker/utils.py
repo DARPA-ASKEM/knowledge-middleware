@@ -64,13 +64,19 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
                 )
             logger.info(f"Updated model in TDS with id {model_id}")
 
-    # Create TDS model
+        else:
+            # the model couldn't be found, so must be new
+            # go ahead and create the model
+            tds_models = f"{TDS_API}/models"
+            model_response = requests.post(tds_models, json=amr_payload, headers=headers)
+            model_id = model_response.json().get("id")
+            logger.info(f"Created model in TDS with id {model_id}")
+
+    # No model id was specified, create TDS model with a default UUID id
     else:
         tds_models = f"{TDS_API}/models"
         model_response = requests.post(tds_models, json=amr_payload, headers=headers)
-
         model_id = model_response.json().get("id")
-
         logger.info(f"Created model in TDS with id {model_id}")
 
     # Create TDS model configuration
