@@ -151,6 +151,7 @@ def standard_flow(scenario, _id):
     code_id = _id
     dataset_id = _id
     model_id = _id
+    model_exists = False
 
     def do_task(url, task, kwargs={}):
         return (task, run_km_job(url, scenario, task, kwargs))
@@ -232,6 +233,7 @@ def standard_flow(scenario, _id):
             task="code_to_amr",
         )
         if result["success"]:
+            model_exists = True
             add_asset(model_id, "models", project_id)
             add_provenance(left_id=model_id,
                            left_type="Model",
@@ -273,6 +275,7 @@ def standard_flow(scenario, _id):
             )
 
             if result["success"]:
+                model_exists = True
                 add_asset(model_id, "models", project_id)
             else:
                 logging.error(
@@ -283,7 +286,7 @@ def standard_flow(scenario, _id):
     # STEP 4: PROFILE AMR
     if not code_exists and not equations_exists:
         yield non_applicable_run("profile_model")
-    elif not model_id and (code_exists or equations_exists):
+    elif not model_exists and (code_exists or equations_exists):
         yield upstream_failure("profile_model")
     else:
         # Check if document exists in TDS and change URL based on that.
@@ -345,7 +348,7 @@ def standard_flow(scenario, _id):
     # Check if code ore equations exist        
     elif not code_exists and not equations_exists:
         yield non_applicable_run("link_amr")        
-    elif not model_id and (code_exists or equations_exists):
+    elif not model_exists and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
         document_response = requests.get(f"{TDS_URL}/documents/{document_id}")
