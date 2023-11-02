@@ -761,6 +761,7 @@ def link_amr(*args, **kwargs):
 def code_to_amr(*args, **kwargs):
     code_id = kwargs.get("code_id")
     name = kwargs.get("name")
+    model_id = kwargs.get("model_id")
     description = kwargs.get("description")
     dynamics_only = kwargs.get("dynamics_only", False)
 
@@ -834,7 +835,7 @@ def code_to_amr(*args, **kwargs):
         metadata = amr_json.get("metadata", {})
         metadata["code_id"] = code_id
         amr_json["metadata"] = metadata
-        tds_responses = put_amr_to_tds(amr_json, name, description)
+        tds_responses = put_amr_to_tds(amr_json, name, description, model_id)
         logger.info(f"TDS Response: {tds_responses}")
 
         put_code_extraction_to_tds(
