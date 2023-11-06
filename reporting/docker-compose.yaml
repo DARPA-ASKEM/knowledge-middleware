@@ -127,7 +127,7 @@ services:
       minio:
         condition: service_started
   redis:
-    image: ghcr.io/darpa-askem/redis:7.0.12-alpine
+    image: redis:7.0.12-alpine
     ports:
       - 6379
   knowledge-middleware-api:
