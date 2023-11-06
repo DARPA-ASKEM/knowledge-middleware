@@ -7,7 +7,7 @@ networks:
   data-api:
     external: true
 services:
-  extraction-api:
+  api:
     container_name: api-knowledge-middleware
     build:
       context: ./
@@ -44,48 +44,6 @@ services:
     networks:
       - knowledge-middleware
       - data-api
-  mit-tr:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: mit-tr
-    networks:
-      - knowledge-middleware
-  skema-tr:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: skema-tr
-    networks:
-      - knowledge-middleware
-  skema-py:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: skema-py
-    networks:
-      - knowledge-middleware
-  skema-rs:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: skema-rs
-    networks:
-      - knowledge-middleware
-  graphdb:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: graphdb
-    networks:
-      - knowledge-middleware
-  eq2mml:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: eq2mml
-    networks:
-      - knowledge-middleware
-  mathjax:
-    extends:
-      file: ./askem-ta1-dockervm/end-to-end-rest/docker-compose.yml
-      service: mathjax
-    networks:
-      - knowledge-middleware
 
 volumes:
   mg_lib:
