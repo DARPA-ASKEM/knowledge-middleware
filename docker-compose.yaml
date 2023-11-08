@@ -44,8 +44,3 @@ services:
     networks:
       - knowledge-middleware
       - data-api
-
-volumes:
-  mg_lib:
-  mg_log:
-  mg_etc:
