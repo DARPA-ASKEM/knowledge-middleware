@@ -27,6 +27,8 @@ The Knowledge Middleware (`KM`) is designed to provide an intermediate job queue
 3. You can now run the tests or reports using the information below.
 4. You can also run `KM` with `make up`
 
+___Important Note:___ Running `make up` will target the regular `docker-compose.yaml` file. This file expects to be running with Terarium Data Service(TDS) on that same machine as it looks for a docker network set up by TDS. In order to run this stack standalone (pointing to a remote TDS installation) use the command `make up-prod`.
+
 ## Integration Testing
 `KM` provides a TA1 integration test harness that powers the [ASKEM Integration Dashboard](https://integration-dashboard.terarium.ai). It makes it easy to add new test cases and scenarios which will automatically be evaluated and surfaced in the dashboard. Additionally, the `KM` test harness can be run offline for development purposes. Running the `KM`` test harness requires docker compose. Please see [reporting/README.md](./reporting/README.md) for more information on how to run the test harness locally.
 
