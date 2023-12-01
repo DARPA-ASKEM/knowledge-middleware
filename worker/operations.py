@@ -376,6 +376,7 @@ def variable_extractions(*args, **kwargs):
     annotate_mit = kwargs.get("annotate_mit")
     name = kwargs.get("name")
     description = kwargs.get("description")
+    kg_domain = kwargs.get("domain", "epi")
 
     document_json, downloaded_document = get_document_from_tds(document_id=document_id)
 
@@ -410,7 +411,7 @@ def variable_extractions(*args, **kwargs):
         files = {
             "file": text.encode(),
         }        
-        params = {"gpt_key": OPENAI_API_KEY}
+        params = {"gpt_key": OPENAI_API_KEY, "kg_domain": kg_domain}
 
         try:
             logger.info(
