@@ -162,7 +162,7 @@ async def variable_extractions(
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
-    domain: DomainType = "epi",
+    domain: DomainType = DomainType.EPI,
     redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Run variable extractions over document
