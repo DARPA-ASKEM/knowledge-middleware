@@ -747,6 +747,18 @@ def link_amr(*args, **kwargs):
 
         model_amr.update(enriched_amr)
 
+        logger.info(f"Setting provenance between model {model_id} and document {document_id}")
+        try:
+            set_provenance(
+                model_id,
+                "Model",
+                document_id,
+                "Document",
+                "EXTRACTED_FROM",
+                )
+        except Exception as e:
+            logger.error(f"Failed to set provenance between model {model_id} and document {document_id}: {e}")
+
         return {
             "status": model_response.status_code,
             "amr": model_amr,
