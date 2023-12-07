@@ -415,8 +415,8 @@ def standard_flow(scenario, _id):
                         with open(ground_truth_path) as file:
                             truth = file.read()
                             files = {
-                                "linked_amr": generated_amr,
-                                "gt_annotations": truth,
+                                "linked_amr": ("linked_amr_file.json", generated_amr),
+                                "gt_annotations": ("gt_linked_amr_file.json", truth),
                             }
                             eval = requests.post(
                                 f"{TA1_UNIFIED_URL}/metal/eval",
