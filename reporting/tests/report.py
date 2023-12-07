@@ -165,6 +165,9 @@ def standard_flow(scenario, _id):
             task="pdf_extraction",
         )
 
+        global cosmos_extraction_json 
+        cosmos_extraction_json = result["result"]["job_result"]["extraction"]
+
         # EVAL STEP 1
         ground_truth_path = (
             f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
@@ -199,7 +202,9 @@ def standard_flow(scenario, _id):
                         result["accuracy"] = {"status_code": eval.status_code}
             except Exception as e:
                 logging.error(f"Cosmos Accuracy Error: {e}")
-
+        else:
+            logging.info(f"No ground truth exists for: {scenario}:{task}")
+            result["accuracy"] = None
         yield task, result
     else:
         yield non_applicable_run("pdf_extraction")
@@ -221,10 +226,39 @@ def standard_flow(scenario, _id):
         if document["text"] is None:
             yield upstream_failure("variable_extraction")
         else:
-            yield do_task(
-                url=url,
+            (task, result) = do_task(
+                url=f"{KM_URL}/variable_extractions?document_id={document_id}",
                 task="variable_extraction",
             )
+            ## EVAL VARIABLE EXTRACTION
+            if result["result"]["job_result"]:
+                # Evaluate accuracy
+                ground_truth_path = f"scenarios/{scenario}/ground_truth/variable_extraction.json"
+                if os.path.exists(ground_truth_path):
+                    logging.info(f"Accuracy for {scenario}:{task}")
+                    generated_extractions = json.dumps(result["result"]["job_result"]["extraction"])
+                    with open(ground_truth_path) as file:
+                        truth = file.read()
+                        files = {
+                            "extractions_file": ("paper_variable_extractions.json", generated_extractions),
+                            "gt_annotations": ("paper_gt_annotations.json", truth),
+                            "json_text": ("paper_cosmos_output.json", json.dumps(cosmos_extraction_json))
+                        }
+                        eval = requests.post(
+                            f"{TA1_UNIFIED_URL}/text-reading/eval",
+                            files=files,
+                        )
+                        if eval.status_code < 300:
+                            result["accuracy"] = eval.json()
+                        else:
+                            result["accuracy"] = {"status_code": eval.status_code}
+                else:
+                    logging.info(f"No ground truth exists for: {scenario}:{task}")
+                    result["accuracy"] = None
+            else:
+                result["accuracy"] = None
+
+            yield task, result
 
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
@@ -338,6 +372,9 @@ def standard_flow(scenario, _id):
                         result["accuracy"] = eval.json()
                     else:
                         result["accuracy"] = {"status_code": eval.status_code}
+            else:
+                logging.info(f"No ground truth exists for: {scenario}:{task}")    
+                result["accuracy"] = None
         else:
             result["accuracy"] = None
 
@@ -370,10 +407,37 @@ def standard_flow(scenario, _id):
                                right_id=document_id,
                                right_type="Document",
                                relation_type="EXTRACTED_FROM")
-                yield do_task(
+                (task, result) = do_task(
                     url=f"{KM_URL}/link_amr?document_id={document_id}&model_id={model_id}",
                     task="link_amr",
                 )
+                ## EVAL AMR LINKING
+                if result["result"]["job_result"]:
+                    # Evaluate accuracy
+                    ground_truth_path = f"scenarios/{scenario}/ground_truth/linked_amr.json"
+                    if os.path.exists(ground_truth_path):
+                        logging.info(f"Accuracy for {scenario}:{task}")
+                        generated_amr = json.dumps(result["result"]["job_result"]["amr"])
+                        with open(ground_truth_path) as file:
+                            truth = file.read()
+                            files = {
+                                "linked_amr": ("linked_amr_file.json", generated_amr),
+                                "gt_annotations": ("gt_linked_amr_file.json", truth),
+                            }
+                            eval = requests.post(
+                                f"{TA1_UNIFIED_URL}/metal/eval",
+                                files=files,
+                            )
+                            if eval.status_code < 300:
+                                result["accuracy"] = eval.json()
+                            else:
+                                result["accuracy"] = {"status_code": eval.status_code}
+                    else:
+                        logging.info(f"No ground truth exists for: {scenario}:{task}")
+                        result["accuracy"] = None
+                else:
+                    result["accuracy"] = None
+                yield task, result
 
     # STEP 6: PROFILE DATASET
     if os.path.exists(f"scenarios/{scenario}/dataset.csv"):
