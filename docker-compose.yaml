@@ -7,7 +7,7 @@ networks:
   data-api:
     external: true
 services:
-  api:
+  km-api:
     container_name: api-knowledge-middleware
     build:
       context: ./

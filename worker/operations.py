@@ -376,6 +376,7 @@ def variable_extractions(*args, **kwargs):
     annotate_mit = kwargs.get("annotate_mit")
     name = kwargs.get("name")
     description = kwargs.get("description")
+    kg_domain = kwargs.get("domain", "epi")
 
     document_json, downloaded_document = get_document_from_tds(document_id=document_id)
 
@@ -410,7 +411,7 @@ def variable_extractions(*args, **kwargs):
         files = {
             "file": text.encode(),
         }        
-        params = {"gpt_key": OPENAI_API_KEY}
+        params = {"gpt_key": OPENAI_API_KEY, "kg_domain": kg_domain}
 
         try:
             logger.info(
@@ -745,6 +746,18 @@ def link_amr(*args, **kwargs):
         logger.info(f"Updated enriched model in TDS with id {model_id}")
 
         model_amr.update(enriched_amr)
+
+        logger.info(f"Setting provenance between model {model_id} and document {document_id}")
+        try:
+            set_provenance(
+                model_id,
+                "Model",
+                document_id,
+                "Document",
+                "EXTRACTED_FROM",
+                )
+        except Exception as e:
+            logger.error(f"Failed to set provenance between model {model_id} and document {document_id}: {e}")
 
         return {
             "status": model_response.status_code,

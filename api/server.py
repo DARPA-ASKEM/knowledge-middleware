@@ -7,7 +7,7 @@ from typing import Annotated, List, Optional
 from fastapi import FastAPI, HTTPException, Path, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.models import EquationType, ExtractionJob
+from api.models import EquationType, ExtractionJob, DomainType
 from api.utils import create_job, fetch_job_status, get_redis
 from lib.settings import settings
 
@@ -162,12 +162,20 @@ async def variable_extractions(
     annotate_mit: bool = True,
     name: str = None,
     description: str = None,
+    domain: DomainType = DomainType.EPI,
     redis=Depends(get_redis),
 ) -> ExtractionJob:
     """Run variable extractions over document
 
     Args:
-        pdf (UploadFile, optional): The document to run extractions over. Defaults to File(...).
+    ```
+        * document_id: [str] the ID of the document in TDS to extract from; must have `text` extracted already via `/pdf_extraction`
+        * annotate_skema: [bool] should SKEMA system be used
+        * annotate_mit: [bool] should MIT system be used
+        * name: [str] name to give to the document (optional)
+        * description: [str] description to apply to document (optional)
+        * domain: [epi, climate] the knowledge graph domain to use (only used by MIT system)
+    ```
     """
     operation_name = "operations.variable_extractions"
 
@@ -178,6 +186,7 @@ async def variable_extractions(
         "annotate_mit": annotate_mit,
         "name": name,
         "description": description,
+        "domain": domain.value,
     }
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)

@@ -211,6 +211,12 @@ def standard_flow(scenario, _id):
 
     # STEP 2: VARIABLE EXTRACTION
     # Check TDS document to see if it has non null text
+    if os.path.exists(f"scenarios/{scenario}/domain.txt"):
+        domain = open(f"scenarios/{scenario}/domain.txt").read()
+        logging.info(f"Domain found: {domain}")
+        url = f"{KM_URL}/variable_extractions?document_id={document_id}&domain={domain}"
+    else:
+        url = f"{KM_URL}/variable_extractions?document_id={document_id}"
     document_response = requests.get(f"{TDS_URL}/documents/{document_id}")
     if document_response.status_code > 300:
         yield non_applicable_run("variable_extraction")

@@ -35,3 +35,7 @@ class ExtractionJob(BaseModel):
 class EquationType(Enum):
     LATEX = "latex"
     MATHML = "mathml"
+
+class DomainType(Enum):
+    EPI = "epi"
+    CLIMATE = "climate"
