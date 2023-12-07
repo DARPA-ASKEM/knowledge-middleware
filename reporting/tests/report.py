@@ -165,6 +165,9 @@ def standard_flow(scenario, _id):
             task="pdf_extraction",
         )
 
+        global cosmos_extraction_json 
+        cosmos_extraction_json = result["result"]["job_result"]["extraction"]
+
         # EVAL STEP 1
         ground_truth_path = (
             f"scenarios/{scenario}/ground_truth/cosmos_ground_truth.json"
@@ -231,8 +234,9 @@ def standard_flow(scenario, _id):
                     with open(ground_truth_path) as file:
                         truth = file.read()
                         files = {
-                            "extractions_file": generated_extractions,
-                            "gt_annotations": truth,
+                            "extractions_file": ("paper_variable_extractions.json", generated_extractions),
+                            "gt_annotations": ("paper_gt_annotations.json", truth),
+                            "json_text": ("paper_cosmos_output.json", json.dumps(cosmos_extraction_json))
                         }
                         eval = requests.post(
                             f"{TA1_UNIFIED_URL}/text-reading/eval",
