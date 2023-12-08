@@ -776,19 +776,24 @@ def code_to_amr(*args, **kwargs):
     name = kwargs.get("name")
     model_id = kwargs.get("model_id")
     description = kwargs.get("description")
+    llm_assisted = kwargs.get("llm_assisted", True)    
     dynamics_only = kwargs.get("dynamics_only", False)
 
     code_json, downloaded_code_object, dynamics_off_flag = get_code_from_tds(
         code_id, code=True, dynamics_only=dynamics_only
     )
 
-    # Checks the return flag fromm the dynamics retrieval process
+    # Checks the return flag from the dynamics retrieval process
     if dynamics_off_flag:
         dynamics_only = False
 
-    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
+    # default to using LLM assisted extraction
+    code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/llm-assisted-codebase-to-pn-amr"
+    if not llm_assisted:
+        code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/codebase-to-pn-amr"
     if dynamics_only:
         code_amr_workflow_url = f"{UNIFIED_API}/workflows/code/snippets-to-pn-amr"
+
 
     if dynamics_only:
         blobs = []
@@ -822,6 +827,7 @@ def code_to_amr(*args, **kwargs):
 
     logger.info(f"Request payload: {request_payload}")
     if isinstance(request_payload, dict):
+        # dynamics only
         amr_response = requests.post(
             code_amr_workflow_url, json=json.loads(json.dumps(request_payload))
         )

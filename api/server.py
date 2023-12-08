@@ -105,6 +105,7 @@ def code_to_amr(
     name: Optional[str] = None,
     model_id: Optional[str] = None,
     description: Optional[str] = None,
+    llm_assisted: Optional[bool] = True,    
     dynamics_only: Optional[bool] = False,
     redis=Depends(get_redis),
 ) -> ExtractionJob:
@@ -118,7 +119,8 @@ def code_to_amr(
         name (str, optional): the name to set on the newly created model
         model_id (str, optional): the id of the model (to create) based on the code
         description (str, optional): the description to set on the newly created model
-        dynamics_only (bool, optional): whether to only run the amr extraction over specified dynamics from the code object in TDS.
+        llm_assisted: (bool, optional): whether to use SKEMA's LLM assisted dynamics extraction prior to submission of a zipfile; cannot be used in conjunction with `dynamics_only`        
+        dynamics_only (bool, optional): whether to only run the amr extraction over specified dynamics from the code object in TDS; cannot be used in conjunction with `llm_assisted`
     ```
     """
     operation_name = "operations.code_to_amr"
@@ -128,6 +130,7 @@ def code_to_amr(
         "model_id": model_id,
         "description": description,
         "dynamics_only": dynamics_only,
+        "llm_assisted": llm_assisted,
     }
 
     resp = create_job(operation_name=operation_name, options=options, redis=redis)
