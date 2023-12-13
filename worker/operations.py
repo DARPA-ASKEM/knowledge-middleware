@@ -706,6 +706,7 @@ def link_amr(*args, **kwargs):
     model = requests.get(tds_model_url)
     model_json = model.json()
     model_amr = model_json
+    model_card = model_amr.get('metadata',{}).get('card')
 
     logging.debug(model_amr)
 
@@ -737,6 +738,7 @@ def link_amr(*args, **kwargs):
 
     if response.status_code == 200:
         enriched_amr = response.json()
+        enriched_amr['metadata']['card'] = model_card
 
         model_response = requests.put(tds_model_url, json=enriched_amr)
         if model_response.status_code != 200:
