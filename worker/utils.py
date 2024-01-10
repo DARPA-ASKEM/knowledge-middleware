@@ -80,7 +80,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
         logger.info(f"Created model in TDS with id {model_id}")
 
     # Create TDS model configuration
-    tds_model_configurations = TDS_API + "/model_configurations"
+    tds_model_configurations = TDS_API + "/model-configurations"
     header = amr_payload.get("header", {})
     configuration_payload = {
         "model_id": model_id,
