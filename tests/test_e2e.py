@@ -208,7 +208,7 @@ def test_code_dynamics_to_amr(
     if settings.MOCK_TDS:
         http_mock.post(f"{settings.TDS_URL}/provenance", json={})
         http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-        http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+        http_mock.post(f"{settings.TDS_URL}/model-configurations", json={"id": "test"})
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         http_mock.post(
@@ -281,7 +281,7 @@ def test_code_zip_to_amr(
     if settings.MOCK_TDS:
         http_mock.post(f"{settings.TDS_URL}/provenance", json={})
         http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-        http_mock.post(f"{settings.TDS_URL}/model_configurations", json={"id": "test"})
+        http_mock.post(f"{settings.TDS_URL}/model-configurations", json={"id": "test"})
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
         # TODO: Check actual response from this endpoint and mock it in a new file.
@@ -363,7 +363,7 @@ def test_equations_to_amr(context_dir, http_mock, client, worker, file_storage):
         )
         http_mock.put(f"{settings.TDS_URL}/models/test2", json={"id": "test2"})
         http_mock.post(
-            f"{settings.TDS_URL}/model_configurations", json=write_to_fake_configs
+            f"{settings.TDS_URL}/model-configurations", json=write_to_fake_configs
         )
     if settings.MOCK_TA1:
         amr = json.load(open(f"{context_dir}/amr.json"))
@@ -528,7 +528,7 @@ def test_profile_model(
     amr = json.load(open(f"./tests/amr.json"))
     if settings.MOCK_TDS:
         http_mock.post(
-            f"{settings.TDS_URL}/provenance/search?search_type=models_from_code",
+            f"{settings.TDS_URL}/provenance/search/models-from-code",
             json={"result": [code_artifact["id"]]},
         )
         http_mock.get(
