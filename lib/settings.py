@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     SKEMA_RS_URL: str = "http://skema-rs.staging.terarium.ai"
     MIT_TR_URL: str = "http://mit-tr.staging.terarium.ai"
     TDS_URL: str = "http://data-service.staging.terarium.ai:8000"
+		TDS_USER: str = "user"
+		TDS_PASSWORD: str = "password"
     COSMOS_URL: str = "http://xdd.wisc.edu/cosmos_service"
     OPENAI_API_KEY: str = "foo"
     LOG_LEVEL: str = "INFO"
