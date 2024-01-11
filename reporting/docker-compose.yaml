@@ -3,133 +3,312 @@
 
 version: '3'
 services:
-  data-service:
-    image: ghcr.io/darpa-askem/data-service:latest
-    environment:
-      DATASET_STORAGE_BASE_URL: s3://datasets/
-      STORAGE_HOST: http://minio:9000
-      S3_BUCKET: askem
-      S3_DATASET_PATH: datasets
-      S3_RESULT_PATH: simulations
-      OPENAI_KEY: sk
-      SQL_URL: data-service-dev-db
-      SQL_PORT: 5432
-      SQL_USER: dev
-      SQL_PASSWORD: dev
-      NEO4J_ENABLED: true
-      NEO4J_driver: neo4j://neo4j:7687
-      AWS_ACCESS_KEY_ID: miniouser
-      AWS_SECRET_ACCESS_KEY: miniopass
-      ES_URL: http://elasticsearch:9200
-      ELASTIC_PASSWORD: tdsElasticPass
-      KIBANA_PASSWORD: tdsKibanaPass
-    depends_on:
-      data-service-migrations:
-        condition: service_completed_successfully
-      neo4j:
-        condition: service_started
-      minio:
-        condition: service_started
-    ports:
-      - 8000:8000
   minio:
-    image: ghcr.io/darpa-askem/data-service-storage:latest
-    environment:
-      S3_BUCKET: askem
-      S3_DATASET_PATH: "datasets"
-      S3_RESULTS_PATH: "simulations"
-      MINIO_ROOT_USER: miniouser
-      MINIO_ROOT_PASSWORD: miniopass
-    expose:
-      - 9000
-      - 9001
-    entrypoint: ""
-    command: [ "minio", "server", "/data" ]
+    image: quay.io/minio/minio:RELEASE.2023-11-15T20-43-25Z
+    command: [ "server", "/data", "--console-address", ":9090" ]
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: "3s"
+      timeout: "3s"
+      retries: 30
     ports:
-      - 9000:9000
-      - 9001:9001
-    depends_on:
-      - neo4j
-      - data-service-dev-db
+      - "9000:9000"
+      - "9090:9090"
+    networks:
+      - terarium
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    volumes:
+      - minio-data:/data
   neo4j:
-    image: ghcr.io/darpa-askem/data-service-graphdb:5.3.0.3
-    expose:
-      - 7474
-      - 7687
+    container_name: neo4j
+    image: neo4j:5.12-community
+    healthcheck:
+      test: wget http://127.0.0.1:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 20
+      start_period: 3s
+    networks:
+      - terarium
+    ports:
+      - "7474:7474"
+      - "7687:7687"
     environment:
       - NEO4J_PLUGINS=["apoc"]
       - apoc.import.file.enabled=true
-      - NEO4J_AUTH=neo4j/password
+      - NEO4J_AUTH=none
       - NEO4J_dbms_memory_pagecache_size=512M
-      - PG_HOST=data-service-dev-db
+      - PG_HOST=postgres
       - PG_PORT=5432
     depends_on:
-      - data-service-dev-db
-  data-service-dev-db:
-    image: ghcr.io/darpa-askem/data-service-dev-db:latest
-    expose:
-      - 5432
-    environment:
-      - POSTGRES_PASSWORD=dev
-      - POSTGRES_USER=dev
-      - POSTGRES_DB=askem
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dev -d askem" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - postgres
   elasticsearch:
-    image: elasticsearch:8.5.3
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - xpack.security.enabled=false
-      - action.auto_create_index=false
+    container_name: elasticsearch
+    image: elasticsearch:8.7.0
+    networks:
+      - terarium
     ports:
-      - 9200
+      - "9200:9200"
+      - "9300:9300"
     healthcheck:
-      test: curl http://localhost:9200/_cluster/health?wait_for_status=yellow || exit 1
-      interval: 10s
-      timeout: 20s
-      retries: 5
-  data-service-migrations:
-    image: ghcr.io/darpa-askem/data-service:latest
-    command: >
-      sh -c "chmod +x /api/migrations/run_migrations.sh && /api/migrations/run_migrations.sh"
+      test:
+        [
+          "CMD",
+          "curl",
+          "--head",
+          "0.0.0.0:9200/_cluster/health?wait_for_status=yellow"
+        ]
+      interval: "3s"
+      timeout: "3s"
+      retries: 30
     environment:
-      - DATASET_STORAGE_BASE_URL=s3://datasets/
-      - STORAGE_HOST=http://minio:9000
-      - S3_BUCKET=askem
-      - S3_DATASET_PATH=datasets
-      - S3_RESULT_PATH=simulations
-      - OPENAI_KEY=sk
-      - SQL_URL=data-service-dev-db
-      - SQL_PORT=5432
-      - SQL_USER=dev
-      - SQL_PASSWORD=dev
-      - SQL_DB=askem
-      - NEO4J_ENABLED=true
-      - NEO4J_driver=neo4j://neo4j:7687
-      - AWS_ACCESS_KEY_ID=miniouser
-      - AWS_SECRET_ACCESS_KEY=miniopass
-      - ES_INDEX_PREFIX=tds_
-      - ES_URL=http://elasticsearch:9200
-      - ES_USERNAME=tds
-      - ES_PASSWORD=tdsElasticPass
-      - ELASTIC_PASSWORD=tdsElasticPass
-      - KIBANA_PASSWORD=tdsKibanaPass
-      - SEED_DATA=false
-    depends_on:
-      data-service-dev-db:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-      minio:
-        condition: service_started
+      - cluster.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
   redis:
     image: redis:7.0.12-alpine
     ports:
       - 6379
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - terarium
+    ports:
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "terarium"
+      RABBITMQ_DEFAULT_PASS: "terarium123"
+      RABBITMQ_MANAGEMENT_ENABLED: "true"
+
+  spicedb:
+    container_name: spicedb
+    image: authzed/spicedb:v1.28.0
+    networks:
+      - terarium
+    ports:
+      - "50051:50051"
+    command: [ "serve" ]
+    environment:
+      SPICEDB_GRPC_PRESHARED_KEY: "dev"
+      SPICEDB_DATASTORE_ENGINE: "postgres"
+      SPICEDB_HTTP_ENABLED: "true"
+      SPICEDB_DATASTORE_CONN_URI: "postgres://terarium_user:terarium@postgres:5432/spicedb?sslmode=disable"
+    healthcheck:
+      test: [ "CMD", "grpc_health_probe", "-addr=:50051" ]
+      interval: "3s"
+      timeout: "3s"
+      retries: 30
+    depends_on:
+      migrate-spicedb:
+        condition: service_completed_successfully
+
+  migrate-spicedb:
+    image: authzed/spicedb:v1.28.0
+    networks:
+      - terarium
+    command: [ "migrate", "head" ]
+    restart: "on-failure"
+    environment:
+      SPICEDB_DATASTORE_ENGINE: "postgres"
+      SPICEDB_DATASTORE_CONN_URI: "postgres://terarium_user:terarium@postgres:5432/spicedb?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    container_name: postgres
+    image: postgres:14-alpine
+    networks:
+      - terarium
+    ports:
+      - "5430:5432"
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "terarium" ]
+      interval: "3s"
+      timeout: "3s"
+      retries: 30
+    user: postgres
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - terarium-db:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  db-migration:
+    container_name: db-migration
+    image: ghcr.io/darpa-askem/db-migration:latest
+    networks:
+      - terarium
+    environment:
+      SPRING_PROFILES_ACTIVE: "default, local-docker"
+      TERARIUM_DB_PASSWORD: "postgres"
+      TERARIUM_DB_USERNAME: "postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  keycloak:
+    image: ghcr.io/unchartedsoftware/keycloak:22.0.3.0
+    networks:
+      - terarium
+    restart: always
+    healthcheck:
+      # Keycloak no longer has curl, https://stackoverflow.com/questions/58168955/testing-minimal-docker-containers-with-healthcheck/76790330#76790330
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/8081;echo -e \"GET /health/ready HTTP/1.1\r
+
+              host: http://localhost\r
+
+              Connection: close\r
+
+              \r
+
+              \" >&3;grep \"HTTP/1.1 200 OK\" <&3"
+        ]
+      interval: '3s'
+      timeout: '3s'
+      retries: 30
+    command: [ 'start-dev', '--http-port=8081' ]
+    environment:
+      KC_DB: 'postgres'
+      KC_DB_URL: 'jdbc:postgresql://postgres/postgres'
+      KC_DB_URL_HOST: 'postgres'
+      KC_DB_USERNAME: 'postgres'
+      KC_DB_PASSWORD: 'postgres'
+      PROXY_ADDRESS_FORWARDING: 'true'
+      KEYCLOAK_ADMIN: 'admin'
+      KEYCLOAK_ADMIN_PASSWORD: 'admin123'
+      KC_HOSTNAME: 'keycloak'
+      KC_HOSTNAME_PORT: '8081'
+      KC_HOSTNAME_ADMIN_URL: 'http://keycloak:8081'
+      KC_HTTP_ENABLED: 'true'
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+    depends_on:
+      keycloak-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts/realm/:/data/
+    ports:
+      - '8081:8081'
+
+  keycloak-init:
+    image: ghcr.io/unchartedsoftware/keycloak:22.0.3.0
+    networks:
+      - terarium
+    command: [ 'import', '--dir', '/data', '--override', 'false' ]
+    volumes:
+      - ./scripts/realm:/data
+    environment:
+      KC_DB: 'postgres'
+      KC_DB_URL: 'jdbc:postgresql://postgres/postgres'
+      KC_DB_USERNAME: 'postgres'
+      KC_DB_PASSWORD: 'postgres'
+      KEYCLOAK_ADMIN: 'admin'
+      KEYCLOAK_ADMIN_PASSWORD: 'admin123'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  hmi-server:
+    image: ghcr.io/darpa-askem/hmi-server:latest
+    container_name: hmi-server
+    networks:
+      - terarium
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--head",
+          "0.0.0.0:3000/actuator/health"
+        ]
+      interval: "3s"
+      timeout: "3s"
+      retries: 30
+    environment:
+      ADOBE_API-KEY: ""
+      GOOGLE-ANALYTICS-ID: ""
+      AWS_URL: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: "admin"
+      AWS_SECRET_ACCESS_KEY: "admin123"
+      SPICEDB_LAUNCHMODE: "PLAINTEXT"
+      SPICEDB_SHARED-KEY: "dev"
+      SPICEDB_TARGET: "spicedb:50051"
+      SPRING_DATA_REDIS_URL: "redis://redis:6379"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/terarium"
+      SPRING_PROFILES_ACTIVE: "default"
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER-URI: "http://keycloak:8081/realms/Terarium"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT-ID: "app"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI: "http://keycloak:8081/realms/Terarium"
+      TERARIUM_DB_PASSWORD: "postgres"
+      TERARIUM_DB_USERNAME: "postgres"
+      TERARIUM_KEYCLOAK_URL: "http://keycloak:8081"
+      TERARIUM_KEYCLOAK_REALM: "Terarium"
+      TERARIUM_KEYCLOAK_CLIENT-ID: "app"
+      TERARIUM_KEYCLOAK_ADMIN-REALM: "master"
+      TERARIUM_KEYCLOAK_ADMIN-CLIENT-ID: "admin-cli"
+      TERARIUM_KEYCLOAK_ADMIN-USERNAME: "admin"
+      TERARIUM_KEYCLOAK_ADMIN-PASSWORD: "admin123"
+      TERARIUM_MQ-ADDRESSES: "amqp://rabbitmq:5672"
+      TERARIUM_MQ-HOST: "rabbitmq"
+      TERARIUM_MQ-PASSWORD: "terarium123"
+      TERARIUM_MQ-POST: "5672"
+      TERARIUM_MQ-USERNAME: "terarium"
+      TERARIUM_ELASTICSEARCH_URL: "http://elasticsearch:9200"
+      TERARIUM_ELASTICSEARCH_AUTH-ENABLED: false
+      SPRING_DATA_NEO4J_URI: "bolt://neo4j:7687"
+      SPRING_DATA_NEO4J_AUTHENTICATION_USERNAME: "neo4j"
+      SPRING_DATA_NEO4J_AUTHENTICATION_PASSWORD: "password"
+      TGPT_APP_URL: ""
+      TGPT_TOKEN: ""
+      TGPT_WS_URL: ""
+      XDD_API-ES-KEY: ""
+      XDD_API-KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      spicedb:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   knowledge-middleware-api:
     image: ghcr.io/darpa-askem/knowledge-middleware-api:latest
     environment:
@@ -206,3 +385,12 @@ services:
         condition: service_started
 volumes:
   report:
+  elasticsearch-data:
+  minio-data:
+  terarium-db:
+    driver: local
+
+networks:
+  terarium:
+    name: terarium
+
