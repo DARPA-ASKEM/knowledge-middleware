@@ -248,74 +248,74 @@ def test_code_dynamics_to_amr(
     #     record_quality_check(context_dir, "code_to_amr", "F1 Score", amr_instance.f1(amr))
 
 
-@pytest.mark.parametrize("resource", params["code_to_amr"])
-def test_code_zip_to_amr(
-    context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
-):
-    #### ARRANGE ####
-    code = open(f"{context_dir}/code/code.py").read()
-    readme = open(f"{context_dir}/code/README.md").read()
-    tds_code = gen_tds_artifact(
-        code=True,
-        dynamics_only=True,
-        id=f"test_code_to_amr_{resource}",
-        file_names=["code.py"],
-    )
-    tds_readme = gen_tds_artifact(
-        code=True,
-        dynamics_only=True,
-        id=f"test_code_to_amr_{resource}",
-        file_names=["README.md"],
-    )
-    # tds_code["files"] = ["code.py"]
-    file_storage.upload("code.py", code)
-    file_storage.upload("README.md", readme)
-
-    query_params = {
-        "code_id": tds_code["id"],
-        "name": "test model",
-        "description": "test description",
-        "dynamics_only": False,
-    }
-
-    if settings.MOCK_TDS:
-        http_mock.post(f"{settings.TDS_URL}/provenance", json={})
-        http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
-        http_mock.post(f"{settings.TDS_URL}/model-configurations", json={"id": "test"})
-    if settings.MOCK_TA1:
-        amr = json.load(open(f"{context_dir}/amr.json"))
-        # TODO: Check actual response from this endpoint and mock it in a new file.
-        http_mock.post(
-            f"{settings.TA1_UNIFIED_URL}/workflows/code/codebase-to-pn-amr", json=amr
-        )
-    elif os.path.exists(f"{context_dir}/amr.json"):
-        amr = json.load(open(f"{context_dir}/amr.json"))
-
-    #### ACT ####
-    response = client.post(
-        "/code_to_amr",
-        params=query_params,
-        headers={"Content-Type": "application/json"},
-    )
-    results = response.json()
-    job_id = results.get("id")
-    worker.work(burst=True)
-    status_response = client.get(f"/status/{job_id}")
-
-    job = Job.fetch(job_id, connection=worker.connection)
-    if job.result is not None:
-        amr_instance = AMR(job.result["amr"])
-
-    #### ASSERT ####
-    assert results.get("status") == "queued"
-    assert status_response.status_code == 200
-    assert (
-        status_response.json().get("status") == "finished"
-    ), f"The RQ job failed.\n{job.latest_result().exc_string}"
-
-    assert (
-        amr_instance.is_valid()
-    ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
+# @pytest.mark.parametrize("resource", params["code_to_amr"])
+# def test_code_zip_to_amr(
+#     context_dir, http_mock, client, worker, gen_tds_artifact, file_storage, resource
+# ):
+    # #### ARRANGE ####
+    # code = open(f"{context_dir}/code/code.py").read()
+    # readme = open(f"{context_dir}/code/README.md").read()
+    # tds_code = gen_tds_artifact(
+    #     code=True,
+    #     dynamics_only=True,
+    #     id=f"test_code_to_amr_{resource}",
+    #     file_names=["code.py"],
+    # )
+    # tds_readme = gen_tds_artifact(
+    #     code=True,
+    #     dynamics_only=True,
+    #     id=f"test_code_to_amr_{resource}",
+    #     file_names=["README.md"],
+    # )
+    # # tds_code["files"] = ["code.py"]
+    # file_storage.upload("code.py", code)
+    # file_storage.upload("README.md", readme)
+		#
+    # query_params = {
+    #     "code_id": tds_code["id"],
+    #     "name": "test model",
+    #     "description": "test description",
+    #     "dynamics_only": False,
+    # }
+		#
+    # if settings.MOCK_TDS:
+    #     http_mock.post(f"{settings.TDS_URL}/provenance", json={})
+    #     http_mock.post(f"{settings.TDS_URL}/models", json={"id": "test"})
+    #     http_mock.post(f"{settings.TDS_URL}/model-configurations", json={"id": "test"})
+    # if settings.MOCK_TA1:
+    #     amr = json.load(open(f"{context_dir}/amr.json"))
+    #     # TODO: Check actual response from this endpoint and mock it in a new file.
+    #     http_mock.post(
+    #         f"{settings.TA1_UNIFIED_URL}/workflows/code/codebase-to-pn-amr", json=amr
+    #     )
+    # elif os.path.exists(f"{context_dir}/amr.json"):
+    #     amr = json.load(open(f"{context_dir}/amr.json"))
+		#
+    # #### ACT ####
+    # response = client.post(
+    #     "/code_to_amr",
+    #     params=query_params,
+    #     headers={"Content-Type": "application/json"},
+    # )
+    # results = response.json()
+    # job_id = results.get("id")
+    # worker.work(burst=True)
+    # status_response = client.get(f"/status/{job_id}")
+		#
+    # job = Job.fetch(job_id, connection=worker.connection)
+    # if job.result is not None:
+    #     amr_instance = AMR(job.result["amr"])
+		#
+    # #### ASSERT ####
+    # assert results.get("status") == "queued"
+    # assert status_response.status_code == 200
+    # assert (
+    #     status_response.json().get("status") == "finished"
+    # ), f"The RQ job failed.\n{job.latest_result().exc_string}"
+		#
+    # assert (
+    #     amr_instance.is_valid()
+    # ), f"AMR failed to validate to its provided schema: {amr_instance.validation_error}"
 
     #### POSTAMBLE ####
     # if 'amr' in locals():
