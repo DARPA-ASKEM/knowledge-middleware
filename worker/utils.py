@@ -195,6 +195,12 @@ def put_code_extraction_to_tds(
 def get_document_from_tds(document_id, code=False):
     tds_documents_url = f"{TDS_API}/documents/{document_id}"
     document = tds_session().get(tds_documents_url)
+
+    if document.status_code != 200:
+        raise Exception(
+            f"Cannot download document {document_id} from TDS: {document.text}"
+        )
+
     document_json = document.json()
     if code:
         filename = document_json.get("filename")
