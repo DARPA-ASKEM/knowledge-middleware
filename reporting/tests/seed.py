@@ -213,7 +213,7 @@ def add_paper(scenario, project_id):
     }
 
     paper_response = auth_session().post(
-        TDS_URL + "/documents",
+        TDS_URL + "/document-asset",
         json=payload,
     )
     if paper_response.status_code >= 300:
@@ -224,7 +224,7 @@ def add_paper(scenario, project_id):
         add_asset(paper_response.json()['id'], "document", project_id)
 
     url_response = auth_session().get(
-        TDS_URL + f"/documents/{paper_response.json()['id']}/upload-url", params={"filename": "paper.pdf"}
+        TDS_URL + f"/document-asset/{paper_response.json()['id']}/upload-url", params={"filename": "paper.pdf"}
     )
     upload_url = url_response.json()["url"]
     with open(filepath, "rb") as file:

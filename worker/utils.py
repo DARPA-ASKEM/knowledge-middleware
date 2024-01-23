@@ -143,7 +143,7 @@ def put_document_extraction_to_tds(
     logger.debug(f"Payload going to TDS: {document_payload}")
     logger.info(f"Storing document to TDS: {document_id}")
     # Update document in TDS
-    document_url = f"{TDS_API}/documents/{document_id}"
+    document_url = f"{TDS_API}/document-asset/{document_id}"
     document_response = auth_session().put(document_url, json=document_payload)
     logger.debug(f"TDS response: {document_response.text}")
     document_put_status = document_response.status_code
@@ -193,7 +193,7 @@ def put_code_extraction_to_tds(
 
 
 def get_document_from_tds(document_id, code=False):
-    tds_documents_url = f"{TDS_API}/documents/{document_id}"
+    tds_documents_url = f"{TDS_API}/document-asset/{document_id}"
     document = auth_session().get(tds_documents_url)
 
     if document.status_code != 200:
@@ -209,7 +209,7 @@ def get_document_from_tds(document_id, code=False):
             0
         ]  # Assumes only one file will be present for now.
 
-    download_url = f"{TDS_API}/documents/{document_id}/download-url?document_id={document_id}&filename={filename}"
+    download_url = f"{TDS_API}/document-asset/{document_id}/download-url?document_id={document_id}&filename={filename}"
     document_download_url = auth_session().get(download_url)
 
     presigned_download = document_download_url.json().get("url")

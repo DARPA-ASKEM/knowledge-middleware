@@ -206,7 +206,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
             writer.write(requests.get(result_endpoint).content)
 
         presigned_response = auth_session().get(
-            f"{TDS_API}/documents/{document_id}/upload-url?filename={zip_file_name}"
+            f"{TDS_API}/document-asset/{document_id}/upload-url?filename={zip_file_name}"
         )
         upload_url = presigned_response.json().get("url")
 
@@ -252,7 +252,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
 
                     file_name_path = os.path.join(temp_dir, file_name)
                     presigned_response = auth_session().get(
-                        f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
+                        f"{TDS_API}/document-asset/{document_id}/upload-url?filename={file_name}"
                     )
                     upload_url = presigned_response.json().get("url")
 

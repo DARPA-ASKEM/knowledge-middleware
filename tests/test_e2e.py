@@ -632,7 +632,7 @@ def test_link_amr(
 
     if settings.MOCK_TDS:
         http_mock.get(f"{settings.TDS_URL}/models/{model_id}", json=amr)
-        http_mock.get(f"{settings.TDS_URL}/documents/{document_id}", json=document)
+        http_mock.get(f"{settings.TDS_URL}/document-asset/{document_id}", json=document)
         http_mock.put(f"{settings.TDS_URL}/models/{model_id}", json={"id": model_id})
 
     if settings.MOCK_TA1:
