@@ -12,7 +12,7 @@ import pandas
 
 from askem_extractions.data_model import AttributeCollection
 
-from api.tds import tds_session
+from lib.auth import auth_session
 from worker.utils import (
     find_source_code,
     get_code_from_tds,
@@ -205,7 +205,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         with open(zip_file, "wb") as writer:
             writer.write(requests.get(result_endpoint).content)
 
-        presigned_response = tds_session().get(
+        presigned_response = auth_session().get(
             f"{TDS_API}/documents/{document_id}/upload-url?filename={zip_file_name}"
         )
         upload_url = presigned_response.json().get("url")
@@ -251,7 +251,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                     file_name = path.split("/")[-1]  # Gets file name from json.
 
                     file_name_path = os.path.join(temp_dir, file_name)
-                    presigned_response = tds_session().get(
+                    presigned_response = auth_session().get(
                         f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
                     )
                     upload_url = presigned_response.json().get("url")
@@ -597,7 +597,7 @@ def data_card(*args, **kwargs):
 
     dataset_json["metadata"]["data_card"] = data_card
 
-    tds_resp = tds_session().put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    tds_resp = auth_session().put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status please check TDS api logs: {tds_resp.status_code}"
@@ -673,7 +673,7 @@ def model_card(*args, **kwargs):
             else:
                 amr["metadata"]["card"] = card
 
-            tds_resp = tds_session().put(f"{TDS_API}/models/{model_id}", json=amr)
+            tds_resp = auth_session().put(f"{TDS_API}/models/{model_id}", json=amr)
             if tds_resp.status_code == 200:
                 logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")
                 return {
@@ -704,7 +704,7 @@ def link_amr(*args, **kwargs):
 
     tds_model_url = f"{TDS_API}/models/{model_id}"
 
-    model = tds_session().get(tds_model_url)
+    model = auth_session().get(tds_model_url)
     model_json = model.json()
     model_amr = model_json
     model_card = model_amr.get('metadata',{}).get('card')
@@ -741,7 +741,7 @@ def link_amr(*args, **kwargs):
         enriched_amr = response.json()
         enriched_amr['metadata']['card'] = model_card
 
-        model_response = tds_session().put(tds_model_url, json=enriched_amr)
+        model_response = auth_session().put(tds_model_url, json=enriched_amr)
         if model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {enriched_amr}"

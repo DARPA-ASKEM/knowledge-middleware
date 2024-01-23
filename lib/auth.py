@@ -10,7 +10,7 @@ TDS_USER = settings.TDS_USER
 TDS_PASSWORD = settings.TDS_PASSWORD
 
 
-def tds_session():
+def auth_session():
 	session = requests.Session()
 	session.auth = (TDS_USER, TDS_PASSWORD)
 	session.headers.update(

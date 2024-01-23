@@ -4,7 +4,7 @@ import logging
 from time import sleep, time
 from datetime import datetime
 from collections import defaultdict
-from api.tds import tds_session
+from lib.auth import auth_session
 import sys
 
 import boto3
@@ -30,7 +30,7 @@ UPLOAD = os.environ.get("UPLOAD", "FALSE").lower() == "true"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 def add_asset(resource_id, resource_type, project_id):
-    resp = tds_session().post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
+    resp = auth_session().post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
     return resp.json()
 
 def add_provenance(left_id, left_type, right_id, right_type, relation_type):
@@ -39,7 +39,7 @@ def add_provenance(left_id, left_type, right_id, right_type, relation_type):
                "right": right_id,
                "right_type": right_type,
                "relation_type": relation_type}
-    resp = tds_session().post(f"{TDS_URL}/provenance", json=payload)
+    resp = auth_session().post(f"{TDS_URL}/provenance", json=payload)
     logging.info(f"Created provenance for {left_type} extracted from {right_type}")
     logging.info(f"Created provenance ID: {resp.json()['id']}")
     return resp.json()
@@ -218,7 +218,7 @@ def standard_flow(scenario, _id):
         url = f"{KM_URL}/variable_extractions?document_id={document_id}&domain={domain}"
     else:
         url = f"{KM_URL}/variable_extractions?document_id={document_id}"
-    document_response = tds_session().get(f"{TDS_URL}/document-asset/{document_id}")
+    document_response = auth_session().get(f"{TDS_URL}/document-asset/{document_id}")
     if document_response.status_code > 300:
         yield non_applicable_run("variable_extraction")
     else:
@@ -264,7 +264,7 @@ def standard_flow(scenario, _id):
     # STEP 3: CODE TO AMR
     # Try dynamics only since code_to_amr fallsback to full repo if dynamics fails
     code_exists = True
-    code_response = tds_session().get(f"{TDS_URL}/code-asset/{code_id}")
+    code_response = auth_session().get(f"{TDS_URL}/code-asset/{code_id}")
     if code_response.status_code > 300:
         code_exists = False
         yield non_applicable_run("code_to_amr")
@@ -331,7 +331,7 @@ def standard_flow(scenario, _id):
         yield upstream_failure("profile_model")
     else:
         # Check if document exists in TDS and change URL based on that.
-        document_response = tds_session().get(f"{TDS_URL}/document-asset/{scenario}")
+        document_response = auth_session().get(f"{TDS_URL}/document-asset/{scenario}")
         if document_response.status_code > 300:
             model_suffix = f"{model_id}"
         else:
@@ -383,7 +383,7 @@ def standard_flow(scenario, _id):
 
     # STEP 5: LINK AMR
     # Check if document exists
-    document_response = tds_session().get(f"{TDS_URL}/document-asset/{document_id}")
+    document_response = auth_session().get(f"{TDS_URL}/document-asset/{document_id}")
     if document_response.status_code > 300:
         yield non_applicable_run("link_amr")
     elif not document_response.json().get('metadata'):
@@ -395,7 +395,7 @@ def standard_flow(scenario, _id):
     elif not model_exists and (code_exists or equations_exists):
         yield upstream_failure("link_amr")
     else:
-        document_response = tds_session().get(f"{TDS_URL}/document-asset/{document_id}")
+        document_response = auth_session().get(f"{TDS_URL}/document-asset/{document_id}")
         if document_response.status_code > 300:
             yield non_applicable_run("link_amr")
         else:

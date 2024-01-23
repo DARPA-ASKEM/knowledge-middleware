@@ -4,7 +4,7 @@ import json
 import os
 import time
 from datetime import datetime
-from api.tds import tds_session
+from lib.auth import auth_session
 import sys
 
 import requests
@@ -29,13 +29,13 @@ def create_project():
         "projectAssets": [],
         }
 
-    resp = tds_session().post(f"{TDS_URL}/projects", json=project)
+    resp = auth_session().post(f"{TDS_URL}/projects", json=project)
     project_id = resp.json()['id']
 
     return project_id
 
 def add_asset(resource_id, resource_type, project_id):
-    resp = tds_session().post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
+    resp = auth_session().post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
     return resp.json()
 
 def add_code(scenario, project_id, file_path_override=None):
@@ -84,7 +84,7 @@ def add_code(scenario, project_id, file_path_override=None):
                 "repo_url": "",
             }
 
-            code_response = tds_session().post(
+            code_response = auth_session().post(
                 TDS_URL + "/code-asset",
                 json=payload,
             )
@@ -96,7 +96,7 @@ def add_code(scenario, project_id, file_path_override=None):
             else:
                 add_asset(code_response.json()['id'], "code", project_id)
 
-            url_response = tds_session().get(
+            url_response = auth_session().get(
                 TDS_URL + f"/code-asset/{code_response.json()['id']}/upload-url",
                 params={"filename": existing_filepath.split("/")[-1]},
             )
@@ -139,7 +139,7 @@ def add_code(scenario, project_id, file_path_override=None):
 
             logging.info(f"Payload: {payload}")
 
-            code_response = tds_session().post(
+            code_response = auth_session().post(
                 TDS_URL + "/code-asset",
                 json=payload,
             )
@@ -212,7 +212,7 @@ def add_paper(scenario, project_id):
         "assets": [],
     }
 
-    paper_response = tds_session().post(
+    paper_response = auth_session().post(
         TDS_URL + "/documents",
         json=payload,
     )
@@ -223,7 +223,7 @@ def add_paper(scenario, project_id):
     else:
         add_asset(paper_response.json()['id'], "document", project_id)
 
-    url_response = tds_session().get(
+    url_response = auth_session().get(
         TDS_URL + f"/documents/{paper_response.json()['id']}/upload-url", params={"filename": "paper.pdf"}
     )
     upload_url = url_response.json()["url"]
@@ -252,7 +252,7 @@ def add_dataset(scenario, project_id):
         "metadata": {},
     }
 
-    dataset_response = tds_session().post(
+    dataset_response = auth_session().post(
         TDS_URL + "/datasets",
         json=payload,
     )
@@ -264,7 +264,7 @@ def add_dataset(scenario, project_id):
     else:
         add_asset(dataset_response.json()['id'], "dataset", project_id)
 
-    url_response = tds_session().get(
+    url_response = auth_session().get(
         TDS_URL + f"/datasets/{dataset_response.json()['id']}/upload-url", params={"filename": "dataset.csv"}
     )
 
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     project_id = os.environ.get("PROJECT_ID")
     if project_id:
         logging.info(f"Project ID found in environment: {project_id}")
-        proj_resp = tds_session().get(f"{TDS_URL}/projects/{project_id}")
+        proj_resp = auth_session().get(f"{TDS_URL}/projects/{project_id}")
         if proj_resp.status_code == 404:
             raise Exception(f"Project ID {project_id} does not exist in TDS at {TDS_URL}")
     # if it does not exist, create it
