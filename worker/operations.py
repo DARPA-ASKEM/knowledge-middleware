@@ -12,6 +12,7 @@ import pandas
 
 from askem_extractions.data_model import AttributeCollection
 
+from api.tds import tds_session
 from worker.utils import (
     find_source_code,
     get_code_from_tds,
@@ -204,7 +205,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         with open(zip_file, "wb") as writer:
             writer.write(requests.get(result_endpoint).content)
 
-        presigned_response = requests.get(
+        presigned_response = tds_session().get(
             f"{TDS_API}/documents/{document_id}/upload-url?filename={zip_file_name}"
         )
         upload_url = presigned_response.json().get("url")
@@ -250,7 +251,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
                     file_name = path.split("/")[-1]  # Gets file name from json.
 
                     file_name_path = os.path.join(temp_dir, file_name)
-                    presigned_response = requests.get(
+                    presigned_response = tds_session().get(
                         f"{TDS_API}/documents/{document_id}/upload-url?filename={file_name}"
                     )
                     upload_url = presigned_response.json().get("url")
@@ -410,7 +411,7 @@ def variable_extractions(*args, **kwargs):
         mit_text_reading_url = f"{MIT_API}/annotation/upload_file_extract"
         files = {
             "file": text.encode(),
-        }        
+        }
         params = {"gpt_key": OPENAI_API_KEY, "kg_domain": kg_domain}
 
         try:
@@ -425,8 +426,8 @@ def variable_extractions(*args, **kwargs):
             logger.debug(f"MIT variable response object: {mit_response.text}")
 
         except Exception as e:
-            logger.error(f"MIT variable extraction for document {document_id} failed.")            
-    
+            logger.error(f"MIT variable extraction for document {document_id} failed.")
+
     # TODO: implement merging code here that generates
     collections = list()
 
@@ -435,14 +436,14 @@ def variable_extractions(*args, **kwargs):
         collections.append(skema_collection)
     except Exception as e:
         logger.error(f"Error generating collection from SKEMA variable extractions: {e}")
-        skema_collection = None    
-    
+        skema_collection = None
+
     try:
         mit_collection = AttributeCollection.from_json(mit_extraction_json)
         collections.append(mit_collection)
     except Exception as e:
         logger.error(f"Error generating collection from MIT variable extractions: {e}")
-        mit_collection = None        
+        mit_collection = None
 
     if not bool(skema_collection and mit_collection):
         logger.info("Falling back on single variable extraction since one system failed")
@@ -451,7 +452,7 @@ def variable_extractions(*args, **kwargs):
     else:
         # Merge both with some de de-duplications
         params = {"gpt_key": OPENAI_API_KEY}
-        
+
         data = {
             "mit_file": json.dumps(mit_extraction_json),
             "arizona_file": json.dumps(skema_extraction_json['outputs'][0]['data']),
@@ -461,7 +462,7 @@ def variable_extractions(*args, **kwargs):
         response = requests.post(
             f"{MIT_API}/integration/get_mapping", params=params, files=data
         )
-        
+
         # MIT merges the collection for us
         if response.status_code == 200:
             variables = AttributeCollection.from_json(response.json())
@@ -469,7 +470,7 @@ def variable_extractions(*args, **kwargs):
             # Fallback to collection
             logger.info(f"MIT merge failed: {response.text}")
             attributes = list(it.chain.from_iterable(c.attributes for c in collections))
-            variables = AttributeCollection(attributes=attributes)  
+            variables = AttributeCollection(attributes=attributes)
 
     if len(document_json.get("file_names")) > 1:
         zip_file_name = document_json.get("file_names")[1]
@@ -512,7 +513,7 @@ def variable_extractions(*args, **kwargs):
         if annotate_mit:
             response["mit_extraction_status_code"] = mit_response.status_code
         else:
-            response["mit_extraction_status_code"] = None        
+            response["mit_extraction_status_code"] = None
     else:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status"
@@ -596,7 +597,7 @@ def data_card(*args, **kwargs):
 
     dataset_json["metadata"]["data_card"] = data_card
 
-    tds_resp = requests.put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
+    tds_resp = tds_session().put(f"{TDS_API}/datasets/{dataset_id}", json=dataset_json)
     if tds_resp.status_code != 200:
         raise Exception(
             f"PUT extraction metadata to TDS failed with status please check TDS api logs: {tds_resp.status_code}"
@@ -672,7 +673,7 @@ def model_card(*args, **kwargs):
             else:
                 amr["metadata"]["card"] = card
 
-            tds_resp = requests.put(f"{TDS_API}/models/{model_id}", json=amr)
+            tds_resp = tds_session().put(f"{TDS_API}/models/{model_id}", json=amr)
             if tds_resp.status_code == 200:
                 logger.info(f"Updated model {model_id} in TDS: {tds_resp.status_code}")
                 return {
@@ -703,7 +704,7 @@ def link_amr(*args, **kwargs):
 
     tds_model_url = f"{TDS_API}/models/{model_id}"
 
-    model = requests.get(tds_model_url)
+    model = tds_session().get(tds_model_url)
     model_json = model.json()
     model_amr = model_json
     model_card = model_amr.get('metadata',{}).get('card')
@@ -740,7 +741,7 @@ def link_amr(*args, **kwargs):
         enriched_amr = response.json()
         enriched_amr['metadata']['card'] = model_card
 
-        model_response = requests.put(tds_model_url, json=enriched_amr)
+        model_response = tds_session().put(tds_model_url, json=enriched_amr)
         if model_response.status_code != 200:
             raise Exception(
                 f"Cannot update model {model_id} in TDS with payload:\n\n {enriched_amr}"
@@ -778,7 +779,7 @@ def code_to_amr(*args, **kwargs):
     name = kwargs.get("name")
     model_id = kwargs.get("model_id")
     description = kwargs.get("description")
-    llm_assisted = kwargs.get("llm_assisted", True)    
+    llm_assisted = kwargs.get("llm_assisted", True)
     dynamics_only = kwargs.get("dynamics_only", False)
 
     code_json, downloaded_code_object, dynamics_off_flag = get_code_from_tds(

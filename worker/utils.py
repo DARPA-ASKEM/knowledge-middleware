@@ -7,6 +7,7 @@ import logging
 import pandas
 import requests
 
+from api.tds import tds_session
 from lib.settings import settings
 
 LOG_LEVEL = settings.LOG_LEVEL.upper()
@@ -31,7 +32,6 @@ TDS_API = settings.TDS_URL
 def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     # Expects json amr payload and puts it to TDS models and model-configurations, returning an ID.
 
-    headers = {"Content-Type": "application/json"}
 
     if name:
         amr_payload["header"]["name"] = name
@@ -46,7 +46,7 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
     if model_id:
         tds_models = f"{TDS_API}/models/{model_id}"
 
-        model_response = requests.get(tds_models, headers=headers)
+        model_response = tds_session().get(tds_models)
         if model_response.status_code == 200:
             # Keep name and information from existing model
             fetched_amr = model_response.json()
@@ -55,8 +55,8 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
                 "description", None
             )
 
-            update_model_response = requests.put(
-                tds_models, json=amr_payload, headers=headers
+            update_model_response = tds_session().put(
+                tds_models, json=amr_payload
             )
             if update_model_response.status_code != 200:
                 raise Exception(
@@ -68,14 +68,14 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
             # the model couldn't be found, so must be new
             # go ahead and create the model
             tds_models = f"{TDS_API}/models"
-            model_response = requests.post(tds_models, json=amr_payload, headers=headers)
+            model_response = tds_session().post(tds_models, json=amr_payload)
             model_id = model_response.json().get("id")
             logger.info(f"Created model in TDS with id {model_id}")
 
     # No model id was specified, create TDS model with a default UUID id
     else:
         tds_models = f"{TDS_API}/models"
-        model_response = requests.post(tds_models, json=amr_payload, headers=headers)
+        model_response = tds_session().post(tds_models, json=amr_payload)
         model_id = model_response.json().get("id")
         logger.info(f"Created model in TDS with id {model_id}")
 
@@ -91,10 +91,9 @@ def put_amr_to_tds(amr_payload, name=None, description=None, model_id=None):
         "configuration": json.loads(json.dumps(amr_payload)),
     }
 
-    config_response = requests.post(
+    config_response = tds_session().post(
         tds_model_configurations,
         data=json.dumps(configuration_payload, default=str),
-        headers=headers,
     )
 
     config_id = config_response.json().get("id")
@@ -145,7 +144,7 @@ def put_document_extraction_to_tds(
     logger.info(f"Storing document to TDS: {document_id}")
     # Update document in TDS
     document_url = f"{TDS_API}/documents/{document_id}"
-    document_response = requests.put(document_url, json=document_payload)
+    document_response = tds_session().put(document_url, json=document_payload)
     logger.debug(f"TDS response: {document_response.text}")
     document_put_status = document_response.status_code
 
@@ -186,7 +185,7 @@ def put_code_extraction_to_tds(
     logger.info(f"Storing extraction to TDS for code: {code_id}")
     # patch TDS code/code
     tds_code = f"{TDS_API}/code/{code_id}"
-    code_response = requests.put(tds_code, json=code_payload)
+    code_response = tds_session().put(tds_code, json=code_payload)
     logger.debug(f"TDS response: {code_response.text}")
     code_put_status = code_response.status_code
 
@@ -195,7 +194,7 @@ def put_code_extraction_to_tds(
 
 def get_document_from_tds(document_id, code=False):
     tds_documents_url = f"{TDS_API}/documents/{document_id}"
-    document = requests.get(tds_documents_url)
+    document = tds_session().get(tds_documents_url)
     document_json = document.json()
     if code:
         filename = document_json.get("filename")
@@ -205,7 +204,7 @@ def get_document_from_tds(document_id, code=False):
         ]  # Assumes only one file will be present for now.
 
     download_url = f"{TDS_API}/documents/{document_id}/download-url?document_id={document_id}&filename={filename}"
-    document_download_url = requests.get(download_url)
+    document_download_url = tds_session().get(download_url)
 
     presigned_download = document_download_url.json().get("url")
 
@@ -227,7 +226,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
     dynamics_off = False
     tds_codes_url = f"{TDS_API}/code/{code_id}"
     logger.info(tds_codes_url)
-    code = requests.get(tds_codes_url)
+    code = tds_session().get(tds_codes_url)
     code_json = code.json()
     logger.info(code_json)
 
@@ -257,7 +256,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
     for name, blocks in file_names.items():
         # name = name.split("/")[-1]
         download_url = f"{TDS_API}/code/{code_id}/download-url?filename={name}"
-        code_download_url = requests.get(download_url)
+        code_download_url = tds_session().get(download_url)
 
         presigned_download = code_download_url.json().get("url")
 
@@ -297,7 +296,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
 def get_dataset_from_tds(dataset_id):
     tds_datasets_url = f"{TDS_API}/datasets/{dataset_id}"
 
-    dataset = requests.get(tds_datasets_url)
+    dataset = tds_session().get(tds_datasets_url)
     dataset_json = dataset.json()
 
     logger.info(f"DATASET RESPONSE JSON: {dataset_json}")
@@ -305,7 +304,7 @@ def get_dataset_from_tds(dataset_id):
     dataframes = []
     for filename in dataset_json.get("file_names", []):
         gen_download_url = f"{TDS_API}/datasets/{dataset_id}/download-url?dataset_id={dataset_id}&filename={filename}"
-        dataset_download_url = requests.get(gen_download_url)
+        dataset_download_url = tds_session().get(gen_download_url)
 
         logger.info(f"{dataset_download_url} {dataset_download_url.json().get('url')}")
 
@@ -331,7 +330,7 @@ def get_dataset_from_tds(dataset_id):
 
 def get_model_from_tds(model_id):
     tds_model_url = f"{TDS_API}/models/{model_id}"
-    model = requests.get(tds_model_url)
+    model = tds_session().get(tds_model_url)
     return model
 
 
@@ -353,7 +352,7 @@ def set_provenance(left_id, left_type, right_id, right_type, relation_type):
     tds_provenance = f"{TDS_API}/provenance"
     logger.info(f"Storing provenance to {tds_provenance}")
     try:
-        provenance_resp = requests.post(tds_provenance, json=provenance_payload)
+        provenance_resp = tds_session().post(tds_provenance, json=provenance_payload)
     except Exception as e:
         logger.error(e)
         logger.info(provenance_resp.text)
@@ -376,7 +375,7 @@ def find_source_code(model_id):
     payload = {"root_id": model_id, "root_type": "Model"}
 
     tds_provenance = f"{TDS_API}/provenance/search?search_type=models_from_code"
-    resp = requests.post(tds_provenance, json=payload)
+    resp = tds_session().post(tds_provenance, json=payload)
     logger.info(f"Provenance code lookup for model ID {model_id}: {resp.json()}")
     results = resp.json().get("result", [])
     if len(results) > 0:
