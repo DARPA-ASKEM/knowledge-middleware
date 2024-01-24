@@ -142,7 +142,7 @@ def put_document_extraction_to_tds(
     logger.debug(f"Payload going to TDS: {document_payload}")
     logger.info(f"Storing document to TDS: {document_id}")
     # Update document in TDS
-    document_url = f"{TDS_API}/document-asset/{document_id}/upload-document"
+    document_url = f"{TDS_API}/document-asset/{document_id}"
     document_response = auth_session().put(document_url, json=document_payload)
     logger.debug(f"TDS response: {document_response.text}")
     document_put_status = document_response.status_code
