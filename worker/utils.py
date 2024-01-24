@@ -143,7 +143,7 @@ def put_document_extraction_to_tds(
     logger.debug(f"Payload going to TDS: {document_payload}")
     logger.info(f"Storing document to TDS: {document_id}")
     # Update document in TDS
-    document_url = f"{TDS_API}/document-asset/{document_id}"
+    document_url = f"{TDS_API}/document-asset/{document_id}/upload-document"
     document_response = auth_session().put(document_url, json=document_payload)
     logger.debug(f"TDS response: {document_response.text}")
     document_put_status = document_response.status_code
@@ -184,7 +184,7 @@ def put_code_extraction_to_tds(
     }
     logger.info(f"Storing extraction to TDS for code: {code_id}")
     # patch TDS code/code
-    tds_code = f"{TDS_API}/code/{code_id}"
+    tds_code = f"{TDS_API}/code-asset/{code_id}"
     code_response = auth_session().put(tds_code, json=code_payload)
     logger.debug(f"TDS response: {code_response.text}")
     code_put_status = code_response.status_code
@@ -230,7 +230,7 @@ def get_document_from_tds(document_id, code=False):
 
 def get_code_from_tds(code_id, code=False, dynamics_only=False):
     dynamics_off = False
-    tds_codes_url = f"{TDS_API}/code/{code_id}"
+    tds_codes_url = f"{TDS_API}/code-asset/{code_id}"
     logger.info(tds_codes_url)
     code = auth_session().get(tds_codes_url)
     code_json = code.json()
@@ -261,7 +261,7 @@ def get_code_from_tds(code_id, code=False, dynamics_only=False):
 
     for name, blocks in file_names.items():
         # name = name.split("/")[-1]
-        download_url = f"{TDS_API}/code/{code_id}/download-url?filename={name}"
+        download_url = f"{TDS_API}/code-asset/{code_id}/download-url?filename={name}"
         code_download_url = auth_session().get(download_url)
 
         presigned_download = code_download_url.json().get("url")
