@@ -302,6 +302,7 @@ if __name__ == "__main__":
         project_id = create_project()
         logging.info(f"No project ID found in environment. Created project with ID: {project_id}")
 
+    logging.info("Seeding test project.")
     for scenario in scenarios:
         logging.info(f"Seeding {scenario} to project {project_id}")
         add_code(scenario, project_id)
