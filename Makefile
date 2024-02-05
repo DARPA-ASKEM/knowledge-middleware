@@ -56,3 +56,8 @@ restart:docker-compose.yaml
 up-prod:docker-compose.yaml
 	$(DOCKER_COMPOSE) -f docker-compose.prod.yaml up -d
 
+# Turn project on for local Terarium development
+# No internal docker connection to TDS, nor Redis
+.PHONY:up-local
+up-local:docker-compose.yaml
+	$(DOCKER_COMPOSE) -f docker-compose.local.yaml up -d
