@@ -322,8 +322,6 @@ services:
     ports:
       - 8001:8000
     depends_on:
-      data-service:
-        condition: service_started
       redis:
         condition: service_started
     healthcheck:
@@ -363,8 +361,8 @@ services:
       - report:/outputs
   tests:
     build:
-      context: .
-      dockerfile: tests/Dockerfile
+      context: ..
+      dockerfile: reporting/tests/Dockerfile
     environment:
       - UPLOAD
       - BUCKET
