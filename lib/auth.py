@@ -13,7 +13,5 @@ TDS_PASSWORD = settings.TDS_PASSWORD
 def auth_session():
 	session = requests.Session()
 	session.auth = (TDS_USER, TDS_PASSWORD)
-	session.headers.update(
-		{"Content-Type": "application/json", "X-Enable-Snake-Case": ""}
-	)
+	session.headers.update({"Content-Type": "application/json", "X-Enable-Snake-Case": "true"})
 	return session

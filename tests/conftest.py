@@ -119,9 +119,9 @@ def gen_tds_artifact(context_dir, http_mock, file_storage):
 
     def generate(code=False, dynamics_only=False, **extra_params):
         if code:
-            _type = "code"
+            _type = "code-asset"
         else:
-            _type = "documents"
+            _type = "document-asset"
         artifact = {
             "id": f"{_type}-{next(counter)}",
             "name": _type,
