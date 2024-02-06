@@ -131,6 +131,7 @@ def put_document_extraction_to_tds(
         file_names = [filename]
 
     document_payload = {
+        "id": document_id,
         "name": name,
         "description": description,
         "file_names": file_names,
@@ -175,6 +176,7 @@ def put_code_extraction_to_tds(
         metadata = {}
 
     code_payload = {
+        "id": code_id,
         "name": name,
         "description": description,
         "files": files,
