@@ -325,7 +325,7 @@ def get_dataset_from_tds(dataset_id):
         dataframes.append(dataframe)
 
     if len(dataframes) > 1:
-        final_df = pandas.merge(dataframes)
+        final_df = pandas.concat(dataframes, ignore_index=True)
     else:
         final_df = dataframes[0]
 
