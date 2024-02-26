@@ -1,0 +1,31 @@
+---
+version: "3.9"
+networks:
+  knowledge-middleware:
+    driver: bridge
+    name: knowledge-middleware
+services:
+  api:
+    container_name: api-knowledge-middleware
+    build:
+      context: ./
+      dockerfile: api/Dockerfile
+    ports:
+      - "8010:8000"
+    env_file:
+      - .env.local
+    networks:
+      - knowledge-middleware
+    volumes:
+      - $PWD/api:/api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  rqworker:
+    container_name: worker-knowledge-middleware
+    build:
+      context: ./
+      dockerfile: worker/Dockerfile
+    env_file:
+      - .env.local
+    networks:
+      - knowledge-middleware

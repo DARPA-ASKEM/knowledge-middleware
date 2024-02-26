@@ -4,6 +4,7 @@ import json
 import os
 import time
 from datetime import datetime
+from lib.auth import auth_session
 import sys
 
 import requests
@@ -25,17 +26,16 @@ def create_project():
     project = {
         "name": "Integration Test Suite Project",
         "description": f"Test generated at {ts}",
-        "assets": [],
-        "active": True,
-        }    
+        "projectAssets": [],
+        }
 
-    resp = requests.post(f"{TDS_URL}/projects", json=project)
+    resp = auth_session().post(f"{TDS_URL}/projects", json=project)
     project_id = resp.json()['id']
 
     return project_id
 
 def add_asset(resource_id, resource_type, project_id):
-    resp = requests.post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
+    resp = auth_session().post(f"{TDS_URL}/projects/{project_id}/assets/{resource_type}/{resource_id}")
     return resp.json()
 
 def add_code(scenario, project_id, file_path_override=None):
@@ -45,8 +45,6 @@ def add_code(scenario, project_id, file_path_override=None):
         f"./scenarios/{scenario}/repo_url.txt",
     ]
     existing_filepath = None
-
-    _id = f"{project_id}-{scenario.replace(' ','-')}"
 
     if file_path_override:
         existing_filepath = file_path_override
@@ -78,7 +76,6 @@ def add_code(scenario, project_id, file_path_override=None):
                 "block": [f"{block_start}-{block_end}"],
             }
             payload = {
-                "id": _id,
                 "name": scenario,
                 "description": "",
                 "files": {
@@ -87,10 +84,9 @@ def add_code(scenario, project_id, file_path_override=None):
                 "repo_url": "",
             }
 
-            code_response = requests.post(
-                TDS_URL + "/code",
+            code_response = auth_session().post(
+                TDS_URL + "/code-asset",
                 json=payload,
-                headers={"Content-Type": "application/json"},
             )
 
             if code_response.status_code >= 300:
@@ -98,10 +94,10 @@ def add_code(scenario, project_id, file_path_override=None):
                     f"Failed to POST code ({code_response.status_code}): {scenario}"
                 )
             else:
-                add_asset(_id, "code", project_id)
+                add_asset(code_response.json()['id'], "code", project_id)
 
-            url_response = requests.get(
-                TDS_URL + f"/code/{_id}/upload-url",
+            url_response = auth_session().get(
+                TDS_URL + f"/code-asset/{code_response.json()['id']}/upload-url",
                 params={"filename": existing_filepath.split("/")[-1]},
             )
             upload_url = url_response.json()["url"]
@@ -133,7 +129,6 @@ def add_code(scenario, project_id, file_path_override=None):
                 files_object[extracted_file] = {}
 
             payload = {
-                "id": _id,
                 "name": scenario,
                 "description": "",
                 "files": files_object,
@@ -144,22 +139,21 @@ def add_code(scenario, project_id, file_path_override=None):
 
             logging.info(f"Payload: {payload}")
 
-            code_response = requests.post(
-                TDS_URL + "/code",
+            code_response = auth_session().post(
+                TDS_URL + "/code-asset",
                 json=payload,
-                headers={"Content-Type": "application/json"},
             )
             if code_response.status_code >= 300:
                 raise Exception(
                     f"Failed to POST code ({code_response.status_code}): {scenario}"
                 )
             else:
-                add_asset(_id, "code", project_id)
+                add_asset(code_response.json()['id'], "code", project_id)
 
             for extracted_file in extracted_files:
                 filepath = os.path.join(temp_dir, extracted_file)
                 url_response = requests.get(
-                    TDS_URL + f"/code/{_id}/upload-url",
+                    TDS_URL + f"/code-asset/{code_response.json()['id']}/upload-url",
                     params={"filename": extracted_file},
                 )
                 upload_url = url_response.json()["url"]
@@ -202,10 +196,9 @@ def add_paper(scenario, project_id):
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} paper")
-    _id = f"{project_id}-{scenario.replace(' ','-')}"
-    
+
+
     payload = {
-        "id": _id,
         "name": scenario,
         "username": "Adam Smith",
         "description": "",
@@ -219,20 +212,19 @@ def add_paper(scenario, project_id):
         "assets": [],
     }
 
-    paper_response = requests.post(
-        TDS_URL + "/documents",
+    paper_response = auth_session().post(
+        TDS_URL + "/document-asset",
         json=payload,
-        headers={"Content-Type": "application/json"},
     )
     if paper_response.status_code >= 300:
         raise Exception(
             f"Failed to POST code ({paper_response.status_code}): {scenario}"
         )
     else:
-        add_asset(_id, "documents", project_id)
+        add_asset(paper_response.json()['id'], "document", project_id)
 
-    url_response = requests.get(
-        TDS_URL + f"/documents/{_id}/upload-url", params={"filename": "paper.pdf"}
+    url_response = auth_session().get(
+        TDS_URL + f"/document-asset/{paper_response.json()['id']}/upload-url", params={"filename": "paper.pdf"}
     )
     upload_url = url_response.json()["url"]
     with open(filepath, "rb") as file:
@@ -251,10 +243,8 @@ def add_dataset(scenario, project_id):
     if not os.path.exists(filepath):
         return
     logging.info(f"Adding {scenario} dataset")
-    _id = f"{project_id}-{scenario.replace(' ','-')}"
 
     payload = {
-        "id": _id,
         "name": scenario,
         "username": "Adam Smith",
         "description": "",
@@ -262,10 +252,9 @@ def add_dataset(scenario, project_id):
         "metadata": {},
     }
 
-    dataset_response = requests.post(
+    dataset_response = auth_session().post(
         TDS_URL + "/datasets",
         json=payload,
-        headers={"Content-Type": "application/json"},
     )
 
     if dataset_response.status_code >= 300:
@@ -273,10 +262,10 @@ def add_dataset(scenario, project_id):
             f"Failed to POST dataset ({dataset_response.status_code}): {scenario}"
         )
     else:
-        add_asset(_id, "datasets", project_id)
+        add_asset(dataset_response.json()['id'], "dataset", project_id)
 
-    url_response = requests.get(
-        TDS_URL + f"/datasets/{_id}/upload-url", params={"filename": "dataset.csv"}
+    url_response = auth_session().get(
+        TDS_URL + f"/datasets/{dataset_response.json()['id']}/upload-url", params={"filename": "dataset.csv"}
     )
 
     upload_url = url_response.json()["url"]
@@ -305,14 +294,15 @@ if __name__ == "__main__":
     project_id = os.environ.get("PROJECT_ID")
     if project_id:
         logging.info(f"Project ID found in environment: {project_id}")
-        proj_resp = requests.get(f"{TDS_URL}/projects/{project_id}")
+        proj_resp = auth_session().get(f"{TDS_URL}/projects/{project_id}")
         if proj_resp.status_code == 404:
             raise Exception(f"Project ID {project_id} does not exist in TDS at {TDS_URL}")
-    # if it does not exist, create it 
+    # if it does not exist, create it
     else:
         project_id = create_project()
         logging.info(f"No project ID found in environment. Created project with ID: {project_id}")
 
+    logging.info("Seeding test project.")
     for scenario in scenarios:
         logging.info(f"Seeding {scenario} to project {project_id}")
         add_code(scenario, project_id)
