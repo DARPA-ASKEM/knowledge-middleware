@@ -18,7 +18,7 @@ if not isinstance(numeric_level, int):
     raise ValueError(f"Invalid log level: {LOG_LEVEL}")
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(numeric_level)
 handler = logging.StreamHandler()
 formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - [%(lineno)d] - %(message)s"
