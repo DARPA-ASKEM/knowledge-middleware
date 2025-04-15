@@ -166,7 +166,7 @@ def cosmos_extraction(document_id, filename, downloaded_document, force_run=Fals
         logger.info("COSMOS response object: %s", extraction_json)
         status_endpoint = extraction_json["status_endpoint"]
         result_endpoint = f"{extraction_json['result_endpoint']}"
-        result_endpoint_text = f"{result_endpoint}/text"
+        result_endpoint_text = f"{result_endpoint}/text-layer"
         equations_endpoint = f"{result_endpoint}/extractions/equations"
         figures_endpoint = f"{result_endpoint}/extractions/figures"
         tables_endpoint = f"{result_endpoint}/extractions/tables"

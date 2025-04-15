@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     TDS_URL: str = "http://data-service.staging.terarium.ai:8000"
     TDS_USER: str = "user"
     TDS_PASSWORD: str = "password"
-    COSMOS_URL: str = "http://xdd.wisc.edu/cosmos_service"
+    COSMOS_URL: str = "http://cosmos0004.chtc.wisc.edu:8088"
     OPENAI_API_KEY: str = "foo"
     LOG_LEVEL: str = "INFO"
     PDF_EXTRACTOR: ExtractionServices = "cosmos"
